@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>{% block page_title %}{{ site_title }}{% endblock %}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    {# Common CSS — loaded on every page #}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/cart.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/account.css') }}">
+
+
+    {# Page-specific CSS #}
+    {% block head_css %}{% endblock %}
+
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎵</text></svg>">
+</head>
+<body class="{% block body_class %}{% endblock %}">
+    {% include 'partials/preloader.html' %}
+
+    <div id="floatingNotes"></div>
+
+    {% include 'partials/header.html' %}
+
+    {# Page Content #}
+    {% block content %}{% endblock %}
+
+    {# Global Overlays #}
+    {% include 'partials/auth_modals.html' %}
+    {% include 'partials/user_sidebar.html' %}
+    {% include 'partials/cart.html' %}
+    {% include 'partials/toast.html' %}
+
+    {# ─── PRELOADER: inline so it works on every page ─── #}
+    <script>
+    (function () {
+        'use strict';
+
+        var preloader = document.getElementById('preloader');
+        var bar       = document.getElementById('preloaderProgress');
+        if (!preloader) return;
+
+        var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        // ── Reduced motion: remove immediately, no animation ──
+        if (prefersReduced) {
+            preloader.remove();
+            return;
+        }
+
+        // ── Configuration ──
+        var MIN_DISPLAY_MS   = 600;   // don't flash — show for at least this long
+        var MAX_DISPLAY_MS   = 5000;  // hard safety cap — never block longer than this
+        var FADE_DURATION_MS = 700;   // CSS transition matches this
+
+        var startTime    = Date.now();
+        var loadComplete = false;
+        var removed      = false;
+
+        // ── Fake progress (visual only, doesn't control dismissal) ──
+        var progress = 0;
+        if (bar) {
+            var progressInterval = setInterval(function () {
+                // Accelerate toward 90%, then wait for real load
+                if (loadComplete) {
+                    progress = 100;
+                } else if (progress < 90) {
+                    progress += Math.random() * 8 + 3;
+                    if (progress > 90) progress = 90;
+                }
+                bar.style.width = progress + '%';
+
+                if (progress >= 100) {
+                    clearInterval(progressInterval);
+                }
+            }, 120);
+        }
+
+        // ── Remove preloader with fade ──
+        function removePreloader() {
+            if (removed) return;
+            removed = true;
+
+            // Snap bar to 100%
+            if (bar) bar.style.width = '100%';
+
+            // Calculate how much of MIN_DISPLAY_MS is left
+            var elapsed = Date.now() - startTime;
+            var remaining = Math.max(0, MIN_DISPLAY_MS - elapsed);
+
+            setTimeout(function () {
+                preloader.classList.add('done');
+                // Remove from DOM after CSS transition finishes
+                setTimeout(function () {
+                    if (preloader.parentNode) preloader.remove();
+                }, FADE_DURATION_MS);
+            }, remaining);
+        }
+
+        // ── Strategy: listen to real load events ──
+
+        // 1) window.load — all images, fonts, stylesheets loaded
+        window.addEventListener('load', function () {
+            loadComplete = true;
+            if (bar) bar.style.width = '100%';
+            removePreloader();
+        });
+
+        // 2) Safety net: force-remove after MAX_DISPLAY_MS no matter what
+        setTimeout(function () {
+            removePreloader();
+        }, MAX_DISPLAY_MS);
+
+        // 3) If DOMContentLoaded already fired by the time this script runs
+        //    (e.g. slow network, script at bottom of body), start filling faster
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            // Page content is already parsed — accelerate progress
+            if (progress < 70) progress = 70;
+        }
+    })();
+    </script>
+
+    {# ─── CSRF + API Helper ─── #}
+    <script>
+        window.CSRF_TOKEN = '{{ csrf_token() }}';
+
+        window.apiFetch = function(url, options) {
+            options = options || {};
+            options.headers = options.headers || {};
+            if (options.method && options.method.toUpperCase() !== 'GET') {
+                options.headers['X-CSRFToken'] = window.CSRF_TOKEN;
+            }
+            if (options.body && typeof options.body === 'object' && !(options.body instanceof FormData)) {
+                options.headers['Content-Type'] = 'application/json';
+                options.body = JSON.stringify(options.body);
+            }
+            options.credentials = 'same-origin';
+            return fetch(url, options);
+        };
+    </script>
+
+    {# ─── External scripts ─── #}
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script src="{{ url_for('static', filename='js/cart.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/account.js') }}"></script>
+
+    {# Page-specific Scripts #}
+    {% block page_scripts %}{% endblock %}
+
+    {% include 'partials/mobile_nav.html' %}
+</body>
+</html>

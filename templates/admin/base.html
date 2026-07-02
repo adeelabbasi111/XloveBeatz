@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>{% block admin_title %}Admin{% endblock %} • XLOVEBEATZ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body>
+    <div class="admin-wrapper">
+        {# ─── SIDEBAR ─── #}
+        <aside class="admin-sidebar">
+            <div class="sidebar-header">
+                <a href="{{ url_for('public.home') }}" class="logo" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:10px;">
+                    <div class="logo-icon"><i class="fas fa-music"></i></div>
+                    <span class="logo-text">XLOVEBEATZ</span>
+                </a>
+            </div>
+            <nav class="sidebar-nav">
+    <a href="{{ url_for('admin.admin_dashboard') }}" class="nav-item {% if request.endpoint == 'admin.admin_dashboard' %}active{% endif %}">
+        <i class="fas fa-chart-pie"></i> <span>Dashboard</span>
+    </a>
+    <a href="{{ url_for('admin.admin_products') }}" class="nav-item {% if 'product' in (request.endpoint or '') %}active{% endif %}">
+        <i class="fas fa-music"></i> <span>Products</span>
+    </a>
+    <a href="{{ url_for('admin.admin_orders') }}" class="nav-item {% if 'order' in (request.endpoint or '') %}active{% endif %}">
+        <i class="fas fa-shopping-bag"></i> <span>Orders</span>
+    </a>
+    <a href="{{ url_for('admin.admin_licenses') }}" class="nav-item {% if request.endpoint == 'admin.admin_licenses' %}active{% endif %}">
+        <i class="fas fa-file-contract"></i> <span>License PDFs</span>
+    </a>
+    <a href="{{ url_for('admin.admin_users') }}" class="nav-item {% if 'user' in (request.endpoint or '') %}active{% endif %}">
+        <i class="fas fa-users"></i> <span>Users</span>
+    </a>
+    <a href="{{ url_for('admin.admin_analytics') }}" class="nav-item {% if request.endpoint == 'admin.admin_analytics' %}active{% endif %}">
+        <i class="fas fa-chart-bar"></i> <span>Analytics</span>
+    </a>
+    <a href="{{ url_for('admin.admin_logs') }}" class="nav-item {% if request.endpoint == 'admin.admin_logs' %}active{% endif %}">
+        <i class="fas fa-history"></i> <span>Activity Log</span>
+    </a>
+</nav>
+            <div class="sidebar-footer">
+                <a href="{{ url_for('public.home') }}" class="nav-item">
+                    <i class="fas fa-external-link-alt"></i> <span>View Store</span>
+                </a>
+                <a href="{{ url_for('auth.logout') }}" class="nav-item" style="color: #ef4444;">
+                    <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
+                </a>
+            </div>
+        </aside>
+
+        {# ─── MAIN ─── #}
+        <div class="admin-main">
+            <header class="admin-header">
+                <h1 class="page-title">{% block page_heading %}Admin{% endblock %}</h1>
+                <div class="admin-user">
+                    <i class="fas fa-user-shield"></i>
+                    <span>{{ g.user.username if g.user else 'Admin' }}</span>
+                </div>
+            </header>
+
+            {# Flash Messages #}
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                <div class="flash flash-{{ category }}">
+                    <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'error' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
+                    <span>{{ message }}</span>
+                    <button class="flash-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
+
+            <div class="admin-content">
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+
+    {# CSRF helper for AJAX #}
+    <script>
+        window.CSRF_TOKEN = '{{ csrf_token() }}';
+    </script>
+    <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+    {% block admin_scripts %}{% endblock %}
+</body>
+</html>

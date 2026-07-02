@@ -1,0 +1,51 @@
+{% extends 'admin/base.html' %}
+
+{% block admin_title %}Activity Log{% endblock %}
+{% block page_heading %}Activity Log{% endblock %}
+
+{% block content %}
+<div class="data-table-wrapper">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Time</th>
+                <th>Admin</th>
+                <th>Action</th>
+                <th>Entity</th>
+                <th>Details</th>
+                <th>IP</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in logs %}
+            <tr>
+                <td class="text-muted">{{ log.created_at.strftime('%d %b %Y, %I:%M %p') if log.created_at else '' }}</td>
+                <td>{{ log.admin.username if log.admin else '—' }}</td>
+                <td><span class="action-badge action-{{ log.action }}">{{ log.action }}</span></td>
+                <td class="text-muted">{{ log.entity_type }} #{{ log.entity_id }}</td>
+                <td>{{ log.details }}</td>
+                <td class="text-muted" style="font-family:'DM Mono', monospace; font-size:0.8rem;">{{ log.ip_address or '—' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if pagination and pagination.pages > 1 %}
+<div class="pagination" style="margin-top:1.5rem; display:flex; justify-content:center; gap:0.5rem;">
+    {% if pagination.has_prev %}
+    <a href="{{ url_for('admin.admin_logs', page=pagination.prev_num) }}" class="btn btn-secondary">« Prev</a>
+    {% endif %}
+    {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+        {% if page_num %}
+        <a href="{{ url_for('admin.admin_logs', page=page_num) }}" class="btn {% if page_num == pagination.page %}btn-primary{% else %}btn-secondary{% endif %}">{{ page_num }}</a>
+        {% else %}
+        <span class="btn btn-secondary" style="opacity:0.3;">…</span>
+        {% endif %}
+    {% endfor %}
+    {% if pagination.has_next %}
+    <a href="{{ url_for('admin.admin_logs', page=pagination.next_num) }}" class="btn btn-secondary">Next »</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

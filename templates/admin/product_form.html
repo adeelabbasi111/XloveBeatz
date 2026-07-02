@@ -1,0 +1,858 @@
+{% extends 'admin/base.html' %}
+
+{% block admin_title %}{{ 'Edit' if product else 'Add' }} Product{% endblock %}
+{% block page_heading %}{{ 'Edit' if product else 'Add' }} Product{% endblock %}
+
+{% block content %}
+<style>
+    /* ─── Waveform Trimmer ─── */
+    .waveform-trimmer {
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 10px;
+        padding: 1rem 1.25rem;
+        margin-top: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    .trimmer-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+    }
+    .trimmer-title {
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: var(--admin-accent, #C9AE74);
+    }
+    .trimmer-info {
+        font-size: 0.7rem;
+        color: var(--text-muted, #7a7570);
+    }
+    .trimmer-canvas-wrapper {
+        position: relative;
+        width: 100%;
+        background: rgba(0,0,0,0.3);
+        border-radius: 6px;
+        overflow: hidden;
+        cursor: pointer;
+    }
+    .trimmer-canvas-wrapper canvas {
+        display: block;
+        width: 100%;
+        height: 100px;
+    }
+    .trimmer-loading {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-muted, #7a7570);
+        font-size: 0.85rem;
+    }
+    .trimmer-loading i { margin-right: 0.5rem; }
+    .trimmer-times {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 0.6rem;
+        padding: 0 0.25rem;
+    }
+    .trim-time-item {
+        text-align: center;
+    }
+    .trim-label {
+        display: block;
+        font-size: 0.65rem;
+        color: var(--text-muted, #7a7570);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 2px;
+    }
+    .trim-value {
+        font-family: 'DM Mono', 'Courier New', monospace;
+        font-size: 0.85rem;
+        color: #f0ece4;
+        font-weight: 600;
+    }
+    .trimmer-actions {
+        margin-top: 0.6rem;
+        text-align: center;
+    }
+    .trim-play-btn {
+        background: var(--admin-accent, #C9AE74) !important;
+        color: #0d0d0d !important;
+        border: none !important;
+        padding: 0.4rem 1.2rem !important;
+        border-radius: 6px !important;
+        font-weight: 700 !important;
+        font-size: 0.8rem !important;
+        cursor: pointer;
+        transition: opacity 0.2s;
+    }
+    .trim-play-btn:hover { opacity: 0.85; }
+
+    /* ─── License Tier Row ─── */
+    .license-tier-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    @media (max-width: 700px) {
+        .license-tier-row {
+            grid-template-columns: 1fr;
+        }
+    }
+    .license-tier-card {
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 10px;
+        padding: 1rem 1.25rem;
+    }
+    .license-tier-card .tier-header {
+        font-weight: 700;
+        font-size: 0.95rem;
+        margin-bottom: 0.75rem;
+    }
+    .tier-basic .tier-header { color: #10b981; }
+    .tier-premium .tier-header { color: #3b82f6; }
+
+    .license-tier-card .form-group { margin-bottom: 0.6rem; }
+    .license-tier-card .form-group:last-child { margin-bottom: 0; }
+    .license-tier-card label {
+        font-size: 0.75rem;
+        margin-bottom: 3px;
+    }
+    .license-tier-card input {
+        font-size: 0.85rem;
+        padding: 0.45rem 0.6rem;
+    }
+
+    /* ─── Exclusive Compact ─── */
+    .license-tier-compact {
+        margin-top: 1rem;
+        background: rgba(201,174,116,0.04);
+        border: 1px solid rgba(201,174,116,0.12);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    .tier-compact-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 1.25rem;
+        font-size: 0.85rem;
+    }
+    .tier-compact-header span:first-child {
+        color: #C9AE74;
+        font-weight: 600;
+    }
+    .tier-compact-header .btn-link {
+        background: none;
+        border: none;
+        color: var(--text-muted, #7a7570);
+        font-size: 0.75rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+    .tier-compact-header .btn-link i {
+        transition: transform 0.2s;
+        font-size: 0.65rem;
+    }
+    .tier-compact-body {
+        padding: 0 1.25rem 1rem;
+    }
+    .tier-compact-body .form-group { margin-bottom: 0.5rem; }
+
+    /* ─── Current file badge ─── */
+    .current-file-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: rgba(16,185,129,0.1);
+        color: #10b981;
+        font-size: 0.75rem;
+        padding: 0.25rem 0.6rem;
+        border-radius: 4px;
+        margin-bottom: 0.4rem;
+    }
+    .current-file-badge i { font-size: 0.65rem; }
+</style>
+
+<div class="form-container">
+    <form method="POST" enctype="multipart/form-data" class="admin-form" id="productForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="duration_hidden" id="durationHidden" value="{{ beat_detail.duration if beat_detail else '' }}">
+        <input type="hidden" name="preview_start" id="previewStart" value="">
+        <input type="hidden" name="preview_end" id="previewEnd" value="">
+
+        {# ═══════════════════════════════════════════ #}
+        {#  BASIC INFORMATION                          #}
+        {# ═══════════════════════════════════════════ #}
+        <div class="form-section">
+            <h3><i class="fas fa-info-circle"></i> Basic Information</h3>
+
+            {% if not product %}
+            <div class="form-group">
+                <label for="product_type">Product Type</label>
+                <select name="product_type" id="product_type" required onchange="toggleTypeFields(this.value)">
+                    <option value="beat" selected>Beat</option>
+                    <option value="pack">Beat Pack</option>
+                    <option value="preset">Vocal Preset</option>
+                </select>
+            </div>
+            {% else %}
+            <div class="form-group">
+                <label>Product Type</label>
+                <input type="text" value="{{ product.product_type | capitalize }}" disabled>
+                <input type="hidden" name="product_type" id="product_type" value="{{ product.product_type }}">
+            </div>
+            {% endif %}
+
+            <div class="form-group">
+                <label for="name">Name</label>
+                <input type="text" name="name" id="name" required
+                       value="{{ product.name if product else '' }}"
+                       placeholder="e.g. Midnight Trap Beat">
+            </div>
+
+            {# ─── Description, Price, Cover — hidden for beats ─── #}
+            <div class="non-beat-fields" id="nonBeatFields"
+                 style="{{ 'display:none;' if (not product or product.product_type == 'beat') else '' }}">
+
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea name="description" id="description"
+                              placeholder="Describe this product…">{{ product.description if product else '' }}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="price">Price (₹)</label>
+                    <input type="number" name="price" id="price" step="0.01" min="0"
+                           value="{{ '%.2f' % (product.price_cents / 100) if product else '' }}"
+                           placeholder="e.g. 299.00">
+                    <small style="color:var(--text-muted); font-size:0.75rem;">Enter price in rupees.</small>
+                </div>
+
+                {% if product and product.cover_image %}
+                <div class="form-group">
+                    <label>Current Cover</label>
+                    <img src="{{ url_for('static', filename='uploads/' + product.cover_image) }}"
+                         alt="Cover" style="max-width:120px; border-radius:6px; margin-bottom:0.5rem;">
+                </div>
+                {% endif %}
+
+                <div class="form-group">
+                    <label for="cover_image">Cover Image {% if product %}(leave empty to keep current){% endif %}</label>
+                    <input type="file" name="cover_image" id="cover_image" accept="image/*">
+                </div>
+            </div>
+        </div>
+
+        {# ═══════════════════════════════════════════ #}
+        {#  BEAT DETAILS                              #}
+        {# ═══════════════════════════════════════════ #}
+        <div class="form-section" id="beatSection"
+             style="{{ '' if (not product or product.product_type == 'beat') else 'display:none;' }}">
+
+            <h3><i class="fas fa-music"></i> Beat Details</h3>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="bpm">BPM</label>
+                    <input type="number" name="bpm" id="bpm" min="40" max="300"
+                           value="{{ beat_detail.bpm if beat_detail else '' }}" placeholder="e.g. 140">
+                </div>
+                <div class="form-group">
+                    <label for="musical_key">Musical Key</label>
+                    <input type="text" name="musical_key" id="musical_key"
+                           value="{{ beat_detail.musical_key if beat_detail else '' }}" placeholder="e.g. Cm, Am, F#m">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="genre">Genre</label>
+                    <input type="text" name="beat_genre" id="genre"
+                           value="{{ beat_detail.genre if beat_detail else '' }}" placeholder="e.g. Trap, Drill, Lo-Fi">
+                </div>
+                <div class="form-group">
+                    <label for="duration">Duration</label>
+                    <input type="text" name="duration" id="duration" readonly
+                           value="{{ beat_detail.duration if beat_detail else '' }}"
+                           placeholder="Auto-detected from MP3"
+                           style="cursor:default; opacity:0.7;">
+                    <small style="color:var(--text-muted); font-size:0.7rem;">
+                        <i class="fas fa-magic"></i> Auto-filled when you upload an MP3
+                    </small>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="pack_id">Assign to Pack (optional)</label>
+                <select name="pack_id" id="pack_id">
+                    <option value="">No Pack (standalone beat)</option>
+                    {% for pack in packs %}
+                    <option value="{{ pack.id }}"
+                        {% if beat_detail and beat_detail.pack_id == pack.id %}selected{% endif %}>
+                        {{ pack.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            {# ───────────────────────────────────────── #}
+            {#  AUDIO FILES — MP3 first, WAV, Project    #}
+            {# ───────────────────────────────────────── #}
+            <h4 style="margin-top:1.5rem;"><i class="fas fa-headphones"></i> Audio Files</h4>
+            <p class="text-muted" style="margin-bottom:1rem;">
+                Upload your full beat MP3, then select the preview region using the waveform trimmer.
+            </p>
+
+            {# ── 1. MP3 Upload ── #}
+            <div class="form-group">
+                <label for="mp3_file"><i class="fas fa-file-audio"></i> MP3 File (Full Beat)</label>
+                {% if beat_detail and beat_detail.mp3_file %}
+                <div class="current-file-badge">
+                    <i class="fas fa-check-circle"></i> {{ beat_detail.mp3_file }}
+                </div>
+                {% endif %}
+                <input type="file" name="mp3_file" id="mp3_file" accept=".mp3"
+                       onchange="handleMp3Upload(this)">
+            </div>
+
+            {# ── 2. Waveform Trimmer (appears after MP3 selected) ── #}
+            <div class="waveform-trimmer" id="trimmerWrapper" style="display:none;">
+                <div class="trimmer-header">
+                    <span class="trimmer-title"><i class="fas fa-cut"></i> Select Preview Region</span>
+                    <span class="trimmer-info">Drag handles to adjust &bull; Drag center to move selection</span>
+                </div>
+
+                <div id="trimmerLoading" class="trimmer-loading" style="display:none;">
+                    <i class="fas fa-spinner fa-spin"></i> Loading waveform…
+                </div>
+
+                <div id="trimmerContent" style="display:none;">
+                    <div class="trimmer-canvas-wrapper" id="trimmerCanvasWrapper">
+                        <canvas id="trimmerCanvas"></canvas>
+                    </div>
+                    <div class="trimmer-times">
+                        <div class="trim-time-item">
+                            <span class="trim-label">Start</span>
+                            <span class="trim-value" id="trimStartTime">0:00</span>
+                        </div>
+                        <div class="trim-time-item">
+                            <span class="trim-label">Selection</span>
+                            <span class="trim-value" id="trimDuration">0:00</span>
+                        </div>
+                        <div class="trim-time-item">
+                            <span class="trim-label">End</span>
+                            <span class="trim-value" id="trimEndTime">0:00</span>
+                        </div>
+                    </div>
+                    <div class="trimmer-actions">
+                        <button type="button" class="btn trim-play-btn" id="trimPlayBtn" onclick="togglePreview()">
+                            <i class="fas fa-play"></i> Preview Selection
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {# Existing preview info (edit mode, when no new MP3 uploaded) #}
+            {% if beat_detail and beat_detail.preview_audio %}
+            <div id="existingPreviewInfo" class="form-group" style="margin-top:0.25rem;">
+                <div class="current-file-badge">
+                    <i class="fas fa-play-circle"></i> Preview: {{ beat_detail.preview_audio }}
+                </div>
+                <small style="color:var(--text-muted); font-size:0.7rem;">
+                    Upload a new MP3 to regenerate the preview
+                </small>
+            </div>
+            {% endif %}
+
+            {# ── 3. WAV Upload ── #}
+            <div class="form-group" style="margin-top:1rem;">
+                <label for="wav_file"><i class="fas fa-file-audio"></i> WAV File (Downloadable)</label>
+                {% if beat_detail and beat_detail.wav_file %}
+                <div class="current-file-badge">
+                    <i class="fas fa-check-circle"></i> {{ beat_detail.wav_file }}
+                </div>
+                {% endif %}
+                <input type="file" name="wav_file" id="wav_file" accept=".wav">
+            </div>
+
+            {# ── 4. Project File Upload ── #}
+            <div class="form-group">
+                <label for="project_file"><i class="fas fa-file-archive"></i> Project File (FLP, ALS, etc.)</label>
+                {% if beat_detail and beat_detail.project_file %}
+                <div class="current-file-badge">
+                    <i class="fas fa-check-circle"></i> {{ beat_detail.project_file }}
+                </div>
+                {% endif %}
+                <input type="file" name="project_file" id="project_file">
+            </div>
+
+            {# ───────────────────────────────────────── #}
+            {#  LICENSE PRICING — Compact Layout          #}
+            {# ───────────────────────────────────────── #}
+            <h4 style="margin-top:2rem;"><i class="fas fa-tags"></i> License Pricing</h4>
+            <p class="text-muted" style="margin-bottom:1rem;">
+                Set price and included files for each tier.
+            </p>
+
+            <div class="license-tier-row">
+                {# ── BASIC ── #}
+                <div class="license-tier-card tier-basic">
+                    <div class="tier-header"><i class="fas fa-music"></i> Basic</div>
+                    <div class="form-group">
+                        <label for="basic_price">Price (₹)</label>
+                        <input type="number" name="basic_price" id="basic_price" step="0.01" min="0"
+                               value="{{ '%.2f' % license_prices.basic if license_prices.get('basic') else '' }}"
+                               placeholder="e.g. 299">
+                    </div>
+                </div>
+
+                {# ── PREMIUM ── #}
+                <div class="license-tier-card tier-premium">
+                    <div class="tier-header"><i class="fas fa-layer-group"></i> Premium</div>
+                    <div class="form-group">
+                        <label for="premium_price">Price (₹)</label>
+                        <input type="number" name="premium_price" id="premium_price" step="0.01" min="0"
+                               value="{{ '%.2f' % license_prices.premium if license_prices.get('premium') else '' }}"
+                               placeholder="e.g. 499">
+                    </div>
+
+                </div>
+            </div>
+
+
+        </div>
+
+        {# ═══════════════════════════════════════════ #}
+        {#  PACK DETAILS                              #}
+        {# ═══════════════════════════════════════════ #}
+        <div class="form-section" id="packFields"
+             style="{{ '' if (product and product.product_type == 'pack') else 'display:none;' }}">
+            <h3><i class="fas fa-layer-group"></i> Pack Details</h3>
+            <div class="form-group">
+                <label for="pack_genre">Genre</label>
+                <input type="text" name="pack_genre" id="pack_genre"
+                       value="{{ beat_pack.genre if beat_pack else '' }}" placeholder="e.g. Indian Fusion, R&B">
+            </div>
+            <p class="text-muted">Total beats count is updated automatically when beats are assigned to this pack.</p>
+        </div>
+
+        {# ═══════════════════════════════════════════ #}
+        {#  PRESET DETAILS                            #}
+        {# ═══════════════════════════════════════════ #}
+        <div class="form-section" id="presetFields"
+             style="{{ '' if (product and product.product_type == 'preset') else 'display:none;' }}">
+            <h3><i class="fas fa-sliders-h"></i> Vocal Preset Details</h3>
+            <div class="form-group">
+                <label for="supported_daw">Supported DAWs</label>
+                <input type="text" name="supported_daw" id="supported_daw"
+                       value="{{ vocal_preset.supported_daw if vocal_preset else '' }}" placeholder="e.g. FL Studio • Logic Pro">
+            </div>
+            <div class="form-group">
+                <label for="preset_zip">Preset ZIP File {% if product %}(leave empty to keep current){% endif %}</label>
+                {% if vocal_preset and vocal_preset.preset_zip %}
+                <div class="current-file-badge">
+                    <i class="fas fa-check-circle"></i> {{ vocal_preset.preset_zip }}
+                </div>
+                {% endif %}
+                <input type="file" name="preset_zip" id="preset_zip" accept=".zip,.rar">
+            </div>
+        </div>
+
+        {# ═══════════════════════════════════════════ #}
+        {#  SUBMIT                                     #}
+        {# ═══════════════════════════════════════════ #}
+        <div class="form-actions">
+            <a href="{{ url_for('admin.admin_products') }}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> {{ 'Update' if product else 'Create' }} Product
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block admin_scripts %}
+<script>
+(function() {
+    'use strict';
+
+    window.toggleTypeFields = function(type) {
+        var beat  = document.getElementById('beatSection');
+        var pack  = document.getElementById('packFields');
+        var preset = document.getElementById('presetFields');
+        var nonBeat = document.getElementById('nonBeatFields');
+
+        if (beat)   beat.style.display   = 'none';
+        if (pack)   pack.style.display   = 'none';
+        if (preset) preset.style.display = 'none';
+        if (nonBeat) nonBeat.style.display = 'none';
+
+        if (type === 'beat') {
+            if (beat) beat.style.display = '';
+        } else if (type === 'pack') {
+            if (pack) pack.style.display = '';
+            if (nonBeat) nonBeat.style.display = '';
+        } else if (type === 'preset') {
+            if (preset) preset.style.display = '';
+            if (nonBeat) nonBeat.style.display = '';
+        }
+    };
+
+    window.toggleExclusive = function() {
+        var body = document.getElementById('exclusiveBody');
+        var text = document.getElementById('exclusiveToggleText');
+        var icon = document.getElementById('exclusiveToggleIcon');
+
+        if (body.style.display === 'none') {
+            body.style.display = '';
+            text.textContent = 'Collapse';
+            icon.style.transform = 'rotate(180deg)';
+        } else {
+            body.style.display = 'none';
+            text.textContent = 'Configure';
+            icon.style.transform = '';
+        }
+    };
+
+    function formatDuration(seconds) {
+        var m = Math.floor(seconds / 60);
+        var s = Math.floor(seconds % 60);
+        return m + ':' + (s < 10 ? '0' : '') + s;
+    }
+
+    function formatTime(seconds) {
+        var m = Math.floor(seconds / 60);
+        var s = Math.floor(seconds % 60);
+        var ms = Math.floor((seconds % 1) * 10);
+        return m + ':' + (s < 10 ? '0' : '') + s + '.' + ms;
+    }
+
+    var trimState = {
+        buffer: null,
+        duration: 0,
+        selStart: 0,
+        selEnd: 0,
+        waveform: [],
+        canvas: null,
+        ctx: null,
+        width: 0,
+        height: 100,
+        isPlaying: false,
+        playSource: null,
+        playCtx: null,
+        dragType: null,
+        dragOffset: 0
+    };
+
+    var BAR_W = 3, BAR_GAP = 1, HANDLE_HIT = 14;
+
+    window.handleMp3Upload = function(input) {
+        var file = input.files[0];
+        if (!file) return;
+
+        var existingInfo = document.getElementById('existingPreviewInfo');
+        if (existingInfo) existingInfo.style.display = 'none';
+
+        var wrapper = document.getElementById('trimmerWrapper');
+        var loading = document.getElementById('trimmerLoading');
+        var content = document.getElementById('trimmerContent');
+        wrapper.style.display = '';
+        loading.style.display = '';
+        content.style.display = 'none';
+
+        var audioEl = new Audio();
+        var objUrl = URL.createObjectURL(file);
+        audioEl.addEventListener('loadedmetadata', function() {
+            var dur = audioEl.duration;
+            document.getElementById('duration').value = formatDuration(dur);
+            document.getElementById('durationHidden').value = formatDuration(dur);
+            URL.revokeObjectURL(objUrl);
+        });
+        audioEl.src = objUrl;
+
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var AudioCtx = window.AudioContext || window.webkitAudioContext;
+            var actx = new AudioCtx();
+            actx.decodeAudioData(e.target.result.slice(0), function(buffer) {
+                trimState.buffer = buffer;
+                trimState.duration = buffer.duration;
+                trimState.selStart = 0;
+                trimState.selEnd = Math.min(30, buffer.duration);
+
+                document.getElementById('duration').value = formatDuration(buffer.duration);
+                document.getElementById('durationHidden').value = formatDuration(buffer.duration);
+
+                updateHiddenFields();
+                computeWaveform();
+                loading.style.display = 'none';
+                content.style.display = '';
+                initCanvas();
+                drawTrimmer();
+                actx.close();
+            }, function(err) {
+                loading.innerHTML = '<i class="fas fa-exclamation-triangle" style="color:#ef4444;"></i> Could not decode audio file.';
+                console.error('Audio decode error:', err);
+                actx.close();
+            });
+        };
+        reader.readAsArrayBuffer(file);
+    };
+
+    function initCanvas() {
+        var wrapper = document.getElementById('trimmerCanvasWrapper');
+        var canvas = document.getElementById('trimmerCanvas');
+        var dpr = window.devicePixelRatio || 1;
+        var w = wrapper.clientWidth;
+        var h = trimState.height;
+
+        canvas.width = w * dpr;
+        canvas.height = h * dpr;
+        canvas.style.width = w + 'px';
+        canvas.style.height = h + 'px';
+
+        trimState.canvas = canvas;
+        trimState.ctx = canvas.getContext('2d');
+        trimState.ctx.scale(dpr, dpr);
+        trimState.width = w;
+    }
+
+    function computeWaveform() {
+        var data = trimState.buffer.getChannelData(0);
+        var w = trimState.width;
+        var numBars = Math.floor(w / (BAR_W + BAR_GAP));
+        var step = Math.ceil(data.length / numBars);
+        var peaks = [];
+
+        for (var i = 0; i < numBars; i++) {
+            var peak = 0;
+            var start = i * step;
+            for (var j = 0; j < step && (start + j) < data.length; j++) {
+                var v = Math.abs(data[start + j]);
+                if (v > peak) peak = v;
+            }
+            peaks.push(peak);
+        }
+        trimState.waveform = peaks;
+    }
+
+    function drawTrimmer() {
+        var ts = trimState;
+        var ctx = ts.ctx;
+        var w = ts.width;
+        var h = ts.height;
+        var peaks = ts.waveform;
+        var dur = ts.duration;
+
+        if (!ctx || !peaks.length) return;
+
+        ctx.clearRect(0, 0, w, h);
+
+        var maxPeak = 0.01;
+        for (var i = 0; i < peaks.length; i++) {
+            if (peaks[i] > maxPeak) maxPeak = peaks[i];
+        }
+
+        var startPx = (ts.selStart / dur) * w;
+        var endPx   = (ts.selEnd / dur) * w;
+
+        ctx.fillStyle = 'rgba(201, 174, 116, 0.06)';
+        ctx.fillRect(startPx, 0, endPx - startPx, h);
+
+        for (var i = 0; i < peaks.length; i++) {
+            var x = i * (BAR_W + BAR_GAP);
+            var barH = Math.max(2, (peaks[i] / maxPeak) * (h * 0.82));
+            var y = (h - barH) / 2;
+            var inSel = (x + BAR_W) >= startPx && x <= endPx;
+
+            ctx.fillStyle = inSel ? 'rgba(201, 174, 116, 0.85)' : 'rgba(201, 174, 116, 0.2)';
+            ctx.fillRect(x, y, BAR_W, barH);
+        }
+
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+        ctx.fillRect(0, 0, startPx, h);
+        ctx.fillRect(endPx, 0, w - endPx, h);
+
+        drawHandle(ctx, startPx, h);
+        drawHandle(ctx, endPx, h);
+
+        document.getElementById('trimStartTime').textContent = formatTime(ts.selStart);
+        document.getElementById('trimEndTime').textContent = formatTime(ts.selEnd);
+        document.getElementById('trimDuration').textContent = formatTime(ts.selEnd - ts.selStart);
+    }
+
+    function drawHandle(ctx, x, h) {
+        var hw = 5;
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(x - hw / 2, 0, hw, h);
+
+        ctx.fillStyle = 'rgba(0,0,0,0.4)';
+        for (var i = -1; i <= 1; i++) {
+            ctx.beginPath();
+            ctx.arc(x, h / 2 + i * 8, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    function getCanvasX(e) {
+        var rect = trimState.canvas.getBoundingClientRect();
+        return Math.max(0, Math.min(rect.width, e.clientX - rect.left));
+    }
+
+    function onTrimDown(e) {
+        var ts = trimState;
+        var x = getCanvasX(e);
+        var w = ts.canvas.getBoundingClientRect().width;
+        var startPx = (ts.selStart / ts.duration) * w;
+        var endPx   = (ts.selEnd / ts.duration) * w;
+
+        if (Math.abs(x - startPx) < HANDLE_HIT) {
+            ts.dragType = 'start';
+        } else if (Math.abs(x - endPx) < HANDLE_HIT) {
+            ts.dragType = 'end';
+        } else if (x > startPx && x < endPx) {
+            ts.dragType = 'selection';
+            ts.dragOffset = x - startPx;
+        }
+    }
+
+    function onTrimMove(e) {
+        var ts = trimState;
+        if (!ts.dragType) return;
+
+        var x = getCanvasX(e);
+        var w = ts.canvas.getBoundingClientRect().width;
+        var time = (x / w) * ts.duration;
+
+        if (ts.dragType === 'start') {
+            ts.selStart = Math.max(0, Math.min(time, ts.selEnd - 0.5));
+        } else if (ts.dragType === 'end') {
+            ts.selEnd = Math.min(ts.duration, Math.max(time, ts.selStart + 0.5));
+        } else if (ts.dragType === 'selection') {
+            var selDur = ts.selEnd - ts.selStart;
+            var newStart = ((x - ts.dragOffset) / w) * ts.duration;
+            newStart = Math.max(0, Math.min(ts.duration - selDur, newStart));
+            ts.selStart = newStart;
+            ts.selEnd = newStart + selDur;
+        }
+
+        updateHiddenFields();
+        drawTrimmer();
+    }
+
+    function onTrimUp() {
+        trimState.dragType = null;
+    }
+
+    function updateHiddenFields() {
+        document.getElementById('previewStart').value = trimState.selStart.toFixed(2);
+        document.getElementById('previewEnd').value = trimState.selEnd.toFixed(2);
+    }
+
+    function initTrimmerEvents() {
+        var canvas = document.getElementById('trimmerCanvas');
+
+        canvas.addEventListener('mousedown', function(e) { onTrimDown(e); });
+        document.addEventListener('mousemove', function(e) { onTrimMove(e); });
+        document.addEventListener('mouseup', function() { onTrimUp(); });
+
+        canvas.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            onTrimDown(e.touches[0]);
+        }, { passive: false });
+        document.addEventListener('touchmove', function(e) {
+            if (trimState.dragType) {
+                e.preventDefault();
+                onTrimMove(e.touches[0]);
+            }
+        }, { passive: false });
+        document.addEventListener('touchend', function() { onTrimUp(); });
+    }
+
+    window.togglePreview = function() {
+        if (trimState.isPlaying) {
+            stopPreview();
+        } else {
+            playPreview();
+        }
+    };
+
+    function playPreview() {
+        var ts = trimState;
+        if (!ts.buffer) return;
+
+        var AudioCtx = window.AudioContext || window.webkitAudioContext;
+        var ctx = new AudioCtx();
+        var source = ctx.createBufferSource();
+        source.buffer = ts.buffer;
+        source.connect(ctx.destination);
+
+        var dur = ts.selEnd - ts.selStart;
+        source.start(0, ts.selStart, dur);
+
+        ts.isPlaying = true;
+        ts.playSource = source;
+        ts.playCtx = ctx;
+        updatePlayBtn();
+
+        source.onended = function() {
+            ts.isPlaying = false;
+            ts.playSource = null;
+            try { ctx.close(); } catch(e) {}
+            ts.playCtx = null;
+            updatePlayBtn();
+        };
+    }
+
+    function stopPreview() {
+        var ts = trimState;
+        if (ts.playSource) {
+            try { ts.playSource.stop(); } catch(e) {}
+        }
+        if (ts.playCtx) {
+            try { ts.playCtx.close(); } catch(e) {}
+        }
+        ts.isPlaying = false;
+        ts.playSource = null;
+        ts.playCtx = null;
+        updatePlayBtn();
+    }
+
+    function updatePlayBtn() {
+        var btn = document.getElementById('trimPlayBtn');
+        if (trimState.isPlaying) {
+            btn.innerHTML = '<i class="fas fa-stop"></i> Stop';
+        } else {
+            btn.innerHTML = '<i class="fas fa-play"></i> Preview Selection';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var typeSelect = document.getElementById('product_type');
+        var type = typeSelect ? typeSelect.value : 'beat';
+        if (!type || type === '') type = 'beat';
+        toggleTypeFields(type);
+
+        initTrimmerEvents();
+
+        var resizeTimer;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(function() {
+                if (trimState.buffer && trimState.canvas) {
+                    initCanvas();
+                    computeWaveform();
+                    drawTrimmer();
+                }
+            }, 250);
+        });
+    });
+
+})();
+</script>
+{% endblock %}

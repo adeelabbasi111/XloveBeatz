@@ -1,0 +1,139 @@
+<div class="account-modal-overlay" id="accountModalOverlay"></div>
+<aside class="account-modal" id="accountModal">
+    <div class="account-modal-header">
+        <div class="account-modal-profile">
+            <div class="account-avatar" id="accountAvatar">
+                <i class="fas fa-user-circle"></i>
+            </div>
+            <div class="account-info">
+                <h3 id="accountModalUsername">Guest</h3>
+                <p id="accountModalEmail">Sign in to access your account</p>
+            </div>
+        </div>
+        <button class="account-modal-close" id="closeAccountModalBtn">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <div class="account-modal-tabs">
+        <button class="account-tab-btn active" data-atab="products">
+            <i class="fas fa-box"></i> Products
+        </button>
+        <button class="account-tab-btn" data-atab="licenses">
+            <i class="fas fa-file-contract"></i> Licenses
+        </button>
+        <button class="account-tab-btn" data-atab="settings">
+            <i class="fas fa-cog"></i> Settings
+        </button>
+    </div>
+
+    <div class="account-modal-content">
+
+        {# ── Products Tab ── #}
+        <div class="account-tab-content active" id="atab-products">
+            <div class="account-tab-header">
+                <h4>My Products</h4>
+                <span class="product-count" id="productCount">—</span>
+            </div>
+            <div class="products-list" id="productsList">
+                <div class="loading-state">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Loading...</p>
+                </div>
+            </div>
+            <div class="guest-state" id="productsGuestState" style="display:none">
+                <div class="guest-icon"><i class="fas fa-lock"></i></div>
+                <p>Sign in to view your purchased products</p>
+                <button class="guest-action-btn primary" id="guestLoginFromProducts">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+            </div>
+        </div>
+
+        {# ── Licenses Tab ── #}
+        <div class="account-tab-content" id="atab-licenses">
+            <div class="account-tab-header">
+                <h4>My Licenses</h4>
+                <span class="license-count" id="licenseCount">—</span>
+            </div>
+            <div class="licenses-list" id="licensesList">
+                <div class="loading-state">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Loading...</p>
+                </div>
+            </div>
+            <div class="guest-state" id="licensesGuestState" style="display:none">
+                <div class="guest-icon"><i class="fas fa-lock"></i></div>
+                <p>Sign in to view your licenses</p>
+                <button class="guest-action-btn primary" id="guestLoginFromLicenses">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+            </div>
+        </div>
+
+        {# ── Settings Tab ── #}
+        <div class="account-tab-content" id="atab-settings">
+            <div class="settings-section" id="settingsLoggedIn" style="display:none">
+
+                {# ── View Profile ── #}
+                <h4>Account Details</h4>
+                <div class="settings-card">
+                    <div class="profile-row">
+                        <span class="profile-label">Username</span>
+                        <span class="profile-value" id="settingsUsername">-</span>
+                    </div>
+                    <div class="profile-row">
+                        <span class="profile-label">Email</span>
+                        <span class="profile-value" id="settingsEmail">-</span>
+                    </div>
+                    <div class="profile-row">
+                        <span class="profile-label">Member Since</span>
+                        <span class="profile-value" id="settingsJoined">-</span>
+                    </div>
+                </div>
+
+                {# ── Edit Profile ── #}
+                <h4 style="margin-top:1.5rem;">Edit Profile</h4>
+                <div class="settings-card">
+                    <div id="profileError" style="display:none;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);color:#ef4444;padding:10px 14px;border-radius:10px;font-size:0.85rem;margin-bottom:14px;"></div>
+                    <div id="profileSuccess" style="display:none;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);color:#10b981;padding:10px 14px;border-radius:10px;font-size:0.85rem;margin-bottom:14px;"></div>
+
+                    <div style="margin-bottom:14px;">
+                        <label style="display:block;font-size:0.75rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px;">Username</label>
+                        <input type="text" id="editUsername" placeholder="Enter new username"
+                               style="width:100%;padding:12px 16px;background:var(--bg-deep);border:1px solid var(--border-light);border-radius:12px;color:var(--text-primary);font-size:0.9rem;font-family:inherit;outline:none;transition:border-color 0.2s,box-shadow 0.2s;box-sizing:border-box;">
+                    </div>
+                    <div style="margin-bottom:18px;">
+                        <label style="display:block;font-size:0.75rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px;">Email</label>
+                        <input type="email" id="editEmail" placeholder="Enter new email"
+                               style="width:100%;padding:12px 16px;background:var(--bg-deep);border:1px solid var(--border-light);border-radius:12px;color:var(--text-primary);font-size:0.9rem;font-family:inherit;outline:none;transition:border-color 0.2s,box-shadow 0.2s;box-sizing:border-box;">
+                    </div>
+                    <button id="saveProfileBtn"
+                            style="width:100%;padding:13px 20px;background:linear-gradient(135deg,var(--accent-soft),var(--accent-purple));color:#fff;border:none;border-radius:14px;font-weight:700;font-size:0.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform 0.2s,box-shadow 0.2s;font-family:inherit;">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </div>
+
+                <button class="logout-btn" id="logoutBtn">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+
+            <div class="settings-section" id="settingsGuest">
+                <div class="guest-state compact">
+                    <div class="guest-icon"><i class="fas fa-user-circle"></i></div>
+                    <p>You are currently browsing as a guest</p>
+                    <div class="guest-actions">
+                        <button class="guest-action-btn primary" id="guestLoginFromSettings">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </button>
+                        <button class="guest-action-btn secondary" id="guestSignupFromSettings">
+                            <i class="fas fa-user-plus"></i> Sign Up
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</aside>

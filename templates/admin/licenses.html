@@ -1,0 +1,90 @@
+{% extends 'admin/base.html' %}
+
+{% block admin_title %}Generated Licenses{% endblock %}
+{% block page_heading %}Generated Licenses{% endblock %}
+
+{% block content %}
+{% if licenses %}
+<div class="data-table-wrapper">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Order</th>
+                <th>Buyer</th>
+                <th>Beat</th>
+                <th>License Type</th>
+                <th>PDF</th>
+                <th>Generated</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for lic in licenses %}
+            <tr>
+                <td>#{{ lic.id }}</td>
+                <td>
+                    {% if lic.order_item and lic.order_item.order %}
+                    <a href="{{ url_for('admin.admin_order_detail', order_id=lic.order_item.order.id) }}" style="color:var(--admin-accent);">
+                        Order #{{ lic.order_item.order.id }}
+                    </a>
+                    {% else %}—{% endif %}
+                </td>
+                <td>{{ lic.buyer_name or '—' }}</td>
+                <td>{{ lic.beat_name or '—' }}</td>
+                <td><span class="type-badge type-beat">{{ lic.license_type or '—' }}</span></td>
+                <td>
+                    {% if lic.pdf_path %}
+                    <a href="{{ url_for('static', filename='uploads/' + lic.pdf_path) }}" class="btn-icon" target="_blank" title="View PDF">
+                        <i class="fas fa-file-pdf"></i>
+                    </a>
+                    {% else %}
+                    <span class="text-muted">No PDF</span>
+                    {% endif %}
+                </td>
+                <td>
+    {% if lic.pdf_path %}
+    <a href="{{ url_for('admin.admin_license_download', lic_id=lic.id) }}"
+       class="btn-icon" title="Download PDF">
+        <i class="fas fa-download"></i>
+    </a>
+    <a href="{{ url_for('admin.admin_license_download', lic_id=lic.id) }}"
+       class="btn-icon" target="_blank" title="View PDF">
+        <i class="fas fa-file-pdf"></i>
+    </a>
+    {% else %}
+    <span class="text-muted">No PDF</span>
+    {% endif %}
+</td>
+                <td class="text-muted">{{ lic.generated_at.strftime('%d %b %Y') if lic.generated_at else '' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if pagination and pagination.pages > 1 %}
+<div class="pagination" style="margin-top:1.5rem; display:flex; justify-content:center; gap:0.5rem;">
+    {% if pagination.has_prev %}
+    <a href="{{ url_for('admin.admin_licenses', page=pagination.prev_num) }}" class="btn btn-secondary">« Prev</a>
+    {% endif %}
+    {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+        {% if page_num %}
+        <a href="{{ url_for('admin.admin_licenses', page=page_num) }}" class="btn {% if page_num == pagination.page %}btn-primary{% else %}btn-secondary{% endif %}">{{ page_num }}</a>
+        {% else %}
+        <span class="btn btn-secondary" style="opacity:0.3;">…</span>
+        {% endif %}
+    {% endfor %}
+    {% if pagination.has_next %}
+    <a href="{{ url_for('admin.admin_licenses', page=pagination.next_num) }}" class="btn btn-secondary">Next »</a>
+    {% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="no-data" style="padding:3rem;">
+    <i class="fas fa-file-pdf" style="font-size:3rem; display:block; margin-bottom:1rem; opacity:0.3;"></i>
+    <p>No license PDFs generated yet.</p>
+    <p class="text-muted" style="margin-top:0.5rem;">Licenses are generated when exclusive beats are purchased.</p>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,82 @@
+{% extends 'admin/base.html' %}
+
+{% block admin_title %}Analytics{% endblock %}
+{% block page_heading %}Analytics{% endblock %}
+
+{% block content %}
+<div class="analytics-grid">
+    {# ─── MONTHLY REVENUE ─── #}
+    <div class="analytics-card">
+        <h3><i class="fas fa-chart-line"></i> Monthly Revenue (Last 6 Months)</h3>
+        <div class="chart-container">
+            {% if monthly_revenue %}
+            <table class="data-table">
+                <thead>
+                    <tr><th>Month</th><th>Revenue</th><th>Visual</th></tr>
+                </thead>
+                <tbody>
+                    {% set max_rev = monthly_revenue | map(attribute=1) | map('int') | max %}
+                    {% for month, total in monthly_revenue %}
+                    <tr>
+                        <td><strong>{{ month }}</strong></td>
+                        <td style="color:#C9AE74; font-weight:700;">{{ total | int | rupees }}</td>
+                        <td style="width:50%;">
+                            <div style="background:linear-gradient(135deg, #a855f7, #ec4899); height:12px; border-radius:6px; width:{{ ((total | int) / max_rev * 100) if max_rev > 0 else 0 }}%; min-width:4px;"></div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="no-data"><i class="fas fa-chart-line"></i><br>No revenue data yet.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    {# ─── TOP SELLING PRODUCTS ─── #}
+    <div class="analytics-card">
+        <h3><i class="fas fa-trophy"></i> Top Selling Products</h3>
+        <div class="chart-container">
+            {% if top_products %}
+            <table class="data-table">
+                <thead>
+                    <tr><th>#</th><th>Product</th><th>Sales</th></tr>
+                </thead>
+                <tbody>
+                    {% for name, sold in top_products %}
+                    <tr>
+                        <td><strong>{{ loop.index }}</strong></td>
+                        <td>{{ name }}</td>
+                        <td><span class="status-badge status-paid">{{ sold }} sold</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="no-data"><i class="fas fa-trophy"></i><br>No sales data yet.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    {# ─── GENRE DISTRIBUTION ─── #}
+    <div class="analytics-card">
+        <h3><i class="fas fa-guitar"></i> Genre Distribution</h3>
+        <div class="chart-container">
+            {% if genre_stats %}
+            {% set max_count = genre_stats | map(attribute=1) | max %}
+            {% for genre, count in genre_stats %}
+            <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1rem;">
+                <span style="width:100px; font-weight:600; font-size:0.9rem;">{{ genre }}</span>
+                <div style="flex:1; background:rgba(255,255,255,0.03); border-radius:6px; height:20px; overflow:hidden;">
+                    <div style="background:linear-gradient(135deg, #a855f7, #3b82f6); height:100%; width:{{ (count / max_count * 100) if max_count > 0 else 0 }}%; border-radius:6px; transition: width 0.5s;"></div>
+                </div>
+                <span style="color:#a0a0a0; font-size:0.85rem; min-width:30px; text-align:right;">{{ count }}</span>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="no-data"><i class="fas fa-guitar"></i><br>No beats added yet.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

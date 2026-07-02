@@ -1,0 +1,260 @@
+{% extends 'base.html' %}
+
+{% block page_title %}{{ site_title }} • Modern Producer Studio{% endblock %}
+
+{% set show_public_nav = true %}
+{% set active_page = 'home' %}
+
+{% block head_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+{% endblock %}
+
+{% block content %}
+<main>
+    {# ============ HERO ============ #}
+    <section class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title-spicy">XLOVEBEATZ</h1>
+            <p class="hero-slogan">{{ slogan }}</p>
+            <div class="hero-cta">
+                <a href="#beat-packs" class="cta-btn magnetic-btn">
+                    <i class="fas fa-play"></i> Explore Beats
+                </a>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="hero-visual-wrapper">
+                <img src="{{ url_for('static', filename='images/hero.jpg') }}"
+                     alt="Hero Art" class="hero-image"
+                     onerror="this.style.display='none'"
+                     loading="lazy">
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    {# ============ MAIN TABS ============ #}
+    <section class="main-container">
+        <div class="tabs-nav">
+            <button class="tab-btn active magnetic-btn" data-tab="beat-packs">Beat Packs</button>
+            <a href="{{ url_for('public.player_page') }}">
+                <button class="tab-btn magnetic-btn" data-tab="beats">Singles</button>
+            </a>
+            <button class="tab-btn magnetic-btn" data-tab="vocal-presets">Vocal Presets</button>
+        </div>
+
+        {# Trust Badges #}
+        <div class="trust-strip reveal-on-scroll">
+            <div class="trust-badge"><i class="fas fa-shield-alt"></i> Secure Checkout</div>
+            <div class="trust-badge"><i class="fas fa-bolt"></i> Instant Delivery</div>
+            <div class="trust-badge"><i class="fas fa-infinity"></i> Unlimited Licenses</div>
+            <div class="trust-badge"><i class="fas fa-headphones"></i> 24/7 Support</div>
+        </div>
+
+        {# ---- BEAT PACKS TAB ---- #}
+        <div id="beat-packs" class="tab-content active">
+            <div class="grid">
+                {% for pack in beat_packs %}
+                <div class="card reveal-on-scroll reveal-stagger-{{ (loop.index - 1) % 3 + 1 }}"
+                     data-product-id="{{ pack.id }}"
+                     data-product-name="{{ pack.name }}"
+                     data-product-price="{{ pack.price_cents / 100 }}"
+                     data-product-type="pack">
+                    <div class="card-image-wrapper skeleton">
+                        {% if pack.cover_image %}
+                        <img src="{{ url_for('static', filename=pack.cover_image) }}"
+                             alt="{{ pack.name }}" class="card-img"
+                             onerror="this.style.display='none'; this.parentElement.classList.remove('skeleton')"
+                             onload="this.parentElement.classList.remove('skeleton')"
+                             loading="lazy">
+                        {% else %}
+                        <img src="{{ url_for('static', filename='data/images/' + pack.slug + '_cover.png') }}"
+                             alt="{{ pack.name }}" class="card-img"
+                             onerror="this.style.display='none'; this.parentElement.classList.remove('skeleton')"
+                             onload="this.parentElement.classList.remove('skeleton')"
+                             loading="lazy">
+                        {% endif %}
+                    </div>
+                    <div class="card-content">
+                        <h3 class="card-title">{{ pack.name }}</h3>
+                        <div class="card-meta">
+                            <span class="genre-tag">{{ pack.beat_pack.genre if pack.beat_pack else 'Various' }}</span>
+                            <span class="price">{{ pack.price_cents | rupees }}</span>
+                        </div>
+                        <p class="card-desc">{{ pack.description }}</p>
+                        <div class="card-actions">
+                            <a href="{{ url_for('public.player_page', pack_id=pack.id) }}" class="explore-btn magnetic-btn">
+                                Explore Pack
+                            </a>
+                            <div class="button-group">
+                                <button class="card-btn add-to-cart magnetic-btn js-add-to-cart">
+                                    <i class="fas fa-shopping-cart"></i> Add
+                                </button>
+                                <button class="card-btn buy-now magnetic-btn js-buy-now">
+                                    <i class="fas fa-bolt"></i> Buy
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        {# ---- SINGLES TAB — simple redirect to player page ---- #}
+        <div id="beats" class="tab-content">
+            <div class="singles-redirect" style="text-align:center; padding:4rem 2rem;">
+                <div style="margin-bottom:1.5rem;">
+                    <i class="fas fa-music" style="font-size:3rem; color:var(--accent, #C9AE74); opacity:0.6;"></i>
+                </div>
+                <h3 style="font-size:1.4rem; margin-bottom:0.75rem; color:#f0ece4;">Browse All Singles</h3>
+                <p style="color:#7a7570; font-size:0.9rem; margin-bottom:2rem; max-width:400px; margin-left:auto; margin-right:auto;">
+                    Explore our full catalog of individual beats. Filter by genre, BPM, key, and more.
+                </p>
+                <a href="{{ url_for('public.player_page') }}" class="explore-btn magnetic-btn" style="display:inline-flex; align-items:center; gap:0.5rem;">
+                    <i class="fas fa-headphones"></i> Open Player
+                </a>
+            </div>
+        </div>
+
+        {# ---- VOCAL PRESETS TAB ---- #}
+        <div id="vocal-presets" class="tab-content">
+            <div class="grid">
+                {% for preset in vocal_presets %}
+                <div class="card reveal-on-scroll reveal-stagger-{{ (loop.index - 1) % 3 + 1 }}"
+                     data-product-id="{{ preset.id }}"
+                     data-product-name="{{ preset.name }}"
+                     data-product-price="{{ preset.price_cents / 100 }}"
+                     data-product-type="preset">
+                    <div class="card-image-wrapper skeleton">
+                        {% if preset.cover_image %}
+                        <img src="{{ url_for('static', filename=preset.cover_image) }}"
+                             alt="{{ preset.name }}" class="card-img"
+                             onerror="this.style.display='none'; this.parentElement.classList.remove('skeleton')"
+                             onload="this.parentElement.classList.remove('skeleton')"
+                             loading="lazy">
+                        {% else %}
+                        <img src="{{ url_for('static', filename='data/images/' + preset.slug + '_cover.jpg') }}"
+                             alt="{{ preset.name }}" class="card-img"
+                             onerror="this.style.display='none'; this.parentElement.classList.remove('skeleton')"
+                             onload="this.parentElement.classList.remove('skeleton')"
+                             loading="lazy">
+                        {% endif %}
+                    </div>
+                    <div class="card-content">
+                        <h3 class="card-title">{{ preset.name }}</h3>
+                        <div class="card-meta">
+                            <span class="genre-tag">{{ preset.vocal_preset.supported_daw if preset.vocal_preset else 'All DAWs' }}</span>
+                            <span class="price">{{ preset.price_cents | rupees }}</span>
+                        </div>
+                        <p class="card-desc">{{ preset.description }}</p>
+                        <div class="card-actions">
+                            <a href="{{ url_for('public.preset_detail', preset_id=preset.id) }}" class="explore-btn magnetic-btn">
+                                Know More
+                            </a>
+                            <div class="button-group">
+                                <button class="card-btn add-to-cart magnetic-btn js-add-to-cart">
+                                    <i class="fas fa-shopping-cart"></i> Add
+                                </button>
+                                <button class="card-btn buy-now magnetic-btn js-buy-now">
+                                    <i class="fas fa-bolt"></i> Buy
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    {# ============ TESTIMONIALS ============ #}
+    <section class="testimonials-section reveal-on-scroll">
+        <h2 class="contact-title">Trusted by Artists Worldwide</h2>
+        <p class="contact-subtitle">Join thousands of artists elevating their sound.</p>
+        <div class="testimonials-grid">
+            <div class="testimonial-card">
+                <p class="testimonial-quote">"The quality of these beats is insane. I landed a placement with a major label using the Midnight Trap pack. Instant download, no hassle."</p>
+                <div class="testimonial-author">
+                    <div class="testimonial-avatar">RK</div>
+                    <div>
+                        <div class="testimonial-name">Rohan K.</div>
+                        <div class="testimonial-role">Producer, Mumbai</div>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-card">
+                <p class="testimonial-quote">"XLOVEBEATS vocal presets saved me hours of mixing. My vocals sit perfectly in the mix now. Worth every rupee and then some."</p>
+                <div class="testimonial-author">
+                    <div class="testimonial-avatar">AS</div>
+                    <div>
+                        <div class="testimonial-name">Aisha S.</div>
+                        <div class="testimonial-role">Independent Artist</div>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-card">
+                <p class="testimonial-quote">"Clean licensing, professional stems, and the customer support is top tier. This is my go-to beat store now."</p>
+                <div class="testimonial-author">
+                    <div class="testimonial-avatar">DJ</div>
+                    <div>
+                        <div class="testimonial-name">Dev J.</div>
+                        <div class="testimonial-role">Beatmaker, Delhi</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    {# ============ CONTACT ============ #}
+    <section class="contact-section" id="contact">
+        <h2 class="contact-title">connect &middot; create &middot; elevate</h2>
+        <p class="contact-subtitle">collaborations, licensing, or custom sound design — let's talk.</p>
+        <div class="social-grid">
+            <a href="{{ get_site_setting('instagram_url', '#') }}" class="social-card magnetic-btn" target="_blank" rel="noopener">
+                <div class="social-icon"><i class="fab fa-instagram"></i></div>
+                <span>@xlovebeatz</span>
+            </a>
+            <a href="{{ get_site_setting('spotify_url', '#') }}" class="social-card magnetic-btn" target="_blank" rel="noopener">
+                <div class="social-icon"><i class="fab fa-spotify"></i></div>
+                <span>Spotify</span>
+            </a>
+            <a href="{{ get_site_setting('youtube_url', '#') }}" class="social-card magnetic-btn" target="_blank" rel="noopener">
+                <div class="social-icon"><i class="fab fa-youtube"></i></div>
+                <span>YouTube</span>
+            </a>
+        </div>
+        <a href="https://wa.me/{{ get_site_setting('whatsapp_number', '1234567890') }}"
+           class="whatsapp-float" id="whatsappFloat" target="_blank" rel="noopener">
+            <i class="fab fa-whatsapp"></i>
+            <span class="whatsapp-tooltip">Chat on WhatsApp</span>
+        </a>
+    </section>
+</main>
+{% endblock %}
+
+{% block page_scripts %}
+<script src="{{ url_for('static', filename='js/index.js') }}"></script>
+<script>
+    // Event delegation for cart buttons (replaces inline onclick with XSS risk)
+    document.addEventListener('click', function(e) {
+        var card = e.target.closest('.card[data-product-id]');
+        if (!card) return;
+
+        var product = {
+            id: parseInt(card.dataset.productId),
+            name: card.dataset.productName,
+            price: parseFloat(card.dataset.productPrice),
+            type: card.dataset.productType
+        };
+
+        if (e.target.closest('.js-add-to-cart')) {
+            addToGlobalCart(product);
+        } else if (e.target.closest('.js-buy-now')) {
+            addToGlobalCart(product, true);
+        }
+    });
+</script>
+{% endblock %}

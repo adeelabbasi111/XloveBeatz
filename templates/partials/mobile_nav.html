@@ -1,0 +1,27 @@
+<nav class="mobile-bottom-nav">
+    <a href="{{ url_for('public.player_page') }}" class="mobile-nav-item" data-page="beats">
+        <div class="mobile-nav-icon-wrap"><i class="fas fa-music"></i></div>
+        <span>Beats</span>
+    </a>
+    <a href="{{ url_for('public.home') }}#beat-packs" class="mobile-nav-item" data-page="packs">
+        <div class="mobile-nav-icon-wrap"><i class="fas fa-compact-disc"></i></div>
+        <span>Packs</span>
+    </a>
+    <button class="mobile-nav-item mobile-account-btn" id="mobileAccountBtn">
+        <div class="mobile-nav-icon-wrap account-circle">
+            <i class="fas fa-user-circle"></i>
+        </div>
+        <span>Account</span>
+    </button>
+    <a href="{{ url_for('public.home') }}#vocal-presets" class="mobile-nav-item" data-page="presets">
+        <div class="mobile-nav-icon-wrap"><i class="fas fa-sliders-h"></i></div>
+        <span>Presets</span>
+    </a>
+<button class="mobile-nav-item" id="mobileCartBtn">
+    <div class="mobile-nav-icon-wrap">
+        <i class="fas fa-shopping-cart"></i>
+        <span class="mobile-cart-badge" id="mobileCartCount" style="display:none;">0</span>
+    </div>
+    <span>Cart</span>
+</button>
+</nav>

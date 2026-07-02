@@ -1,0 +1,42 @@
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Environment and secrets
+.env
+.env.*
+*.env
+instance/*.py
+instance/*
+
+# Database and local data
+*.sqlite
+*.sqlite3
+*.db
+*.log
+
+# Flask / app uploads and generated files
+static/uploads/
+static/data/
+static/images/
+instance/
+
+# IDE/editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db

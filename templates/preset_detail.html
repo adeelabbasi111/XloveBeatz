@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ preset.name }} — XLoveBeatz{% endblock %}
+
+{% block content %}
+<section style="padding:6rem 2rem; text-align:center;">
+    <h1>{{ preset.name }}</h1>
+    <p style="color:#7a7570; margin-top:1rem;">Preset detail page coming soon.</p>
+    <a href="{{ url_for('public.home') }}" style="color:#C9AE74; margin-top:2rem; display:inline-block;">
+        &larr; Back to Home
+    </a>
+</section>
+{% endblock %}

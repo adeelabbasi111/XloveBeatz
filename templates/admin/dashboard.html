@@ -1,0 +1,100 @@
+{% extends 'admin/base.html' %}
+
+{% block admin_title %}Dashboard{% endblock %}
+{% block page_heading %}Dashboard{% endblock %}
+
+{% block content %}
+{# ─── STATS ─── #}
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon revenue"><i class="fas fa-rupee-sign"></i></div>
+        <div class="stat-info">
+            <div class="stat-value">{{ stats.total_revenue_cents | rupees }}</div>
+            <div class="stat-label">Total Revenue</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon orders"><i class="fas fa-shopping-bag"></i></div>
+        <div class="stat-info">
+            <div class="stat-value">{{ stats.total_orders }}</div>
+            <div class="stat-label">Total Orders ({{ stats.paid_orders }} paid)</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon products"><i class="fas fa-music"></i></div>
+        <div class="stat-info">
+            <div class="stat-value">{{ stats.total_products }}</div>
+            <div class="stat-label">{{ stats.total_beats }} Beats · {{ stats.total_packs }} Packs · {{ stats.total_presets }} Presets</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon users"><i class="fas fa-users"></i></div>
+        <div class="stat-info">
+            <div class="stat-value">{{ stats.total_users }}</div>
+            <div class="stat-label">Registered Users · {{ stats.total_downloads }} Downloads</div>
+        </div>
+    </div>
+</div>
+
+{# ─── RECENT ORDERS + ACTIVITY ─── #}
+<div class="dashboard-grid">
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h3>Recent Orders</h3>
+            <a href="{{ url_for('admin.admin_orders') }}" class="view-all">View All</a>
+        </div>
+        <div class="card-body">
+            {% if recent_orders %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Order</th>
+                        <th>Customer</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in recent_orders %}
+                    <tr>
+                        <td><a href="{{ url_for('admin.admin_order_detail', order_id=order.id) }}" style="color: var(--accent);">#{{ order.id }}</a></td>
+                        <td>{{ order.user.username if order.user else (order.email or 'Guest') }}</td>
+                        <td>{{ order.total_cents | rupees }}</td>
+                        <td><span class="status-badge status-{{ order.payment_status }}">{{ order.payment_status }}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="text-muted">No orders yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h3>Recent Activity</h3>
+            <a href="{{ url_for('admin.admin_logs') }}" class="view-all">View All</a>
+        </div>
+        <div class="card-body">
+            {% if recent_activities %}
+            <div class="activity-list">
+                {% for log in recent_activities %}
+                <div class="activity-item">
+                    <div class="activity-icon">
+                        <i class="fas fa-{% if log.action == 'create' %}plus{% elif log.action == 'update' %}edit{% elif log.action == 'delete' %}trash{% else %}cog{% endif %}"></i>
+                    </div>
+                    <div class="activity-info">
+                        <div class="activity-text">{{ log.details }}</div>
+                        <div class="activity-time">{{ log.created_at.strftime('%d %b %Y, %I:%M %p') if log.created_at else '' }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-muted">No activity yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

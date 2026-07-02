@@ -1,0 +1,93 @@
+{% extends 'admin/base.html' %}
+
+{% block admin_title %}Users{% endblock %}
+{% block page_heading %}Users{% endblock %}
+
+{% block content %}
+<div class="data-table-wrapper">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>User</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Orders</th>
+                <th>Last Login</th>
+                <th>Joined</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td class="text-muted">{{ loop.index + ((pagination.page - 1) * pagination.per_page) }}</td>
+
+                <td>
+                    <strong>{{ user.username or 'Unknown' }}</strong>
+                </td>
+
+                <td class="text-muted">{{ user.email or '—' }}</td>
+
+                <td>
+                    {% if user.is_admin %}
+                        <span style="color:#C9AE74; font-weight:600;">
+                            <i class="fas fa-shield-halved"></i> Admin
+                        </span>
+                    {% else %}
+                        <span style="color:var(--text-muted);">User</span>
+                    {% endif %}
+                </td>
+
+                <td class="text-muted">
+                    {{ order_counts.get(user.id, 0) }}
+                </td>
+
+                <td class="text-muted">
+                    {{ user.last_login.strftime('%d %b %Y, %I:%M %p') if user.last_login else 'Never' }}
+                </td>
+
+                <td class="text-muted">
+                    {{ user.created_at.strftime('%d %b %Y') if user.created_at else '—' }}
+                </td>
+
+                <td>
+                    <a href="{{ url_for('admin.admin_user_detail', user_id=user.id) }}"
+                       class="btn btn-secondary btn-sm" title="View Details">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="8" style="text-align:center; padding:2rem; color:var(--text-muted);">
+                    <i class="fas fa-users" style="font-size:1.5rem; display:block; margin-bottom:0.5rem;"></i>
+                    No users found.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if pagination and pagination.pages > 1 %}
+<div class="pagination" style="margin-top:1.5rem; display:flex; justify-content:center; gap:0.5rem;">
+    {% if pagination.has_prev %}
+    <a href="{{ url_for('admin.admin_users', page=pagination.prev_num) }}" class="btn btn-secondary">« Prev</a>
+    {% endif %}
+    {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+        {% if page_num %}
+        <a href="{{ url_for('admin.admin_users', page=page_num) }}"
+           class="btn {% if page_num == pagination.page %}btn-primary{% else %}btn-secondary{% endif %}">
+            {{ page_num }}
+        </a>
+        {% else %}
+        <span class="btn btn-secondary" style="opacity:0.3;">…</span>
+        {% endif %}
+    {% endfor %}
+    {% if pagination.has_next %}
+    <a href="{{ url_for('admin.admin_users', page=pagination.next_num) }}" class="btn btn-secondary">Next »</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

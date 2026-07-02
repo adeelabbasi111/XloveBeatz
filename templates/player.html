@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+
+{% block page_title %}{{ page_title }} • {{ site_title }}{% endblock %}
+
+{% set show_back_btn = true %}
+{% set active_page = 'player' %}
+
+{% block head_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/player/main.css') }}">
+{% endblock %}
+
+{% block body_class %}player-page{% endblock %}
+
+{% block content %}
+
+<audio id="globalAudioPlayer" preload="metadata"></audio>
+
+<div class="main-container">
+
+  {# ═══════════════════════════════════════════
+     PLAYER PANEL — Left side
+     ═══════════════════════════════════════════ #}
+  <div class="player-panel">
+
+    {# ── Visualizer Stage ── #}
+    <div class="visualizer-stage" id="visualizerStage">
+      <canvas id="vizCanvas"></canvas>
+
+      {# ── Player Card (centered on visualizer) ── #}
+      <div class="player-card">
+
+        {# Artwork Disc #}
+        <div class="artwork-zone" id="artworkZone">
+          <i class="fas fa-compact-disc"></i>
+          <div class="playing-dots" id="playingDots">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+
+        {# ── Track Info (moved below artwork, full width) ── #}
+        <div class="track-header-info">
+          <div class="track-title-row">
+            <h1 class="track-name-big" id="playerTrackName">
+              {% if beats %}{{ beats[0].name }}{% else %}Select a Beat{% endif %}
+            </h1>
+          </div>
+          <div class="meta-row" id="metaRow">
+            {% if beats %}
+              <span class="meta-pill price-pill" id="playerPriceBadge">₹{{ "%.0f"|format(beats[0].price) }}</span>
+              <span class="meta-pill"><i class="fas fa-wave-square"></i> <span id="currentBpm">{{ beats[0].bpm }} BPM</span></span>
+              <span class="meta-pill"><i class="fas fa-music"></i> <span id="currentKey">{{ beats[0].key }}</span></span>
+              <span class="meta-pill"><i class="fas fa-compact-disc"></i> <span id="currentGenre">{{ beats[0].genre }}</span></span>
+            {% endif %}
+          </div>
+        </div>
+
+        {# ── Waveform (with bottom reflection) ── #}
+        <div class="waveform-container">
+          <div id="waveformProgress" class="waveform-progress"></div>
+          <div class="waveform-reflection" aria-hidden="true"></div>
+        </div>
+
+        {# ── Controls Row + Vertical Volume Strip ── #}
+        <div class="controls-wrapper">
+          <div class="ctrl-row">
+            <button class="ctrl-btn-sm" id="prevBtn" title="Previous">
+              <i class="fas fa-backward-step"></i>
+            </button>
+            <button class="play-btn-big" id="mainPlayBtn" title="Play/Pause">
+              <i class="fas fa-play"></i>
+            </button>
+            <button class="ctrl-btn-sm" id="nextBtn" title="Next">
+              <i class="fas fa-forward-step"></i>
+            </button>
+
+            <div class="time-display">
+              <span id="currentTime">0:00</span>
+              <span class="time-sep">/</span>
+              <span id="totalTime">0:00</span>
+            </div>
+
+            {# ── Vertical Volume Strip (hover to reveal) ── #}
+            <div class="volume-strip" id="volumeWrapper">
+              <button class="volume-trigger" id="volumeIcon" title="Volume">
+                <i class="fas fa-volume-high"></i>
+              </button>
+              <div class="volume-popover">
+                <div class="volume-popover-inner">
+                  <input type="range" id="volumeSlider" class="volume-range-vertical"
+                         min="0" max="1" step="0.01" value="0.7" orient="vertical">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {# ── Action Buttons ── #}
+        <div class="action-row">
+          <button class="btn btn-cart" id="addToCartBtn"
+                  data-type="beat"
+                  data-id="{% if beats %}{{ beats[0].id }}{% endif %}">
+            <i class="fas fa-cart-plus"></i> Add to Cart
+          </button>
+          <button class="btn btn-buy" id="buyNowBtn"
+                  data-type="beat"
+                  data-id="{% if beats %}{{ beats[0].id }}{% endif %}">
+            <i class="fas fa-bolt"></i> Buy Now
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  {# ═══════════════════════════════════════════
+     TRACKLIST PANEL — Right side
+     ═══════════════════════════════════════════ #}
+  <div class="tracklist-panel">
+    <div class="panel-header">
+      <h2 id="tracklistHeading">
+        <i class="fas fa-list-ul"></i>
+        <span id="tracklistTitle">All Beats</span>
+        <span class="track-count" id="trackCount">{{ beats|length }} tracks</span>
+      </h2>
+      <div class="category-tabs" id="categoryTabs">
+        <button class="cat-tab active" data-category="all">All</button>
+      </div>
+    </div>
+
+    <div class="tracklist-scroll" id="tracklistScroll">
+      {% for beat in beats %}
+        <div class="track-item"
+             data-index="{{ loop.index0 }}"
+             data-id="{{ beat.id }}"
+             data-name="{{ beat.name }}"
+             data-bpm="{{ beat.bpm }}"
+             data-key="{{ beat.key }}"
+             data-genre="{{ beat.genre }}"
+             data-price="{{ beat.price }}"
+             data-duration="{{ beat.duration }}"
+             data-preview="{{ url_for('static', filename=beat.preview_audio) if beat.preview_audio else '' }}"
+             data-price-basic="{{ beat.license_tiers.get('basic', {}).get('price', beat.price) if beat.license_tiers else beat.price }}"
+             data-price-premium="{{ beat.license_tiers.get('premium', {}).get('price', '') if beat.license_tiers else '' }}"
+             data-price-exclusive="{{ beat.license_tiers.get('exclusive', {}).get('price', '') if beat.license_tiers else '' }}"
+             data-files-basic="{{ beat.license_tiers.get('basic', {}).get('files', 'MP3 + WAV') if beat.license_tiers else 'MP3 + WAV' }}"
+             data-files-premium="{{ beat.license_tiers.get('premium', {}).get('files', 'MP3 + WAV + Stems') if beat.license_tiers else 'MP3 + WAV + Stems' }}"
+             data-files-exclusive="{{ beat.license_tiers.get('exclusive', {}).get('files', 'WAV + Stems + Project') if beat.license_tiers else 'WAV + Stems + Project' }}">
+
+          <span class="track-num">{{ "%02d"|format(loop.index) }}</span>
+
+          <div class="track-info">
+            <div class="track-name">{{ beat.name }}</div>
+            <div class="track-details-row">
+              <span class="detail-badge bpm-badge">{{ beat.bpm }} BPM</span>
+              <span class="detail-badge key-badge">{{ beat.key }}</span>
+              <span class="detail-badge genre-badge">{{ beat.genre }}</span>
+            </div>
+          </div>
+
+          <span class="track-price-tag">₹{{ "%.0f"|format(beat.price) }}</span>
+
+          <button class="play-track-icon" title="Play">
+            <i class="fas fa-play"></i>
+          </button>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+
+{# ═══════════════════════════════════════════
+   LICENSE MODAL
+   ═══════════════════════════════════════════ #}
+<div class="license-modal-overlay" id="licenseModal">
+  <div class="license-modal-container">
+    <button class="modal-close-btn" id="closeModalBtn">
+      <i class="fas fa-xmark"></i>
+    </button>
+
+    <div class="modal-header">
+      <h3 id="modalBeatName">Beat Name</h3>
+      <p class="modal-subtitle">Select your license type</p>
+    </div>
+
+    <div class="license-options">
+      <div class="license-card" data-license="basic">
+        <div class="card-select-indicator"><i class="fas fa-circle-check"></i></div>
+        <div class="card-header"><i class="fas fa-headphones"></i> Basic</div>
+        <div class="card-price" id="price-basic">₹0</div>
+        <ul class="card-features">
+          <li><i class="fas fa-check"></i> <span id="files-basic">MP3 + WAV</span></li>
+          <li><i class="fas fa-check"></i> Non-Exclusive</li>
+          <li><i class="fas fa-check"></i> 10,000 Streams</li>
+        </ul>
+      </div>
+
+      <div class="license-card" data-license="premium">
+        <div class="card-select-indicator"><i class="fas fa-circle-check"></i></div>
+        <div class="card-header"><i class="fas fa-star"></i> Premium</div>
+        <div class="card-price" id="price-premium">₹0</div>
+        <ul class="card-features">
+          <li><i class="fas fa-check"></i> <span id="files-premium">MP3 + WAV + Stems</span></li>
+          <li><i class="fas fa-check"></i> Non-Exclusive</li>
+          <li><i class="fas fa-check"></i> 50,000 Streams</li>
+        </ul>
+      </div>
+
+      <div class="license-card exclusive" data-license="exclusive">
+        <div class="exclusive-glow"></div>
+        <div class="card-select-indicator"><i class="fas fa-circle-check"></i></div>
+        <div class="card-header"><i class="fas fa-crown"></i> Exclusive</div>
+        <div class="card-price" id="price-exclusive">₹0</div>
+        <ul class="card-features">
+          <li><i class="fas fa-check"></i> <span id="files-exclusive">WAV + Stems + Project</span></li>
+          <li><i class="fas fa-check"></i> 100% Ownership</li>
+          <li><i class="fas fa-check"></i> Unlimited Streams</li>
+          <li><i class="fas fa-check"></i> Beat removed from store</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-buy" id="confirmLicenseBtn" disabled>
+        <i class="fas fa-cart-plus"></i>
+        <span id="confirmBtnText">Add to Cart</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block page_scripts %}
+  <script src="{{ url_for('static', filename='js/player.js') }}"></script>
+  <script>
+    document.addEventListener('click', function(e) {
+      var card = e.target.closest('.license-card[data-license]');
+      if (card) {
+        selectLicense(card.dataset.license);
+      }
+    });
+  </script>
+{% endblock %}

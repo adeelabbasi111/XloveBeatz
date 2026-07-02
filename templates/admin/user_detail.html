@@ -1,0 +1,463 @@
+{% extends 'admin/base.html' %}
+
+{% block admin_title %}User: {{ user.username }}{% endblock %}
+{% block page_heading %}User: {{ user.username }}{% endblock %}
+
+{% block content %}
+<style>
+    .user-detail-page {
+        max-width: 900px;
+    }
+
+    /* ── Profile Header Card ── */
+    .user-profile-card {
+        background: var(--bg-surface, #13151C);
+        border: 1px solid var(--border-light, rgba(255,255,255,0.06));
+        border-radius: 16px;
+        padding: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .user-avatar-large {
+        width: 64px;
+        height: 64px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, var(--accent-soft, #7C8DF0), var(--accent-purple, #9D7CEC));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.6rem;
+        color: #fff;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+
+    .user-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        flex: 1;
+    }
+
+    .user-meta h3 {
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin: 0;
+        background: linear-gradient(120deg, #fff, var(--accent-soft, #7C8DF0));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        display: inline-block;
+    }
+
+    .user-meta-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--text-secondary, #A0A5B5);
+        font-size: 0.85rem;
+    }
+
+    .user-meta-row i {
+        width: 16px;
+        text-align: center;
+        color: var(--accent-soft, #7C8DF0);
+        font-size: 0.8rem;
+    }
+
+    .user-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 14px;
+        border-radius: 30px;
+        font-size: 0.78rem;
+        font-weight: 600;
+    }
+
+    .badge-admin {
+        background: rgba(201, 174, 116, 0.1);
+        border: 1px solid rgba(201, 174, 116, 0.25);
+        color: #C9AE74;
+    }
+
+    .badge-user {
+        background: var(--bg-elevated, #1B1E27);
+        border: 1px solid var(--border-light, rgba(255,255,255,0.06));
+        color: var(--text-muted, #6C7285);
+    }
+
+    .user-actions-area {
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 8px;
+    }
+
+    .user-actions-area .btn {
+        white-space: nowrap;
+    }
+
+    .self-note {
+        font-size: 0.75rem;
+        color: var(--text-muted, #6C7285);
+        text-align: right;
+        max-width: 180px;
+    }
+
+    /* ── Stats Row ── */
+    .user-stats-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: var(--bg-surface, #13151C);
+        border: 1px solid var(--border-light, rgba(255,255,255,0.06));
+        border-radius: 14px;
+        padding: 1.25rem;
+        text-align: center;
+    }
+
+    .stat-card .stat-number {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: var(--text-primary, #F1F3F8);
+        line-height: 1;
+        margin-bottom: 4px;
+    }
+
+    .stat-card .stat-label {
+        font-size: 0.75rem;
+        color: var(--text-muted, #6C7285);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+    }
+
+    /* ── Section Cards ── */
+    .user-section {
+        background: var(--bg-surface, #13151C);
+        border: 1px solid var(--border-light, rgba(255,255,255,0.06));
+        border-radius: 16px;
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--border-light, rgba(255,255,255,0.06));
+    }
+
+    .section-header h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .section-header h3 i {
+        color: var(--accent-soft, #7C8DF0);
+        font-size: 0.9rem;
+    }
+
+    .section-count {
+        font-size: 0.75rem;
+        color: var(--text-muted, #6C7285);
+        background: var(--bg-elevated, #1B1E27);
+        padding: 3px 10px;
+        border-radius: 20px;
+    }
+
+    .section-body {
+        padding: 0;
+    }
+
+    .section-empty {
+        padding: 2.5rem;
+        text-align: center;
+        color: var(--text-muted, #6C7285);
+        font-size: 0.9rem;
+    }
+
+    .section-empty i {
+        display: block;
+        font-size: 2rem;
+        margin-bottom: 12px;
+        opacity: 0.3;
+    }
+
+    /* ── Tables inside sections ── */
+    .user-section .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .user-section .data-table th {
+        padding: 0.75rem 1.5rem;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-muted, #6C7285);
+        font-weight: 500;
+        text-align: left;
+        border-bottom: 1px solid var(--border-light, rgba(255,255,255,0.06));
+        background: rgba(255,255,255,0.01);
+    }
+
+    .user-section .data-table td {
+        padding: 0.85rem 1.5rem;
+        font-size: 0.88rem;
+        border-bottom: 1px solid var(--border-light, rgba(255,255,255,0.04));
+        color: var(--text-primary, #F1F3F8);
+    }
+
+    .user-section .data-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .user-section .data-table tbody tr:hover {
+        background: rgba(255,255,255,0.015);
+    }
+
+    /* ── Status badges in tables ── */
+    .status-pill {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: capitalize;
+    }
+
+    .status-pill.paid {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+
+    .status-pill.pending {
+        background: rgba(234, 179, 8, 0.1);
+        color: #eab308;
+    }
+
+    .status-pill.failed {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+
+    .status-pill.refunded {
+        background: rgba(168, 85, 247, 0.1);
+        color: #a855f7;
+    }
+
+    .order-link {
+        color: var(--accent-soft, #7C8DF0);
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .order-link:hover {
+        text-decoration: underline;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 700px) {
+        .user-profile-card {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 1.25rem;
+        }
+
+        .user-actions-area {
+            align-items: stretch;
+        }
+
+        .user-stats-row {
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        .stat-card .stat-number {
+            font-size: 1.4rem;
+        }
+
+        .user-section .data-table th,
+        .user-section .data-table td {
+            padding: 0.65rem 1rem;
+            font-size: 0.8rem;
+        }
+    }
+</style>
+
+<div class="user-detail-page">
+
+    {# ═══════════════════════════════════════════
+       PROFILE HEADER
+       ═══════════════════════════════════════════ #}
+    <div class="user-profile-card">
+        <div style="display:flex; gap:1rem; align-items:flex-start;">
+            <div class="user-avatar-large">
+                {{ user.username[0] | upper if user.username else '?' }}
+            </div>
+            <div class="user-meta">
+                <h3>{{ user.username }}</h3>
+                <div class="user-meta-row">
+                    <i class="fas fa-envelope"></i>
+                    <span>{{ user.email }}</span>
+                </div>
+                <div class="user-meta-row">
+                    <i class="fas fa-calendar-plus"></i>
+                    <span>Joined {{ user.created_at.strftime('%d %b %Y') if user.created_at else '—' }}</span>
+                </div>
+                <div class="user-meta-row">
+                    <i class="fas fa-clock"></i>
+                    <span>Last login {{ user.last_login.strftime('%d %b %Y, %I:%M %p') if user.last_login else 'Never logged in' }}</span>
+                </div>
+                <div style="margin-top:4px;">
+                    {% if user.is_admin %}
+                    <span class="user-badge badge-admin"><i class="fas fa-shield-halved"></i> Admin</span>
+                    {% else %}
+                    <span class="user-badge badge-user"><i class="fas fa-user"></i> Regular User</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="user-actions-area">
+            {% if user.id != g.user.id %}
+            <form method="POST" action="{{ url_for('admin.admin_user_toggle_admin', user_id=user.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-secondary">
+                    <i class="fas fa-user-shield"></i>
+                    {{ 'Remove Admin' if user.is_admin else 'Make Admin' }}
+                </button>
+            </form>
+            {% else %}
+            <p class="self-note"><i class="fas fa-lock"></i> You cannot change your own admin status.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    {# ═══════════════════════════════════════════
+       STATS
+       ═══════════════════════════════════════════ #}
+    <div class="user-stats-row">
+        <div class="stat-card">
+            <div class="stat-number">{{ orders | length }}</div>
+            <div class="stat-label">Orders</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ downloads | length }}</div>
+            <div class="stat-label">Downloads</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">
+                {% set total_spent = 0 %}
+                {% for order in orders %}
+                    {% if order.payment_status == 'paid' %}
+                        {% set total_spent = total_spent + order.total_cents %}
+                    {% endif %}
+                {% endfor %}
+                ₹{{ "%.0f" % (total_spent / 100) }}
+            </div>
+            <div class="stat-label">Total Spent</div>
+        </div>
+    </div>
+
+    {# ═══════════════════════════════════════════
+       ORDERS TABLE
+       ═══════════════════════════════════════════ #}
+    <div class="user-section">
+        <div class="section-header">
+            <h3><i class="fas fa-receipt"></i> Orders</h3>
+            <span class="section-count">{{ orders | length }} total</span>
+        </div>
+        <div class="section-body">
+            {% if orders %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Order</th>
+                        <th>Items</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('admin.admin_order_detail', order_id=order.id) }}" class="order-link">
+                                #{{ order.id }}
+                            </a>
+                        </td>
+                        <td class="text-muted">{{ order.items | length if order.items is defined else '—' }} item(s)</td>
+                        <td>{{ order.total_cents | rupees }}</td>
+                        <td>
+                            <span class="status-pill {{ order.payment_status }}">{{ order.payment_status }}</span>
+                        </td>
+                        <td class="text-muted">{{ order.created_at.strftime('%d %b %Y') if order.created_at else '—' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="section-empty">
+                <i class="fas fa-receipt"></i>
+                No orders yet.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {# ═══════════════════════════════════════════
+       DOWNLOADS TABLE
+       ═══════════════════════════════════════════ #}
+    <div class="user-section">
+        <div class="section-header">
+            <h3><i class="fas fa-download"></i> Downloads</h3>
+            <span class="section-count">{{ downloads | length }} total</span>
+        </div>
+        <div class="section-body">
+            {% if downloads %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Count</th>
+                        <th>Last Downloaded</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for dl in downloads %}
+                    <tr>
+                        <td>{{ dl.product.name if dl.product else 'Deleted' }}</td>
+                        <td>{{ dl.download_count }}</td>
+                        <td class="text-muted">{{ dl.last_downloaded.strftime('%d %b %Y, %I:%M %p') if dl.last_downloaded else '—' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="section-empty">
+                <i class="fas fa-cloud-arrow-down"></i>
+                No downloads yet.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

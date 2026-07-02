@@ -1,0 +1,48 @@
+/* ============================================================
+WAVEFORM (with reflection)
+============================================================ */
+.waveform-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  cursor: pointer;
+}
+
+.waveform-progress {
+  width: 100%;
+  height: 34px;
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  padding: 0 4px;
+}
+
+.waveform-reflection {
+  width: 100%;
+  height: 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 0 4px;
+  opacity: 0.25;
+  transform: scaleY(-1);
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,0.6), transparent 90%);
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.6), transparent 90%);
+  pointer-events: none;
+}
+
+.wave-bar {
+  flex: 1;
+  background: rgba(124, 141, 240, 0.22);
+  border-radius: 2px 2px 0 0;
+  transition: background 0.15s ease;
+  min-height: 3px;
+  min-width: 2px;
+}
+
+.wave-bar.played {
+  background: linear-gradient(to top, var(--accent-soft), #B8C3FF);
+  box-shadow: 0 0 6px rgba(124, 141, 240, 0.35);
+}

@@ -1,0 +1,288 @@
+/* ============================================================
+PLAYER CARD
+============================================================ */
+.player-card {
+  position: relative;
+  z-index: 2;
+  width: 85%;
+  max-width: 420px;
+  background: rgba(19, 21, 28, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: var(--card-radius);
+  border: 1px solid var(--border-light);
+  padding: 24px 22px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  box-shadow:
+    0 20px 60px -20px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* ============================================================
+TRACK HEADER
+============================================================ */
+.track-header-info {
+  flex-shrink: 0;
+  margin-bottom: 10px;
+  text-align: center;
+  width: 100%;
+}
+
+.track-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  width: 100%;
+}
+
+.track-name-big {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  background: linear-gradient(120deg, #FFFFFF, #B8C3FF, #FFFFFF);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmerText 6s linear infinite;
+  width: 100%;
+  text-align: center;
+  line-height: 1.3;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+@keyframes shimmerText {
+  to { background-position: 200% center; }
+}
+
+.price-pill {
+  background: rgba(201, 174, 116, 0.12) !important;
+  border-color: rgba(201, 174, 116, 0.3) !important;
+  color: var(--accent-gold-mute) !important;
+  font-weight: 700 !important;
+}
+
+.meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+}
+
+.meta-pill {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-light);
+  padding: 4px 10px;
+  border-radius: 30px;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.meta-pill i {
+  color: var(--accent-soft);
+  font-size: 0.65rem;
+}
+
+/* ============================================================
+ARTWORK
+============================================================ */
+.artwork-zone {
+  position: relative;
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #1E212C, #13151C);
+  border: 2px solid var(--border-mid);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 12px 32px -8px rgba(0, 0, 0, 0.5),
+    0 0 0 12px rgba(124, 141, 240, 0.05),
+    inset 0 0 20px rgba(0, 0, 0, 0.3);
+  flex-shrink: 0;
+}
+
+.artwork-zone i {
+  font-size: 2rem;
+  background: linear-gradient(135deg, var(--accent-soft), var(--accent-purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.artwork-zone.playing {
+  animation: discSpin 3s linear infinite;
+}
+
+@keyframes discSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.playing-dots {
+  position: absolute;
+  bottom: -18px;
+  display: flex;
+  gap: 3px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.playing-dots.active { opacity: 1; }
+
+.playing-dots span {
+  width: 4px;
+  background: var(--accent-soft);
+  border-radius: 3px;
+  animation: eqBounce 0.7s infinite alternate;
+}
+
+.playing-dots span:nth-child(2) { animation-delay: 0.15s; }
+.playing-dots span:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes eqBounce {
+  0%   { height: 5px; }
+  100% { height: 16px; }
+}
+
+/* ============================================================
+CONTROLS
+============================================================ */
+.controls-wrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.ctrl-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  justify-content: center;
+}
+
+.ctrl-btn-sm {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-light);
+  color: var(--text-secondary);
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: var(--transition-smooth);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ctrl-btn-sm:hover {
+  color: var(--text-primary);
+  background: rgba(124, 141, 240, 0.12);
+  border-color: rgba(124, 141, 240, 0.3);
+  transform: translateY(-1px);
+}
+
+.play-btn-big {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-soft), var(--accent-purple));
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  box-shadow:
+    0 8px 28px -8px var(--accent-glow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: var(--transition-smooth);
+  font-size: 1.05rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.play-btn-big:hover {
+  transform: scale(1.06);
+  box-shadow: 0 12px 32px -6px var(--accent-glow);
+}
+
+.play-btn-big:active {
+  transform: scale(0.98);
+}
+
+.time-display {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  padding: 5px 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-light);
+  border-radius: 20px;
+  min-width: 85px;
+  text-align: center;
+}
+
+.time-sep {
+  margin: 0 3px;
+  opacity: 0.5;
+}
+
+/* ============================================================
+ACTION BUTTONS
+============================================================ */
+.action-row {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.btn {
+  flex: 1;
+  padding: 11px 14px;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 0.82rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: none;
+  transition: var(--transition-smooth);
+}
+
+.btn-cart {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-mid);
+  color: var(--text-primary);
+}
+
+.btn-cart:hover {
+  border-color: var(--accent-soft);
+  background: rgba(124, 141, 240, 0.08);
+  transform: translateY(-1px);
+}
+
+.btn-buy {
+  background: linear-gradient(135deg, var(--accent-soft), var(--accent-purple));
+  color: #fff;
+  box-shadow: 0 6px 18px -6px var(--accent-glow);
+}
+
+.btn-buy:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px -6px var(--accent-glow);
+}

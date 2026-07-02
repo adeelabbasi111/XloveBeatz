@@ -1,0 +1,105 @@
+{% extends 'admin/base.html' %}
+
+{% block admin_title %}Order #{{ order.id }}{% endblock %}
+{% block page_heading %}Order #{{ order.id }}{% endblock %}
+
+{% block content %}
+<div class="order-detail">
+    <div class="order-header">
+        {# ─── ORDER INFO ─── #}
+        <div class="order-info">
+            <h3>Order Information</h3>
+            <div class="info-grid">
+                <div>
+                    <label>Order ID</label>
+                    <span>#{{ order.id }}</span>
+                </div>
+                <div>
+                    <label>Date</label>
+                    <span>{{ order.created_at.strftime('%d %b %Y, %I:%M %p') if order.created_at else '—' }}</span>
+                </div>
+                <div>
+                    <label>Total</label>
+                    <span style="font-size:1.25rem; font-weight:700; color:#C9AE74;">{{ order.total_cents | rupees }}</span>
+                </div>
+                <div>
+                    <label>Status</label>
+                    <span class="status-badge status-{{ order.payment_status }}">{{ order.payment_status }}</span>
+                </div>
+                <div>
+                    <label>Payment Method</label>
+                    <span>{{ order.payment_method or '—' }}</span>
+                </div>
+                <div>
+                    <label>Transaction ID</label>
+                    <span class="text-muted" style="word-break:break-all;">{{ order.transaction_id or '—' }}</span>
+                </div>
+            </div>
+        </div>
+
+        {# ─── CUSTOMER ─── #}
+        <div class="order-customer">
+            <h3>Customer</h3>
+            {% if order.user %}
+            <div class="info-grid">
+                <div>
+                    <label>Username</label>
+                    <span>{{ order.user.username }}</span>
+                </div>
+                <div>
+                    <label>Email</label>
+                    <span>{{ order.user.email }}</span>
+                </div>
+            </div>
+            {% else %}
+            <p class="text-muted">Guest order — {{ order.email or 'No email provided' }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    {# ─── ITEMS ─── #}
+    <div class="order-items">
+        <h3>Order Items</h3>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Type</th>
+                    <th>License</th>
+                    <th>Price Paid</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in order.items %}
+                <tr>
+                    <td>
+                        <strong>{{ item.product.name if item.product else 'Deleted Product' }}</strong>
+                        {% if item.product %}
+                        <div class="text-muted">{{ item.product.slug }}</div>
+                        {% endif %}
+                    </td>
+                    <td>{% if item.product %}<span class="type-badge type-{{ item.product.product_type }}">{{ item.product.product_type }}</span>{% else %}—{% endif %}</td>
+                    <td>{% if item.license %}<span class="status-badge status-active">{{ item.license.name }}</span>{% else %}—{% endif %}</td>
+                    <td>{{ item.price_paid_cents | rupees }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {# ─── STATUS UPDATE ─── #}
+    <div class="order-actions">
+        <h3>Update Status</h3>
+        <form method="POST" action="{{ url_for('admin.admin_order_status', order_id=order.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <select name="status">
+                <option value="pending" {% if order.payment_status == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="paid" {% if order.payment_status == 'paid' %}selected{% endif %}>Paid</option>
+                <option value="failed" {% if order.payment_status == 'failed' %}selected{% endif %}>Failed</option>
+                <option value="refunded" {% if order.payment_status == 'refunded' %}selected{% endif %}>Refunded</option>
+            </select>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Update</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

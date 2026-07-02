@@ -1,0 +1,88 @@
+<!-- CART DRAWER -->
+<div class="cart-overlay" id="cartOverlay"></div>
+
+<div class="cart-drawer" id="cartDrawer">
+    <div class="cart-glow-orb"></div>
+
+    {# Header #}
+    <div class="cart-header">
+        <div class="cart-header-left">
+            <div class="cart-vinyl"><i class="fas fa-compact-disc"></i></div>
+            <div class="cart-header-text">
+                <h3>Your Cart</h3>
+                <span class="cart-items-count" id="cartItemsCount">0 items</span>
+            </div>
+        </div>
+        <button id="closeCartBtn" class="cart-close-btn magnetic-btn" aria-label="Close cart">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    {# Live Waveform #}
+    <div class="cart-waveform" id="cartWaveform">
+        <span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span><span></span>
+    </div>
+
+    {# Items Area #}
+    <div class="cart-items" id="cartItemsList">
+        <div class="empty-cart-state" id="emptyCartState">
+            <div class="empty-cart-vinyl">
+                <div class="empty-vinyl-grooves"></div>
+                <i class="fas fa-music"></i>
+            </div>
+            <p class="empty-cart-title">Your cart is empty</p>
+            <p class="empty-cart-subtitle">Drop some fire beats in here 🔥</p>
+            <a href="{{ url_for('public.player_page') }}" class="empty-cart-cta" id="browseBeatsBtn">Browse Beats</a>
+        </div>
+    </div>
+
+    {# Suggestions #}
+    <div class="cart-suggestions" id="cartSuggestions" style="display:none;">
+        <p class="suggestions-label">Trending Now</p>
+        <div class="suggestion-chips">
+            <a href="{{ url_for('public.player_page') }}" class="suggestion-chip">Trap Essentials</a>
+            <a href="{{ url_for('public.player_page') }}" class="suggestion-chip">Drill Kit</a>
+            <a href="{{ url_for('public.player_page') }}" class="suggestion-chip">Lo-Fi Pack</a>
+        </div>
+    </div>
+
+    {# Footer #}
+    <div class="cart-footer" id="cartFooter">
+        <div class="cart-summary">
+            <div class="summary-row">
+                <span>Subtotal</span>
+                <span id="cartSubtotal">₹0.00</span>
+            </div>
+            <div class="summary-row discount" id="discountRow" style="display:none;">
+                <span>Discount</span>
+                <span id="cartDiscount">-₹0.00</span>
+            </div>
+            <div class="summary-row">
+                <span>Processing Fee</span>
+                <span class="free-badge">FREE</span>
+            </div>
+            <div class="summary-divider"></div>
+            <div class="summary-row grand">
+                <span>Total</span>
+                <span id="cartGrandTotal">₹0.00</span>
+            </div>
+        </div>
+
+        <button class="checkout-btn-premium" id="checkoutBtn" disabled>
+            <span class="checkout-btn-content">
+                <i class="fas fa-lock"></i>
+                <span>Proceed to Checkout</span>
+            </span>
+            <span class="checkout-btn-shine"></span>
+        </button>
+
+        <div class="cart-trust-badges">
+            <span><i class="fas fa-shield-alt"></i> Secure</span>
+            <span><i class="fas fa-bolt"></i> Instant</span>
+            <span><i class="fas fa-undo"></i> 7-Day Refund</span>
+        </div>
+    </div>
+</div>

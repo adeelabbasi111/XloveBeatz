@@ -1,0 +1,97 @@
+{% extends 'admin/base.html' %}
+
+{% block admin_title %}Products{% endblock %}
+{% block page_heading %}Products{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="filter-tabs">
+        <a href="{{ url_for('admin.admin_products') }}" class="filter-tab {% if not current_type %}active{% endif %}">All</a>
+        <a href="{{ url_for('admin.admin_products', type='beat') }}" class="filter-tab {% if current_type == 'beat' %}active{% endif %}">Beats</a>
+        <a href="{{ url_for('admin.admin_products', type='pack') }}" class="filter-tab {% if current_type == 'pack' %}active{% endif %}">Packs</a>
+        <a href="{{ url_for('admin.admin_products', type='preset') }}" class="filter-tab {% if current_type == 'preset' %}active{% endif %}">Presets</a>
+    </div>
+    <a href="{{ url_for('admin.admin_product_add') }}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Add Product
+    </a>
+</div>
+
+<div class="data-table-wrapper">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Type</th>
+                <th>Price</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for product in products %}
+            <tr>
+                <td>
+                    <div style="display:flex; align-items:center; gap:12px;">
+        {% if product.cover_image %}
+        <img src="{{ url_for('static', filename='uploads/' + product.cover_image) }}" class="table-img" alt="{{ product.name }}" onerror="this.style.display='none'">
+        {% else %}
+        <div class="table-img-placeholder"><i class="fas fa-{% if product.product_type == 'beat' %}music{% elif product.product_type == 'pack' %}layer-group{% else %}sliders-h{% endif %}"></i></div>
+        {% endif %}
+        <div>
+            <strong>{{ product.name }}</strong>
+            <div class="text-muted">{{ product.slug }}</div>
+            {# Show beat count for packs #}
+            {% if product.product_type == 'pack' and product.beat_pack %}
+            <div class="text-muted" style="font-size:0.75rem;">
+                <i class="fas fa-music" style="color:var(--admin-accent);"></i> {{ product.beat_pack.total_beats }} beats
+            </div>
+            {% endif %}
+        </div>
+                    </div>
+                </td>
+                <td><span class="type-badge type-{{ product.product_type }}">{{ product.product_type }}</span></td>
+                <td>{{ product.price_cents | rupees }}</td>
+                <td>
+                    <form method="POST" action="{{ url_for('admin.admin_product_toggle', product_id=product.id) }}" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="status-badge {% if product.is_active %}status-active{% else %}status-inactive{% endif %}" style="cursor:pointer; border:none;">
+                            {{ 'Active' if product.is_active else 'Inactive' }}
+                        </button>
+                    </form>
+                </td>
+                <td class="text-muted">{{ product.created_at.strftime('%d %b %Y') if product.created_at else '' }}</td>
+                <td>
+                    <div class="action-buttons">
+                        <a href="{{ url_for('admin.admin_product_edit', product_id=product.id) }}" class="btn-icon" title="Edit"><i class="fas fa-edit"></i></a>
+                        <form method="POST" action="{{ url_for('admin.admin_product_delete', product_id=product.id) }}" style="display:inline;" onsubmit="return confirm('Delete {{ product.name }}? This cannot be undone.')">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn-icon danger" title="Delete"><i class="fas fa-trash"></i></button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{# ─── PAGINATION ─── #}
+{% if pagination and pagination.pages > 1 %}
+<div class="pagination" style="margin-top: 1.5rem; display:flex; justify-content:center; gap:0.5rem;">
+    {% if pagination.has_prev %}
+    <a href="{{ url_for('admin.admin_products', page=pagination.prev_num, type=current_type) }}" class="btn btn-secondary">« Prev</a>
+    {% endif %}
+    {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+        {% if page_num %}
+        <a href="{{ url_for('admin.admin_products', page=page_num, type=current_type) }}" class="btn {% if page_num == pagination.page %}btn-primary{% else %}btn-secondary{% endif %}">{{ page_num }}</a>
+        {% else %}
+        <span class="btn btn-secondary" style="opacity:0.3;">…</span>
+        {% endif %}
+    {% endfor %}
+    {% if pagination.has_next %}
+    <a href="{{ url_for('admin.admin_products', page=pagination.next_num, type=current_type) }}" class="btn btn-secondary">Next »</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,38 @@
+<header class="site-header">
+    <!-- Logo -->
+    <a href="{{ url_for('public.home') }}" class="logo">
+        <div class="logo-icon">
+            <i class="fas fa-music"></i>
+        </div>
+        <span class="logo-text">XLOVEBEATS</span>
+    </a>
+
+    <!-- Desktop Navigation -->
+    <nav class="desktop-nav">
+        <a href="{{ url_for('public.player_page') }}" class="nav-link {% if active_page == 'beats' %}active{% endif %}">
+            <i class="fas fa-music"></i>
+            <span>Beats</span>
+        </a>
+        <a href="{{ url_for('public.home') }}#beat-packs" class="nav-link {% if active_page == 'packs' %}active{% endif %}">
+            <i class="fas fa-box"></i>
+            <span>Packs</span>
+        </a>
+        <a href="{{ url_for('public.home') }}#vocal-presets" class="nav-link {% if active_page == 'presets' %}active{% endif %}">
+            <i class="fas fa-sliders-h"></i>
+            <span>Presets</span>
+        </a>
+
+        <div class="nav-divider"></div>
+
+        <button class="nav-link nav-action" id="openCartBtn">
+            <i class="fas fa-shopping-cart"></i>
+            <span>Cart</span>
+            <span class="nav-badge" id="cartCount">3</span>
+        </button>
+
+        <button class="nav-link nav-action logged-in" id="accountBtn">
+            <i class="fas fa-user"></i>
+            <span>Account</span>
+        </button>
+    </nav>
+</header>

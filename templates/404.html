@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 • Track Not Found | XLOVEBEATZ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-deep: #0C0E13;
+            --bg-surface: #13151C;
+            --bg-elevated: #1B1E27;
+            --border-light: rgba(255, 255, 255, 0.06);
+            --text-primary: #F1F3F8;
+            --text-secondary: #A0A5B5;
+            --text-muted: #6C7285;
+            --accent-soft: #7C8DF0;
+            --accent-glow: rgba(124, 141, 240, 0.25);
+            --accent-gold-mute: #C9AE74;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at 30% 20%, rgba(124, 141, 240, 0.08), transparent 60%),
+                        radial-gradient(circle at 80% 70%, rgba(201, 174, 78, 0.04), transparent 70%);
+            pointer-events: none;
+            z-index: -2;
+        }
+
+        /* Floating Notes */
+        .floating-notes {
+            position: fixed;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: -1;
+        }
+        .note {
+            position: absolute;
+            bottom: -50px;
+            color: var(--accent-soft);
+            opacity: 0.08;
+            font-size: 2rem;
+            animation: floatUp linear infinite;
+            user-select: none;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+            15% { opacity: 0.12; }
+            85% { opacity: 0.08; }
+            100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; }
+        }
+
+        /* Main Container */
+        .error-container {
+            text-align: center;
+            padding: 40px 24px;
+            max-width: 600px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Vinyl + Tonearm */
+        .vinyl-stage {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 40px;
+            position: relative;
+        }
+        .vinyl {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background:
+                radial-gradient(circle at 30% 30%, rgba(255,255,255,0.08), transparent 50%),
+                repeating-radial-gradient(
+                    var(--bg-elevated) 0, var(--bg-elevated) 7px,
+                    #1f2230 7px, #1f2230 9px
+                );
+            position: relative;
+            animation: wobble 3s ease-in-out infinite;
+            box-shadow: 0 0 60px rgba(124, 141, 240, 0.15);
+        }
+        .vinyl::before {
+            content: '404';
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 56px; height: 56px;
+            background: linear-gradient(135deg, var(--accent-soft), #9D7CEC);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.85rem;
+            color: white;
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+        .vinyl::after {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 18px; height: 18px;
+            background: var(--bg-deep);
+            border-radius: 50%;
+            z-index: 2;
+        }
+        .tonearm {
+            position: absolute;
+            top: -18px;
+            right: -28px;
+            width: 80px;
+            height: 120px;
+            transform-origin: top right;
+            transform: rotate(22deg);
+            animation: scratch 2.5s ease-in-out infinite;
+        }
+        .tonearm::before {
+            content: '';
+            position: absolute;
+            top: 0; right: 0;
+            width: 22px; height: 22px;
+            background: linear-gradient(135deg, #C0C0C0, #808080);
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+        }
+        .tonearm::after {
+            content: '';
+            position: absolute;
+            top: 18px; right: 8px;
+            width: 5px; height: 90px;
+            background: linear-gradient(90deg, #A0A0A0, #D0D0D0);
+            border-radius: 3px;
+            transform: rotate(-12deg);
+        }
+        @keyframes wobble {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(2deg); }
+            75% { transform: rotate(-2deg); }
+        }
+        @keyframes scratch {
+            0%, 100% { transform: rotate(22deg); }
+            50% { transform: rotate(32deg); }
+        }
+
+        /* Glitch 404 */
+        .glitch-404 {
+            font-size: clamp(4rem, 12vw, 7rem);
+            font-weight: 900;
+            line-height: 1;
+            margin-bottom: 20px;
+            position: relative;
+            color: var(--text-primary);
+            letter-spacing: -0.04em;
+        }
+        .glitch-404::before,
+        .glitch-404::after {
+            content: '404';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+        }
+        .glitch-404::before {
+            color: var(--accent-soft);
+            animation: glitch-1 2.2s infinite linear alternate-reverse;
+            clip-path: polygon(0 0, 100% 0, 100% 40%, 0 40%);
+        }
+        .glitch-404::after {
+            color: var(--accent-gold-mute);
+            animation: glitch-2 2.8s infinite linear alternate-reverse;
+            clip-path: polygon(0 60%, 100% 60%, 100% 100%, 0 100%);
+        }
+        @keyframes glitch-1 {
+            0% { transform: translateX(0); }
+            20% { transform: translateX(-4px); }
+            40% { transform: translateX(4px); }
+            60% { transform: translateX(-2px); }
+            80% { transform: translateX(2px); }
+            100% { transform: translateX(0); }
+        }
+        @keyframes glitch-2 {
+            0% { transform: translateX(0); }
+            20% { transform: translateX(4px); }
+            40% { transform: translateX(-4px); }
+            60% { transform: translateX(2px); }
+            80% { transform: translateX(-2px); }
+            100% { transform: translateX(0); }
+        }
+
+        /* Dead Equalizer */
+        .dead-eq {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            margin-bottom: 32px;
+            height: 36px;
+            align-items: flex-end;
+        }
+        .dead-eq span {
+            width: 5px;
+            background: var(--border-mid);
+            border-radius: 3px;
+        }
+        .dead-eq span:nth-child(1) { height: 20%; }
+        .dead-eq span:nth-child(2) { height: 45%; }
+        .dead-eq span:nth-child(3) { height: 15%; }
+        .dead-eq span:nth-child(4) { height: 35%; }
+        .dead-eq span:nth-child(5) { height: 25%; }
+
+        .error-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        .error-desc {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-bottom: 36px;
+            line-height: 1.6;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .home-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(135deg, var(--accent-soft), #9D7CEC);
+            color: white;
+            padding: 14px 32px;
+            border-radius: 60px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            box-shadow: 0 8px 20px var(--accent-glow);
+            border: none;
+            cursor: pointer;
+        }
+        .home-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 14px 30px rgba(124, 141, 240, 0.4);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .vinyl, .tonearm, .glitch-404::before, .glitch-404::after, .note {
+                animation: none !important;
+            }
+        }
+        @media (max-width: 480px) {
+            .vinyl-stage { width: 160px; height: 160px; }
+            .error-title { font-size: 1.25rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-notes" id="floatingNotes"></div>
+
+    <div class="error-container">
+        <div class="vinyl-stage">
+            <div class="vinyl"></div>
+            <div class="tonearm"></div>
+        </div>
+
+        <div class="glitch-404">404</div>
+
+        <div class="dead-eq">
+            <span></span><span></span><span></span><span></span><span></span>
+        </div>
+
+        <h1 class="error-title">Beat Not Found</h1>
+        <p class="error-desc">This track has been removed, renamed, or maybe it was never recorded. Let's get you back to the studio.</p>
+
+        <a href="/" class="home-btn">
+            <i class="fas fa-arrow-left"></i> Back to Studio
+        </a>
+    </div>
+
+    <script>
+        const notesContainer = document.getElementById('floatingNotes');
+        const symbols = ['♪', '♫', '♬', '♩', '♭'];
+        for (let i = 0; i < 16; i++) {
+            const note = document.createElement('span');
+            note.className = 'note';
+            note.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+            note.style.left = Math.random() * 100 + '%';
+            note.style.animationDuration = (14 + Math.random() * 18) + 's';
+            note.style.animationDelay = Math.random() * 8 + 's';
+            note.style.fontSize = (1.4 + Math.random() * 2) + 'rem';
+            notesContainer.appendChild(note);
+        }
+    </script>
+</body>
+</html>

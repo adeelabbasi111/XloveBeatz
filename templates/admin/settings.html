@@ -1,0 +1,52 @@
+{% extends 'admin/base.html' %}
+
+{% block admin_title %}Site Settings{% endblock %}
+{% block page_heading %}Site Settings{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <form method="POST" class="admin-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="form-section">
+            <h3><i class="fas fa-store"></i> Store Info</h3>
+            <div class="form-group">
+                <label for="site_title">Site Title</label>
+                <input type="text" name="site_title" id="site_title" value="{{ settings.site_title }}" placeholder="XLOVEBEATZ">
+            </div>
+            <div class="form-group">
+                <label for="site_slogan">Slogan</label>
+                <input type="text" name="site_slogan" id="site_slogan" value="{{ settings.site_slogan }}" placeholder="Crafted for artists who move the world">
+            </div>
+            <div class="form-group">
+                <label for="contact_email">Contact Email</label>
+                <input type="email" name="contact_email" id="contact_email" value="{{ settings.contact_email }}" placeholder="hello@xlovebeats.com">
+            </div>
+            <div class="form-group">
+                <label for="whatsapp_number">WhatsApp Number (with country code)</label>
+                <input type="text" name="whatsapp_number" id="whatsapp_number" value="{{ settings.whatsapp_number }}" placeholder="918329189796">
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3><i class="fas fa-share-alt"></i> Social Links</h3>
+            <div class="form-group">
+                <label for="instagram_url"><i class="fab fa-instagram"></i> Instagram URL</label>
+                <input type="url" name="instagram_url" id="instagram_url" value="{{ settings.instagram_url }}" placeholder="https://instagram.com/xlovebeatz">
+            </div>
+            <div class="form-group">
+                <label for="spotify_url"><i class="fab fa-spotify"></i> Spotify URL</label>
+                <input type="url" name="spotify_url" id="spotify_url" value="{{ settings.spotify_url }}" placeholder="https://open.spotify.com/artist/...">
+            </div>
+            <div class="form-group">
+                <label for="youtube_url"><i class="fab fa-youtube"></i> YouTube URL</label>
+                <input type="url" name="youtube_url" id="youtube_url" value="{{ settings.youtube_url }}" placeholder="https://youtube.com/@xlovebeatz">
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Settings</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
