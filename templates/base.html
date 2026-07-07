@@ -12,9 +12,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     {# Common CSS — loaded on every page #}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/cart.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/account.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/cart/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/header/main.css') }}">
 
 
     {# Page-specific CSS #}
@@ -150,7 +150,6 @@
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script src="{{ url_for('static', filename='js/cart.js') }}"></script>
     <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/account.js') }}"></script>
 
     {# Page-specific Scripts #}
     {% block page_scripts %}{% endblock %}

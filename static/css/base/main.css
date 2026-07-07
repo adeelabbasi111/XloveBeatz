@@ -1,0 +1,10 @@
+/* ============================================================
+   BASE-MAIN.CSS — Imports all base CSS files
+   Include this one file in base.html
+   ============================================================ */
+
+@import url('resets.css');
+@import url('auth.css');
+@import url('user-sidebar.css');
+@import url('preloader.css');
+@import url('mobile.css');

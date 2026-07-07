@@ -71,69 +71,90 @@
             </div>
         </div>
 
+
         {# ── Settings Tab ── #}
-        <div class="account-tab-content" id="atab-settings">
-            <div class="settings-section" id="settingsLoggedIn" style="display:none">
+    <div class="account-tab-content" id="atab-settings">
+    <div class="settings-section" id="settingsLoggedIn" style="display:none">
 
-                {# ── View Profile ── #}
-                <h4>Account Details</h4>
-                <div class="settings-card">
-                    <div class="profile-row">
-                        <span class="profile-label">Username</span>
-                        <span class="profile-value" id="settingsUsername">-</span>
-                    </div>
-                    <div class="profile-row">
-                        <span class="profile-label">Email</span>
-                        <span class="profile-value" id="settingsEmail">-</span>
-                    </div>
-                    <div class="profile-row">
-                        <span class="profile-label">Member Since</span>
-                        <span class="profile-value" id="settingsJoined">-</span>
-                    </div>
-                </div>
-
-                {# ── Edit Profile ── #}
-                <h4 style="margin-top:1.5rem;">Edit Profile</h4>
-                <div class="settings-card">
-                    <div id="profileError" style="display:none;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);color:#ef4444;padding:10px 14px;border-radius:10px;font-size:0.85rem;margin-bottom:14px;"></div>
-                    <div id="profileSuccess" style="display:none;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);color:#10b981;padding:10px 14px;border-radius:10px;font-size:0.85rem;margin-bottom:14px;"></div>
-
-                    <div style="margin-bottom:14px;">
-                        <label style="display:block;font-size:0.75rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px;">Username</label>
-                        <input type="text" id="editUsername" placeholder="Enter new username"
-                               style="width:100%;padding:12px 16px;background:var(--bg-deep);border:1px solid var(--border-light);border-radius:12px;color:var(--text-primary);font-size:0.9rem;font-family:inherit;outline:none;transition:border-color 0.2s,box-shadow 0.2s;box-sizing:border-box;">
-                    </div>
-                    <div style="margin-bottom:18px;">
-                        <label style="display:block;font-size:0.75rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px;">Email</label>
-                        <input type="email" id="editEmail" placeholder="Enter new email"
-                               style="width:100%;padding:12px 16px;background:var(--bg-deep);border:1px solid var(--border-light);border-radius:12px;color:var(--text-primary);font-size:0.9rem;font-family:inherit;outline:none;transition:border-color 0.2s,box-shadow 0.2s;box-sizing:border-box;">
-                    </div>
-                    <button id="saveProfileBtn"
-                            style="width:100%;padding:13px 20px;background:linear-gradient(135deg,var(--accent-soft),var(--accent-purple));color:#fff;border:none;border-radius:14px;font-weight:700;font-size:0.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform 0.2s,box-shadow 0.2s;font-family:inherit;">
-                        <i class="fas fa-save"></i> Save Changes
-                    </button>
-                </div>
-
-                <button class="logout-btn" id="logoutBtn">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </button>
+        {# ── View Profile ── #}
+        <h4>Account Details</h4>
+        <div class="settings-card">
+            <div class="profile-row">
+                <span class="profile-label">Username</span>
+                <span class="profile-value" id="settingsUsername">-</span>
             </div>
-
-            <div class="settings-section" id="settingsGuest">
-                <div class="guest-state compact">
-                    <div class="guest-icon"><i class="fas fa-user-circle"></i></div>
-                    <p>You are currently browsing as a guest</p>
-                    <div class="guest-actions">
-                        <button class="guest-action-btn primary" id="guestLoginFromSettings">
-                            <i class="fas fa-sign-in-alt"></i> Login
-                        </button>
-                        <button class="guest-action-btn secondary" id="guestSignupFromSettings">
-                            <i class="fas fa-user-plus"></i> Sign Up
-                        </button>
-                    </div>
-                </div>
+            <div class="profile-row">
+                <span class="profile-label">Email</span>
+                <span class="profile-value" id="settingsEmail">-</span>
+            </div>
+            <div class="profile-row">
+                <span class="profile-label">Member Since</span>
+                <span class="profile-value" id="settingsJoined">-</span>
             </div>
         </div>
+
+        {# ── Edit Profile ── #}
+        <h4 class="settings-section-heading">Edit Profile</h4>
+        <div class="settings-card">
+            <div id="profileError" class="settings-alert error"></div>
+            <div id="profileSuccess" class="settings-alert success"></div>
+
+            <div class="settings-field">
+                <label class="settings-label">Username</label>
+                <input type="text" id="editUsername" placeholder="Enter new username" class="settings-input">
+            </div>
+            <div class="settings-field">
+                <label class="settings-label">Email</label>
+                <input type="email" id="editEmail" placeholder="Enter new email" class="settings-input">
+            </div>
+            <button id="saveProfileBtn" class="settings-save-btn">
+                <i class="fas fa-save"></i> Save Changes
+            </button>
+        </div>
+
+        {# ── Change Password ── #}
+        <h4 class="settings-section-heading">Change Password</h4>
+        <div class="settings-card">
+            <div id="passwordError" class="settings-alert error"></div>
+            <div id="passwordSuccess" class="settings-alert success"></div>
+
+            <div class="settings-field">
+                <label class="settings-label">Current Password</label>
+                <input type="password" id="currentPassword" placeholder="Enter current password" class="settings-input">
+            </div>
+            <div class="settings-field">
+                <label class="settings-label">New Password</label>
+                <input type="password" id="newPassword" placeholder="Enter new password" class="settings-input">
+            </div>
+            <div class="settings-field">
+                <label class="settings-label">Confirm New Password</label>
+                <input type="password" id="confirmNewPassword" placeholder="Confirm new password" class="settings-input">
+            </div>
+            <button id="changePasswordBtn" class="settings-save-btn">
+                <i class="fas fa-key"></i> Update Password
+            </button>
+        </div>
+
+        <button class="logout-btn" id="logoutBtn">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+    </div>
+
+    <div class="settings-section" id="settingsGuest">
+        <div class="guest-state compact">
+            <div class="guest-icon"><i class="fas fa-user-circle"></i></div>
+            <p>You are currently browsing as a guest</p>
+            <div class="guest-actions">
+                <button class="guest-action-btn primary" id="guestLoginFromSettings">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+                <button class="guest-action-btn secondary" id="guestSignupFromSettings">
+                    <i class="fas fa-user-plus"></i> Sign Up
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
     </div>
 </aside>

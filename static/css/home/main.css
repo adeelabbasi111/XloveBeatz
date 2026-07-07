@@ -1,0 +1,10 @@
+/* ============================================================
+   -MAIN.CSS — Imports all page CSS files
+   Load this only on index.html
+   ============================================================ */
+
+@import url('hero.css');
+@import url('tabs.css');
+@import url('cards.css');
+@import url('sections.css');
+@import url('mobile.css');

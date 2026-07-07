@@ -16,8 +16,7 @@ ENV/
 .env
 .env.*
 *.env
-instance/*.py
-instance/*
+
 
 # Database and local data
 *.sqlite
@@ -28,7 +27,6 @@ instance/*
 # Flask / app uploads and generated files
 static/uploads/
 static/data/
-static/images/
 instance/
 
 # IDE/editor files

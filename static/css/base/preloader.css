@@ -1,0 +1,114 @@
+/* ============================================================
+   PRELOADER.CSS — Loading screen
+   ============================================================ */
+
+.preloader {
+    position: fixed;
+    inset: 0;
+    background: var(--bg-deep);
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.preloader.done {
+    opacity: 0;
+    transform: scale(1.08);
+    pointer-events: none;
+}
+
+.preloader-vinyl {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: repeating-radial-gradient(
+        var(--bg-elevated) 0, var(--bg-elevated) 6px,
+        #1f2230 6px, #1f2230 8px
+    );
+    position: relative;
+    animation: preloaderSpin 1.4s linear infinite;
+    box-shadow: 0 0 50px rgba(124, 141, 240, 0.2);
+}
+
+.preloader-vinyl-inner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 34px;
+    height: 34px;
+    background: linear-gradient(135deg, var(--accent-soft), var(--accent-purple));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.65rem;
+    color: white;
+    letter-spacing: 0.05em;
+}
+
+@keyframes preloaderSpin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+.preloader-eq {
+    display: flex;
+    gap: 4px;
+    height: 28px;
+    align-items: flex-end;
+}
+
+.preloader-eq span {
+    width: 4px;
+    background: linear-gradient(to top, var(--accent-soft), var(--accent-gold-mute));
+    border-radius: 2px;
+    animation: preloaderEq 0.7s ease-in-out infinite;
+    transform-origin: bottom;
+}
+
+.preloader-eq span:nth-child(1) { height: 40%; animation-delay: 0s;    }
+.preloader-eq span:nth-child(2) { height: 80%; animation-delay: 0.1s;  }
+.preloader-eq span:nth-child(3) { height: 60%; animation-delay: 0.2s;  }
+.preloader-eq span:nth-child(4) { height: 100%;animation-delay: 0.15s; }
+.preloader-eq span:nth-child(5) { height: 50%; animation-delay: 0.05s; }
+
+@keyframes preloaderEq {
+    0%, 100% { transform: scaleY(1); }
+    50%      { transform: scaleY(1.7); }
+}
+
+.preloader-text {
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.35em;
+    color: var(--text-primary);
+    animation: preloaderPulse 2s ease-in-out infinite;
+}
+
+@keyframes preloaderPulse {
+    0%, 100% { opacity: 0.5; letter-spacing: 0.35em; }
+    50%      { opacity: 1;   letter-spacing: 0.42em; }
+}
+
+.preloader-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--bg-elevated);
+}
+
+.preloader-progress {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent-soft), var(--accent-gold-mute));
+    transition: width 0.25s ease;
+    box-shadow: 0 0 12px var(--accent-glow);
+}

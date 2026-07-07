@@ -1,0 +1,187 @@
+/* ============================================================
+   HOME/SECTIONS.CSS — Testimonials, contact, social, credits, WhatsApp
+   ============================================================ */
+
+/* ── Testimonials ── */
+.testimonials-section {
+    padding: 80px 40px;
+    border-top: 1px solid var(--border-light);
+    text-align: center;
+}
+
+.testimonials-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    max-width: 1200px;
+    margin: 40px auto 0;
+}
+
+.testimonial-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-light);
+    border-radius: var(--card-radius);
+    padding: 28px;
+    text-align: left;
+    transition: var(--transition-smooth);
+}
+
+.testimonial-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(124, 141, 240, 0.3);
+}
+
+.testimonial-quote {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    font-style: italic;
+    margin-bottom: 20px;
+    line-height: 1.6;
+}
+
+.testimonial-author {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.testimonial-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent-soft), var(--accent-gold-mute));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: white;
+    font-size: 0.9rem;
+}
+
+.testimonial-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.testimonial-role {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+/* ── Producer Credits ── */
+.producer-credits {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    border-top: 1px solid var(--border-light);
+}
+
+.producer-credits strong {
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+/* ── Contact Section ── */
+.contact-section {
+    text-align: center;
+    margin-top: 0;
+    padding: 60px 40px 80px;
+    border-top: 1px solid var(--border-light);
+}
+
+.contact-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+.contact-subtitle {
+    color: var(--text-secondary);
+    margin-bottom: 48px;
+    font-size: 1rem;
+}
+
+/* ── Social Grid ── */
+.social-grid {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.social-card {
+    background: var(--bg-surface);
+    width: 160px;
+    padding: 20px 12px;
+    border-radius: 32px;
+    text-decoration: none;
+    color: var(--text-primary);
+    border: 1px solid var(--border-light);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    transition: var(--transition-smooth);
+}
+
+.social-icon {
+    width: 54px;
+    height: 54px;
+    background: rgba(124, 141, 240, 0.1);
+    border-radius: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.7rem;
+    color: var(--accent-soft);
+}
+
+.social-card:hover {
+    transform: translateY(-6px);
+    border-color: var(--accent-soft);
+    background: #171A24;
+}
+
+/* ── WhatsApp Float ── */
+.whatsapp-float {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    background: #25D366;
+    width: 54px;
+    height: 54px;
+    border-radius: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.8rem;
+    text-decoration: none;
+    box-shadow: 0 8px 20px rgba(37, 211, 102, 0.25);
+    z-index: 1100;
+    transition: transform 0.4s var(--ease-spring), opacity 0.4s ease;
+}
+
+.whatsapp-float.hidden {
+    transform: translateY(100px);
+    opacity: 0;
+}
+
+.whatsapp-tooltip {
+    position: absolute;
+    right: 70px;
+    background: var(--bg-elevated);
+    padding: 6px 14px;
+    border-radius: 40px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: 0.2s;
+}
+
+.whatsapp-float:hover .whatsapp-tooltip {
+    opacity: 1;
+    transform: translateX(-6px);
+}

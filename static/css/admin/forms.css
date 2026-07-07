@@ -1,0 +1,348 @@
+/* ============================================================
+   ADMIN/FORMS.CSS — All form styles
+   ============================================================ */
+
+.form-container {
+    max-width: 800px;
+}
+
+.admin-form {
+    background: var(--admin-surface);
+    border: 1px solid var(--admin-border);
+    border-radius: var(--admin-radius);
+    padding: 1.75rem;
+}
+
+.form-section {
+    margin-bottom: 1.75rem;
+    padding-bottom: 1.75rem;
+    border-bottom: 1px solid var(--admin-border);
+}
+
+.form-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.form-section h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.form-section h3 i {
+    color: var(--admin-accent);
+    font-size: 0.95rem;
+}
+
+.form-section h4 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 1.25rem 0 0.75rem;
+}
+
+.form-group {
+    margin-bottom: 1.25rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.4rem;
+    color: var(--admin-text-sec);
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 0.65rem 0.9rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--admin-border-mid);
+    border-radius: 8px;
+    color: #fff;
+    font-size: 0.85rem;
+    font-family: inherit;
+    transition: var(--admin-transition);
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--admin-accent);
+    background: rgba(168, 85, 247, 0.05);
+    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.08);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 90px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 1.75rem;
+}
+
+.current-image {
+    margin-bottom: 1rem;
+}
+
+.current-image img {
+    max-width: 180px;
+    border-radius: 8px;
+    border: 1px solid var(--admin-border);
+}
+
+/* ─── SELECT DROPDOWNS ─── */
+select,
+.form-group select {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    padding-right: 2.5rem !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a855f7' stroke-width='3'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 0.9rem center !important;
+    background-size: 12px !important;
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    cursor: pointer;
+}
+
+select option,
+.form-group select option {
+    background: #1a1a2e !important;
+    color: #fff !important;
+}
+
+/* ─── FILE INPUT ─── */
+input[type="file"] {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px dashed var(--admin-border-mid);
+    border-radius: 8px;
+    padding: 0.85rem;
+    color: var(--admin-text-sec);
+    cursor: pointer;
+    transition: var(--admin-transition);
+}
+
+input[type="file"]:hover {
+    border-color: var(--admin-accent);
+    background: rgba(168, 85, 247, 0.03);
+}
+
+input[type="file"]::file-selector-button {
+    background: linear-gradient(135deg, var(--admin-accent), var(--admin-accent2));
+    color: #fff;
+    border: none;
+    padding: 0.45rem 0.9rem;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-right: 0.75rem;
+    font-weight: 600;
+    font-size: 0.8rem;
+    transition: var(--admin-transition);
+}
+
+input[type="file"]::file-selector-button:hover {
+    transform: scale(1.03);
+}
+
+/* ─── PLACEHOLDERS ─── */
+input::placeholder,
+textarea::placeholder {
+    color: #555;
+}
+
+    /* ─── Waveform Trimmer ─── */
+    .waveform-trimmer {
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 10px;
+        padding: 1rem 1.25rem;
+        margin-top: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    .trimmer-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+    }
+    .trimmer-title {
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: var(--admin-accent, #C9AE74);
+    }
+    .trimmer-info {
+        font-size: 0.7rem;
+        color: var(--text-muted, #7a7570);
+    }
+    .trimmer-canvas-wrapper {
+        position: relative;
+        width: 100%;
+        background: rgba(0,0,0,0.3);
+        border-radius: 6px;
+        overflow: hidden;
+        cursor: pointer;
+    }
+    .trimmer-canvas-wrapper canvas {
+        display: block;
+        width: 100%;
+        height: 100px;
+    }
+    .trimmer-loading {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-muted, #7a7570);
+        font-size: 0.85rem;
+    }
+    .trimmer-loading i { margin-right: 0.5rem; }
+    .trimmer-times {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 0.6rem;
+        padding: 0 0.25rem;
+    }
+    .trim-time-item {
+        text-align: center;
+    }
+    .trim-label {
+        display: block;
+        font-size: 0.65rem;
+        color: var(--text-muted, #7a7570);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 2px;
+    }
+    .trim-value {
+        font-family: 'DM Mono', 'Courier New', monospace;
+        font-size: 0.85rem;
+        color: #f0ece4;
+        font-weight: 600;
+    }
+    .trimmer-actions {
+        margin-top: 0.6rem;
+        text-align: center;
+    }
+    .trim-play-btn {
+        background: var(--admin-accent, #C9AE74) !important;
+        color: #0d0d0d !important;
+        border: none !important;
+        padding: 0.4rem 1.2rem !important;
+        border-radius: 6px !important;
+        font-weight: 700 !important;
+        font-size: 0.8rem !important;
+        cursor: pointer;
+        transition: opacity 0.2s;
+    }
+    .trim-play-btn:hover { opacity: 0.85; }
+
+    /* ─── License Tier Row ─── */
+    .license-tier-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    @media (max-width: 700px) {
+        .license-tier-row {
+            grid-template-columns: 1fr;
+        }
+    }
+    .license-tier-card {
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 10px;
+        padding: 1rem 1.25rem;
+    }
+    .license-tier-card .tier-header {
+        font-weight: 700;
+        font-size: 0.95rem;
+        margin-bottom: 0.75rem;
+    }
+    .tier-basic .tier-header { color: #10b981; }
+    .tier-premium .tier-header { color: #3b82f6; }
+
+    .license-tier-card .form-group { margin-bottom: 0.6rem; }
+    .license-tier-card .form-group:last-child { margin-bottom: 0; }
+    .license-tier-card label {
+        font-size: 0.75rem;
+        margin-bottom: 3px;
+    }
+    .license-tier-card input {
+        font-size: 0.85rem;
+        padding: 0.45rem 0.6rem;
+    }
+
+    /* ─── Exclusive Compact ─── */
+    .license-tier-compact {
+        margin-top: 1rem;
+        background: rgba(201,174,116,0.04);
+        border: 1px solid rgba(201,174,116,0.12);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    .tier-compact-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 1.25rem;
+        font-size: 0.85rem;
+    }
+    .tier-compact-header span:first-child {
+        color: #C9AE74;
+        font-weight: 600;
+    }
+    .tier-compact-header .btn-link {
+        background: none;
+        border: none;
+        color: var(--text-muted, #7a7570);
+        font-size: 0.75rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+    .tier-compact-header .btn-link i {
+        transition: transform 0.2s;
+        font-size: 0.65rem;
+    }
+    .tier-compact-body {
+        padding: 0 1.25rem 1rem;
+    }
+    .tier-compact-body .form-group { margin-bottom: 0.5rem; }
+
+    /* ─── Current file badge ─── */
+    .current-file-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: rgba(16,185,129,0.1);
+        color: #10b981;
+        font-size: 0.75rem;
+        padding: 0.25rem 0.6rem;
+        border-radius: 4px;
+        margin-bottom: 0.4rem;
+    }
+    .current-file-badge i { font-size: 0.65rem; }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}

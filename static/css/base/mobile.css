@@ -1,0 +1,78 @@
+/* ============================================================
+   MOBILE.CSS — All mobile responsive overrides (max-width: 700px)
+   Load last among base files.
+   ============================================================ */
+
+@media (max-width: 700px) {
+
+    /* ── Logo ── */
+    .logo {
+        order: 1;
+    }
+
+    /* ── Auth Buttons ── */
+    .auth-buttons {
+        gap: 4px;
+    }
+
+    .auth-btn {
+        padding: 6px 12px;
+        font-size: 0.75rem;
+    }
+
+    .auth-btn .btn-label {
+        display: none;
+    }
+
+    .user-menu-btn .btn-label {
+        display: none;
+    }
+
+    .user-menu-btn {
+        padding: 8px 12px;
+    }
+
+    /* ── Auth Modals ── */
+    .auth-modal {
+        padding: 28px 20px;
+    }
+
+    /* ── User Sidebar becomes bottom sheet ── */
+    .user-sidebar {
+        width: 100vw;
+        max-width: 100vw;
+        transform: translateY(100%);
+        top: auto;
+        bottom: 0;
+        height: 85vh;
+        border-radius: 24px 24px 0 0;
+        border-left: none;
+        border-top: 1px solid var(--border-light);
+        transition: transform 0.35s var(--ease-spring);
+    }
+
+    .user-sidebar.open {
+        transform: translateY(0);
+    }
+
+    .user-sidebar-overlay {
+        background: rgba(12, 14, 19, 0.9);
+    }
+}
+
+/* ── Reduced Motion ── */
+@media (prefers-reduced-motion: reduce) {
+    .note,
+    .hero-equalizer {
+        display: none;
+    }
+
+    .reveal-on-scroll {
+        opacity: 1;
+        transform: none;
+    }
+
+    .preloader {
+        display: none !important;
+    }
+}

@@ -2,15 +2,18 @@
 TRACKLIST PANEL
 ============================================================ */
 .tracklist-panel{
-    margin-top : 40px;
+    /*margin-top : 68px;*/
 }
 
 .panel-header {
   padding: 16px 20px 0;
   flex-shrink: 0;
   position: relative;
-  z-index: 5;
-  background: rgba(12, 14, 19, 0.35);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: rgba(12, 14, 19, 0.95) !important;
+  backdrop-filter: blur(10px);
 }
 
 .panel-header h2 {
@@ -87,6 +90,7 @@ TRACKLIST SCROLL + CUSTOM SCROLLBAR
   padding: 4px 16px 20px 20px;
   scrollbar-width: thin;
   scrollbar-color: rgba(124, 141, 240, 0.3) transparent;
+  padding-bottom: 120px !important;
 }
 
 .tracklist-scroll::-webkit-scrollbar {
@@ -173,19 +177,24 @@ TRACK ITEM
   gap: 5px;
 }
 
+
 .detail-badge {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 3px 8px;
   border-radius: 20px;
-  font-size: 0.68rem;
   font-weight: 600;
   letter-spacing: 0.02em;
+  background: transparent !important;
+  border: none !important;
+  color: var(--text-muted) !important;
+  padding: 0 4px !important;
+  font-size: 0.75rem !important;
 }
 
 .detail-badge i {
   font-size: 0.6rem;
+  opacity : 0.5;
 }
 
 .bpm-badge {

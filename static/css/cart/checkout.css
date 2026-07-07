@@ -1,0 +1,148 @@
+/* ============================================================
+   CART/CHECKOUT.CSS — Footer, summary, checkout button, trust badges
+   ============================================================ */
+
+/* ── FOOTER ── */
+.cart-footer {
+    position: relative;
+    z-index: 2;
+    padding: 20px 24px 24px;
+    border-top: 1px solid var(--border-light);
+    background: rgba(15, 17, 24, 0.85);
+    backdrop-filter: blur(24px);
+}
+
+/* ── SUMMARY ── */
+.cart-summary {
+    margin-bottom: 16px;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.summary-row.discount {
+    color: #4ade80;
+}
+
+.summary-row.discount span:last-child {
+    font-weight: 600;
+}
+
+.free-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #4ade80;
+    background: rgba(74, 222, 128, 0.1);
+    padding: 2px 8px;
+    border-radius: 20px;
+    letter-spacing: 0.05em;
+}
+
+.summary-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border-mid), transparent);
+    margin: 8px 0;
+}
+
+.summary-row.grand {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.summary-row.grand span:last-child {
+    font-size: 1.2rem;
+    font-weight: 800;
+    background: linear-gradient(120deg, var(--accent-gold-mute), #E5D5A5);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+}
+
+/* ── CHECKOUT BUTTON ── */
+.checkout-btn-premium {
+    width: 100%;
+    padding: 16px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--accent-soft), #6C7CE0);
+    color: white;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    border: none;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.35s cubic-bezier(0.2, 0.9, 0.4, 1);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    box-shadow: 0 8px 24px rgba(124, 141, 240, 0.25);
+}
+
+.checkout-btn-premium::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+    transition: left 0.6s ease;
+}
+
+.checkout-btn-premium:hover::before {
+    left: 100%;
+}
+
+.checkout-btn-premium:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(124, 141, 240, 0.35);
+}
+
+.checkout-btn-premium:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.checkout-btn-premium:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    filter: grayscale(0.6);
+    box-shadow: none;
+}
+
+.checkout-btn-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+    z-index: 2;
+}
+
+/* ── TRUST BADGES ── */
+.cart-trust-badges {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}
+
+.cart-trust-badges span {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.cart-trust-badges i {
+    font-size: 0.8rem;
+    color: var(--accent-soft);
+    opacity: 0.7;
+}

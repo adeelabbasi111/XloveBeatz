@@ -1,0 +1,9 @@
+/* ============================================================
+   ADMIN-MAIN.CSS — Imports all admin CSS files
+   Include this one file in base.html
+   ============================================================ */
+
+@import url('base.css');
+@import url('components.css');
+@import url('forms.css');
+@import url('pages.css');

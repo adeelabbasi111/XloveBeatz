@@ -1,0 +1,245 @@
+/* ============================================================
+   MOBILE-NAV.CSS — Mobile bottom nav + toast system
+   Loaded on: base.html (all pages)
+   ============================================================ */
+
+/* ── Mobile Bottom Nav — Full Width, Flush Bottom ── */
+.mobile-bottom-nav {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    background: rgba(12, 14, 19, 0.96);
+    backdrop-filter: blur(24px) saturate(1.4);
+    border-top: 1px solid rgba(124, 141, 240, 0.1);
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+    z-index: 999;
+    justify-content: space-around;
+    align-items: flex-end;
+    gap: 2px;
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.3);
+    box-sizing: border-box;
+}
+
+.mobile-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    transition: var(--transition-smooth);
+    padding: 8px 4px 6px;
+    border-radius: 14px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    position: relative;
+    flex: 1;
+    min-width: 0;
+}
+
+.mobile-nav-item i {
+    font-size: 1.15rem;
+    transition: transform 0.3s var(--ease-spring);
+}
+
+.mobile-nav-icon-wrap {
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    transition: var(--transition-smooth);
+    position: relative;
+}
+
+.mobile-nav-item:hover {
+    color: var(--text-secondary);
+}
+
+.mobile-nav-item:hover .mobile-nav-icon-wrap {
+    background: rgba(124, 141, 240, 0.08);
+}
+
+.mobile-nav-item:hover i {
+    transform: translateY(-2px);
+}
+
+.mobile-nav-item.active {
+    color: var(--accent-soft);
+}
+
+.mobile-nav-item.active .mobile-nav-icon-wrap {
+    background: linear-gradient(135deg, rgba(124, 141, 240, 0.2), rgba(157, 124, 236, 0.15));
+    box-shadow: 0 4px 12px rgba(124, 141, 240, 0.15);
+}
+
+.mobile-nav-item.active i {
+    transform: translateY(-2px);
+}
+
+.mobile-nav-item.active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent-soft), var(--accent-purple));
+    border-radius: 0 0 4px 4px;
+    opacity: 0.8;
+}
+
+/* ── Account Button — Center, Bigger ── */
+.mobile-account-btn {
+    background: transparent;
+    padding-top: 4px;
+}
+
+.mobile-account-btn .account-circle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent-soft), var(--accent-purple));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 20px rgba(124, 141, 240, 0.3);
+    transition: var(--transition-smooth);
+}
+
+.mobile-account-btn .account-circle i {
+    font-size: 1.3rem;
+    color: #fff;
+}
+
+.mobile-account-btn:hover .account-circle {
+    transform: scale(1.08);
+    box-shadow: 0 8px 24px rgba(124, 141, 240, 0.4);
+}
+
+.mobile-account-btn.active .account-circle {
+    background: linear-gradient(135deg, var(--accent-soft), var(--accent-purple));
+    box-shadow: 0 6px 24px rgba(124, 141, 240, 0.4);
+}
+
+.mobile-account-btn.active::before {
+    display: none;
+}
+
+.mobile-account-btn.logged-in .account-circle::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 10px;
+    height: 10px;
+    background: #10b981;
+    border-radius: 50%;
+    border: 2px solid var(--bg-deep);
+}
+
+/* ── Cart Badge ── */
+.mobile-cart-badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: linear-gradient(135deg, var(--accent-soft), var(--accent-purple));
+    color: #fff;
+    font-size: 0.55rem;
+    font-weight: 800;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    border: 2px solid var(--bg-deep);
+    line-height: 1;
+}
+
+/* ── Toast System ── */
+.toast-container {
+    position: fixed;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10000;
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 10px;
+    pointer-events: none;
+}
+
+.toast {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-mid);
+    padding: 14px 28px;
+    border-radius: 16px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    z-index: 10000;
+    pointer-events: none;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+    transition: all 0.4s var(--ease-spring);
+    max-width: 90vw;
+    white-space: nowrap;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+.toast.toast-fading {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+}
+
+.toast-success {
+    border-color: rgba(16,185,129,0.3);
+    background: rgba(16,185,129,0.08);
+    color: #34d399;
+}
+
+.toast-error {
+    border-color: rgba(239,68,68,0.3);
+    background: rgba(239,68,68,0.08);
+    color: #f87171;
+}
+
+.toast-info {
+    border-color: rgba(124,141,240,0.3);
+    background: rgba(124,141,240,0.08);
+    color: #a5b4fc;
+}
+
+/* ── Responsive ── */
+@media (max-width: 700px) {
+    .mobile-bottom-nav {
+        display: flex;
+    }
+
+    main {
+        padding-bottom: 100px;
+    }
+
+    .toast-container {
+        bottom: 100px;
+    }
+}

@@ -362,7 +362,7 @@
                         });
                         updateCartUI();
                         closeCart();
-                        window.location.href = '/checkout/success?order_id=' + orderData.db_order_id;
+                        window.location.href = '/payment/success/' + orderData.db_order_id;
                     } else {
                         showToast('❌ Verification failed', 'error');
                     }
@@ -397,7 +397,7 @@
                             });
                             updateCartUI();
                             closeCart();
-                            window.location.href = '/checkout/success?order_id=' + orderData.db_order_id;
+                            window.location.href = '/payment/success/' + orderData.db_order_id;
                         } else {
                             showToast('❌ Verification failed', 'error');
                         }

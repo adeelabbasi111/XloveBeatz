@@ -1,0 +1,225 @@
+/* ============================================================
+   ADMIN/PAGES.CSS — Page-specific: header, filters, activity,
+   detail pages, analytics, pagination
+   ============================================================ */
+
+/* ─── PAGE HEADER ─── */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.filter-tabs {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+}
+
+.filter-tab {
+    padding: 0.45rem 0.9rem;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--admin-text-sec);
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: var(--admin-transition);
+}
+
+.filter-tab:hover {
+    background: rgba(168, 85, 247, 0.1);
+    color: var(--admin-accent);
+}
+
+.filter-tab.active {
+    background: rgba(168, 85, 247, 0.2);
+    color: var(--admin-accent);
+}
+
+/* ─── ACTIVITY LIST ─── */
+.activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.activity-item {
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 8px;
+}
+
+.activity-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: rgba(168, 85, 247, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--admin-accent);
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.activity-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.activity-text {
+    font-weight: 500;
+    font-size: 0.9rem;
+    margin-bottom: 0.15rem;
+}
+
+.activity-time {
+    color: var(--admin-text-sec);
+    font-size: 0.8rem;
+}
+
+/* ─── ORDER / USER DETAIL ─── */
+.order-detail,
+.user-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.order-header,
+.user-header {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+}
+
+.order-info,
+.order-customer,
+.order-items,
+.order-actions,
+.user-info,
+.user-actions,
+.user-orders,
+.user-downloads {
+    background: var(--admin-surface);
+    border: 1px solid var(--admin-border);
+    border-radius: var(--admin-radius);
+    padding: 1.25rem;
+}
+
+.order-info h3,
+.order-customer h3,
+.order-items h3,
+.order-actions h3,
+.user-info h3,
+.user-orders h3,
+.user-downloads h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+}
+
+.info-grid > div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.info-grid label {
+    color: var(--admin-text-sec);
+    font-size: 0.8rem;
+}
+
+.order-actions form {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+/* ─── ANALYTICS ─── */
+.analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    gap: 1.25rem;
+}
+
+.analytics-card {
+    background: var(--admin-surface);
+    border: 1px solid var(--admin-border);
+    border-radius: var(--admin-radius);
+    padding: 1.25rem;
+}
+
+.analytics-card h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.analytics-card h3 i {
+    color: var(--admin-accent);
+}
+
+.chart-container {
+    min-height: 100px;
+}
+
+.no-data {
+    text-align: center;
+    color: var(--admin-text-sec);
+    padding: 2rem;
+    font-size: 0.9rem;
+}
+
+.no-data i {
+    font-size: 2rem;
+    margin-bottom: 0.75rem;
+    display: block;
+    opacity: 0.3;
+}
+
+/* ─── PAGINATION ─── */
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+}
+
+.pagination .btn {
+    padding: 0.5rem 0.9rem;
+    font-size: 0.8rem;
+    min-width: 36px;
+    justify-content: center;
+}
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 768px) {
+    .dashboard-grid,
+    .analytics-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .order-header,
+    .user-header {
+        grid-template-columns: 1fr;
+    }
+
+    .license-tier-grid {
+        grid-template-columns: 1fr !important;
+    }
+}

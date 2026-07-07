@@ -3,6 +3,7 @@ Database models only. No business logic, no service functions.
 """
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func, UniqueConstraint
+import os
 
 db = SQLAlchemy()
 
@@ -244,6 +245,11 @@ class Newsletter(db.Model):
 # =========================
 
 def init_db(app):
+
+    instance_path = app.instance_path
+    if not os.path.exists(instance_path):
+        os.makedirs(instance_path, exist_ok=True)
+
     """Create tables and seed default license tiers."""
     with app.app_context():
         db.create_all()

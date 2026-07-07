@@ -15,23 +15,16 @@
     var loginError = document.getElementById('loginError');
     var signupError = document.getElementById('signupError');
 
-    var userSidebar = document.getElementById('userSidebar');
-    var userSidebarOverlay = document.getElementById('userSidebarOverlay');
-    var openUserSidebarBtn = document.getElementById('openUserSidebarBtn');
-    var closeUserSidebarBtn = document.getElementById('closeUserSidebarBtn');
-
     var guestAuthBtns = document.getElementById('guestAuthBtns');
     var userMenuBtns = document.getElementById('userMenuBtns');
     var headerUsername = document.getElementById('headerUsername');
-    var header = document.getElementById('header');
+    var header = document.querySelector('.site-header');
 
     var accountBtn = document.getElementById('accountBtn');
     var mobileAccountBtn = document.getElementById('mobileAccountBtn');
     var accountModal = document.getElementById('accountModal');
     var accountModalOverlay = document.getElementById('accountModalOverlay');
     var closeAccountModalBtn = document.getElementById('closeAccountModalBtn');
-    var accountTabBtns = document.querySelectorAll('.account-tab-btn[data-atab]');
-    var accountTabContents = document.querySelectorAll('.account-tab-content');
 
     var mobileNavItems = document.querySelectorAll('.mobile-nav-item');
 
@@ -64,11 +57,8 @@
         setTimeout(function() { accountModal.classList.add('open'); }, 10);
         document.body.style.overflow = 'hidden';
 
-        // Load real data when opening
         if (currentUser) {
-            loadAccountProducts();
-            loadAccountLicenses();
-            loadAccountProfile();
+            loadAccountStats();
         }
     }
 
@@ -81,11 +71,13 @@
         }, 350);
     }
 
+    // Login/Signup buttons
     if (openLoginBtn) openLoginBtn.addEventListener('click', function() { openModal(loginModal); });
     if (openSignupBtn) openSignupBtn.addEventListener('click', function() { openModal(signupModal); });
     if (closeLoginBtn) closeLoginBtn.addEventListener('click', function() { closeModal(loginModal); });
     if (closeSignupBtn) closeSignupBtn.addEventListener('click', function() { closeModal(signupModal); });
 
+    // Account modal close
     if (closeAccountModalBtn) closeAccountModalBtn.addEventListener('click', closeAccountModal);
     if (accountModalOverlay) {
         accountModalOverlay.addEventListener('click', function(e) {
@@ -93,6 +85,7 @@
         });
     }
 
+    // Switch between login/signup
     if (switchToSignup) switchToSignup.addEventListener('click', function(e) {
         e.preventDefault();
         closeModal(loginModal);
@@ -111,53 +104,59 @@
         });
     });
 
-    // ==================== SIDEBAR CONTROLS ====================
-    function openUserSidebar() {
-        if (!userSidebar) return;
-        userSidebar.classList.add('open');
-        if (userSidebarOverlay) userSidebarOverlay.classList.add('active');
-        document.body.style.overflow = 'hidden';
-        loadUserPurchases();
+    // ==================== ACCOUNT BUTTON CLICK ====================
+    function handleAccountClick() {
+        openAccountModal();
     }
 
-    function closeUserSidebar() {
-        if (!userSidebar) return;
-        userSidebar.classList.remove('open');
-        if (userSidebarOverlay) userSidebarOverlay.classList.remove('active');
-        document.body.style.overflow = '';
-    }
-
-    if (openUserSidebarBtn) openUserSidebarBtn.addEventListener('click', openUserSidebar);
-    if (closeUserSidebarBtn) closeUserSidebarBtn.addEventListener('click', closeUserSidebar);
-    if (userSidebarOverlay) userSidebarOverlay.addEventListener('click', closeUserSidebar);
-
-    // Sidebar Tabs
-    var userTabBtns = document.querySelectorAll('.user-tab-btn');
-    var userTabContents = document.querySelectorAll('.user-tab-content');
-    userTabBtns.forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            var target = btn.dataset.utab;
-            userTabBtns.forEach(function(b) { b.classList.remove('active'); });
-            userTabContents.forEach(function(c) { c.classList.remove('active'); });
-            btn.classList.add('active');
-            var tabContent = document.getElementById('utab-' + target);
-            if (tabContent) tabContent.classList.add('active');
-        });
+    if (accountBtn) accountBtn.addEventListener('click', handleAccountClick);
+    if (mobileAccountBtn) mobileAccountBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        handleAccountClick();
     });
 
-    // Account Modal Tabs
-    function activateAccountTab(tabId) {
-        accountTabContents.forEach(function(c) { c.classList.remove('active'); });
-        var activeContent = document.getElementById('atab-' + tabId);
-        if (activeContent) activeContent.classList.add('active');
-        accountTabBtns.forEach(function(btn) {
-            btn.classList.toggle('active', btn.dataset.atab === tabId);
-        });
-    }
-
-    accountTabBtns.forEach(function(btn) {
-        btn.addEventListener('click', function() { activateAccountTab(btn.dataset.atab); });
+    // Account modal auth buttons (guest state)
+    var accountLoginBtn = document.getElementById('accountLoginBtn');
+    var accountSignupBtn = document.getElementById('accountSignupBtn');
+    if (accountLoginBtn) accountLoginBtn.addEventListener('click', function() {
+        closeAccountModal();
+        setTimeout(function() { openModal(loginModal); }, 200);
     });
+    if (accountSignupBtn) accountSignupBtn.addEventListener('click', function() {
+        closeAccountModal();
+        setTimeout(function() { openModal(signupModal); }, 200);
+    });
+
+    // Logout
+    var logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
+
+    // ==================== LOAD QUICK STATS ====================
+    async function loadAccountStats() {
+        var purchaseCount = 0;
+
+        try {
+            var purchasesRes = await fetch('/api/user/purchases', { credentials: 'same-origin' });
+            var purchasesData = await purchasesRes.json();
+            var purchases = purchasesData.purchases || [];
+            purchaseCount = purchases.length;
+            var productCountEl = document.getElementById('accountProductCount');
+            if (productCountEl) productCountEl.textContent = purchaseCount;
+        } catch (e) {}
+
+        try {
+            var licensesRes = await fetch('/api/user/licenses', { credentials: 'same-origin' });
+            var licensesData = await licensesRes.json();
+            var licenses = licensesData.licenses || [];
+            var licenseCountEl = document.getElementById('accountLicenseCount');
+            if (licenseCountEl) licenseCountEl.textContent = licenses.length;
+        } catch (e) {}
+
+        try {
+            var orderCountEl = document.getElementById('accountOrderCount');
+            if (orderCountEl) orderCountEl.textContent = purchaseCount || 0;
+        } catch (e) {}
+    }
 
     // ==================== AUTH UI STATE ====================
     function updateAuthUI(user) {
@@ -174,6 +173,8 @@
         var avatar = document.getElementById('accountAvatar');
         var modalUsername = document.getElementById('accountModalUsername');
         var modalEmail = document.getElementById('accountModalEmail');
+        var authPrompt = document.getElementById('accountAuthPrompt');
+        var loggedIn = document.getElementById('accountLoggedIn');
 
         if (isLoggedIn && user) {
             if (modalUsername) modalUsername.textContent = user.username || 'User';
@@ -182,301 +183,20 @@
                 avatar.innerHTML = '<span style="font-weight:800;font-size:1.2rem;">' +
                     (user.username ? user.username.charAt(0).toUpperCase() : 'U') + '</span>';
             }
+            if (authPrompt) authPrompt.style.display = 'none';
+            if (loggedIn) loggedIn.style.display = 'block';
         } else {
             if (modalUsername) modalUsername.textContent = 'Guest';
             if (modalEmail) modalEmail.textContent = 'Sign in to access your account';
             if (avatar) avatar.innerHTML = '<i class="fas fa-user-circle"></i>';
-        }
-
-        // Settings
-        var settingsLoggedIn = document.getElementById('settingsLoggedIn');
-        var settingsGuest = document.getElementById('settingsGuest');
-        var settingsUsername = document.getElementById('settingsUsername');
-        var settingsEmail = document.getElementById('settingsEmail');
-        var settingsJoined = document.getElementById('settingsJoined');
-
-        if (isLoggedIn && user) {
-            if (settingsLoggedIn) settingsLoggedIn.style.display = 'block';
-            if (settingsGuest) settingsGuest.style.display = 'none';
-            if (settingsUsername) settingsUsername.textContent = user.username || '-';
-            if (settingsEmail) settingsEmail.textContent = user.email || '-';
-            if (settingsJoined) settingsJoined.textContent = user.joined || '-';
-        } else {
-            if (settingsLoggedIn) settingsLoggedIn.style.display = 'none';
-            if (settingsGuest) settingsGuest.style.display = 'block';
-        }
-
-        // Products & Licenses Guest States
-        var productsGuestState = document.getElementById('productsGuestState');
-        var licensesGuestState = document.getElementById('licensesGuestState');
-        var productsList = document.getElementById('productsList');
-        var licensesList = document.getElementById('licensesList');
-
-        if (isLoggedIn) {
-            if (productsGuestState) productsGuestState.style.display = 'none';
-            if (licensesGuestState) licensesGuestState.style.display = 'none';
-            if (productsList) productsList.style.display = 'block';
-            if (licensesList) licensesList.style.display = 'block';
-        } else {
-            if (productsGuestState) productsGuestState.style.display = 'block';
-            if (licensesGuestState) licensesGuestState.style.display = 'block';
-            if (productsList) productsList.style.display = 'none';
-            if (licensesList) licensesList.style.display = 'none';
+            if (authPrompt) authPrompt.style.display = 'block';
+            if (loggedIn) loggedIn.style.display = 'none';
         }
 
         if (!isLoggedIn) {
-            closeUserSidebar();
             closeAccountModal();
         }
     }
-
-    // ==================== LOAD ACCOUNT PRODUCTS ====================
-    async function loadAccountProducts() {
-        var list = document.getElementById('productsList');
-        var count = document.getElementById('productCount');
-        if (!list) return;
-
-        list.innerHTML = '<div class="loading-state"><i class="fas fa-spinner fa-spin"></i><p>Loading your products...</p></div>';
-
-        try {
-            var res = await fetch('/api/user/purchases');
-            var data = await res.json();
-
-            if (data.error) {
-                list.innerHTML = '<div class="empty-state"><i class="fas fa-lock"></i><p>' + data.error + '</p></div>';
-                return;
-            }
-
-            var purchases = data.purchases || [];
-            if (count) count.textContent = purchases.length + ' item' + (purchases.length !== 1 ? 's' : '');
-
-            if (purchases.length === 0) {
-                list.innerHTML = '<div class="empty-state"><i class="fas fa-shopping-bag"></i><p>No purchases yet</p><p style="font-size:0.8rem;margin-top:6px;opacity:0.6;">Start exploring our beats!</p></div>';
-                return;
-            }
-
-            var typeIcons = { beat: 'fa-music', pack: 'fa-layer-group', preset: 'fa-sliders-h' };
-            var licenseColors = { Basic: 'var(--accent-soft)', Premium: '#3b82f6', Exclusive: '#C9AE74', Standard: 'var(--text-muted)' };
-
-            list.innerHTML = purchases.map(function(p) {
-                var icon = typeIcons[p.product_type] || 'fa-box';
-                var licColor = licenseColors[p.license] || 'var(--accent-soft)';
-                return '<div class="product-item">' +
-                    '<div class="product-item-header">' +
-                        '<div>' +
-                            '<div class="product-item-name"><i class="fas ' + icon + '" style="margin-right:8px;opacity:0.5;font-size:0.8rem;"></i>' + p.product_name + '</div>' +
-                            '<div class="product-item-type">' + p.product_type + ' &bull; ' + p.order_date + '</div>' +
-                        '</div>' +
-                        '<span class="product-item-license" style="background:' + licColor + '20;color:' + licColor + ';">' + p.license + '</span>' +
-                    '</div>' +
-                    '<div class="product-item-footer">' +
-                        '<span>₹' + p.price_paid.toFixed(0) + ' &bull; ' + p.download_count + ' downloads</span>' +
-                        '<a href="/download/' + p.product_id + '" class="product-download-btn"><i class="fas fa-download"></i> Download</a>' +
-                    '</div>' +
-                '</div>';
-            }).join('');
-
-        } catch (err) {
-            list.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><p>Failed to load products</p></div>';
-        }
-    }
-
-    // ==================== LOAD ACCOUNT LICENSES ====================
-    async function loadAccountLicenses() {
-        var list = document.getElementById('licensesList');
-        var count = document.getElementById('licenseCount');
-        if (!list) return;
-
-        list.innerHTML = '<div class="loading-state"><i class="fas fa-spinner fa-spin"></i><p>Loading your licenses...</p></div>';
-
-        try {
-            var res = await fetch('/api/user/licenses');
-            var data = await res.json();
-
-            if (data.error) {
-                list.innerHTML = '<div class="empty-state"><i class="fas fa-lock"></i><p>' + data.error + '</p></div>';
-                return;
-            }
-
-            var licenses = data.licenses || [];
-            if (count) count.textContent = licenses.length + ' item' + (licenses.length !== 1 ? 's' : '');
-
-            if (licenses.length === 0) {
-                list.innerHTML = '<div class="empty-state"><i class="fas fa-file-contract"></i><p>No licenses yet</p><p style="font-size:0.8rem;margin-top:6px;opacity:0.6;">Licenses are generated after purchase</p></div>';
-                return;
-            }
-
-            list.innerHTML = licenses.map(function(lic) {
-                var badgeClass = lic.license_type === 'Exclusive' ? 'gold' : '';
-                var downloadBtn = '';
-                if (lic.has_pdf) {
-                    downloadBtn = '<a href="/download/license/' + lic.license_id + '" class="product-download-btn"><i class="fas fa-file-pdf"></i> Download PDF</a>';
-                } else {
-                    downloadBtn = '<span style="font-size:0.75rem;color:var(--text-muted);">PDF not available</span>';
-                }
-
-                return '<div class="license-item">' +
-                    '<div class="license-item-header">' +
-                        '<div>' +
-                            '<div class="license-item-name">' + lic.product_name + '</div>' +
-                            '<div class="license-item-type">' + lic.license_type + ' License &bull; ' + lic.product_type + '</div>' +
-                        '</div>' +
-                        '<span class="license-item-badge ' + badgeClass + '">' + lic.license_type + '</span>' +
-                    '</div>' +
-                    '<div class="license-item-footer">' +
-                        '<span>Generated ' + lic.generated_at + '</span>' +
-                        downloadBtn +
-                    '</div>' +
-                '</div>';
-            }).join('');
-
-        } catch (err) {
-            list.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><p>Failed to load licenses</p></div>';
-        }
-    }
-
-    // ==================== LOAD ACCOUNT PROFILE ====================
-    async function loadAccountProfile() {
-        try {
-            var res = await fetch('/api/user/profile');
-            var data = await res.json();
-
-            if (data.error) return;
-
-            var settingsUsername = document.getElementById('settingsUsername');
-            var settingsEmail = document.getElementById('settingsEmail');
-            var settingsJoined = document.getElementById('settingsJoined');
-
-            if (settingsUsername) settingsUsername.textContent = data.username || '-';
-            if (settingsEmail) settingsEmail.textContent = data.email || '-';
-            if (settingsJoined) settingsJoined.textContent = data.joined || '-';
-
-            // Pre-fill edit fields
-            var editUsername = document.getElementById('editUsername');
-            var editEmail = document.getElementById('editEmail');
-            if (editUsername) editUsername.value = data.username || '';
-            if (editEmail) editEmail.value = data.email || '';
-
-        } catch (err) {
-            console.error('Failed to load profile:', err);
-        }
-    }
-
-    // ==================== EDIT PROFILE ====================
-    async function handleProfileSave() {
-        var editUsername = document.getElementById('editUsername');
-        var editEmail = document.getElementById('editEmail');
-        var profileError = document.getElementById('profileError');
-        var profileSuccess = document.getElementById('profileSuccess');
-        var saveBtn = document.getElementById('saveProfileBtn');
-
-        if (!editUsername || !editEmail) return;
-
-        if (profileError) { profileError.style.display = 'none'; profileError.textContent = ''; }
-        if (profileSuccess) { profileSuccess.style.display = 'none'; profileSuccess.textContent = ''; }
-
-        var newUsername = editUsername.value.trim();
-        var newEmail = editEmail.value.trim();
-
-        if (!newUsername && !newEmail) {
-            if (profileError) {
-                profileError.textContent = 'Please fill in at least one field';
-                profileError.style.display = 'block';
-            }
-            return;
-        }
-
-        if (saveBtn) {
-            saveBtn.disabled = true;
-            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-        }
-
-        try {
-            // Get CSRF token from meta tag or cookie
-            var csrfToken = '';
-            var metaTag = document.querySelector('meta[name="csrf-token"]');
-            if (metaTag) {
-                csrfToken = metaTag.content;
-            }
-            // Fallback: try hidden input
-            if (!csrfToken) {
-                var hiddenCsrf = document.querySelector('input[name="csrf_token"]');
-                if (hiddenCsrf) csrfToken = hiddenCsrf.value;
-            }
-
-            var headers = { 'Content-Type': 'application/json' };
-            if (csrfToken) {
-                headers['X-CSRFToken'] = csrfToken;
-            }
-
-            var res = await fetch('/api/user/profile', {
-                method: 'PUT',
-                headers: headers,
-                body: JSON.stringify({ username: newUsername, email: newEmail })
-            });
-            var data = await res.json();
-
-            if (data.success) {
-                if (profileSuccess) {
-                    profileSuccess.textContent = data.message || 'Profile updated!';
-                    profileSuccess.style.display = 'block';
-                }
-                showToast('Profile updated successfully', 'success');
-
-                if (data.user) {
-                    var settingsUsername = document.getElementById('settingsUsername');
-                    var settingsEmail = document.getElementById('settingsEmail');
-                    if (settingsUsername) settingsUsername.textContent = data.user.username;
-                    if (settingsEmail) settingsEmail.textContent = data.user.email;
-
-                    if (currentUser) {
-                        currentUser.username = data.user.username;
-                        currentUser.email = data.user.email;
-                    }
-                    var modalUsername = document.getElementById('accountModalUsername');
-                    var modalEmail = document.getElementById('accountModalEmail');
-                    if (modalUsername) modalUsername.textContent = data.user.username;
-                    if (modalEmail) modalEmail.textContent = data.user.email;
-                    if (headerUsername) headerUsername.textContent = data.user.username;
-                }
-            } else {
-                if (profileError) {
-                    profileError.textContent = data.error || 'Update failed';
-                    profileError.style.display = 'block';
-                }
-            }
-        } catch (err) {
-            if (profileError) {
-                profileError.textContent = 'Network error. Please try again.';
-                profileError.style.display = 'block';
-            }
-        } finally {
-            if (saveBtn) {
-                saveBtn.disabled = false;
-                saveBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
-            }
-        }
-        const header = document.querySelector('.site-header');
-
-window.addEventListener('scroll', () => {
-    if (window.pageYOffset > 20) {
-        header.classList.add('scrolled');
-    } else {
-        header.classList.remove('scrolled');
-    }
-});
-
-function bumpCart() {
-    const badge = document.getElementById('cartCount');
-    badge.classList.remove('bump');
-    void badge.offsetWidth;
-    badge.classList.add('bump');
-}
-    }
-
-    // Bind save button
-    var saveProfileBtn = document.getElementById('saveProfileBtn');
-    if (saveProfileBtn) saveProfileBtn.addEventListener('click', handleProfileSave);
 
     // ==================== AUTH API CALLS ====================
     async function handleLogin(e) {
@@ -597,7 +317,6 @@ function bumpCart() {
             if (result.success) {
                 showToast('Logged out successfully', 'info');
                 updateAuthUI(null);
-                closeUserSidebar();
                 closeAccountModal();
             }
         } catch (err) {
@@ -607,86 +326,6 @@ function bumpCart() {
 
     if (loginForm) loginForm.addEventListener('submit', handleLogin);
     if (signupForm) signupForm.addEventListener('submit', handleSignup);
-
-    var logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
-
-    // ==================== ACCOUNT BUTTON CLICK ====================
-    function handleAccountClick() {
-        openAccountModal();
-    }
-
-    if (accountBtn) accountBtn.addEventListener('click', handleAccountClick);
-    if (mobileAccountBtn) mobileAccountBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        handleAccountClick();
-    });
-
-    // Guest buttons
-    var guestLoginBtns = ['guestLoginFromProducts', 'guestLoginFromLicenses', 'guestLoginFromSettings'];
-    guestLoginBtns.forEach(function(id) {
-        var btn = document.getElementById(id);
-        if (btn) {
-            btn.addEventListener('click', function() {
-                closeAccountModal();
-                setTimeout(function() { openModal(loginModal); }, 200);
-            });
-        }
-    });
-
-    var guestSignupBtn = document.getElementById('guestSignupFromSettings');
-    if (guestSignupBtn) {
-        guestSignupBtn.addEventListener('click', function() {
-            closeAccountModal();
-            setTimeout(function() { openModal(signupModal); }, 200);
-        });
-    }
-
-    // ==================== SIDEBAR PURCHASES (legacy) ====================
-    async function loadUserPurchases() {
-        var list = document.getElementById('purchasesList');
-        var count = document.getElementById('purchaseCount');
-        if (!list) return;
-
-        list.innerHTML = '<div class="loading-state"><i class="fas fa-spinner fa-spin"></i><p>Loading your beats...</p></div>';
-
-        try {
-            var res = await fetch('/api/user/purchases');
-            var data = await res.json();
-
-            if (data.error) {
-                list.innerHTML = '<div class="empty-purchases"><i class="fas fa-lock"></i><p>Please login to view purchases</p></div>';
-                return;
-            }
-
-            var purchases = data.purchases || [];
-            if (count) count.textContent = purchases.length + ' item' + (purchases.length !== 1 ? 's' : '');
-
-            if (purchases.length === 0) {
-                list.innerHTML = '<div class="empty-purchases"><i class="fas fa-music"></i><p>No purchases yet</p><p style="font-size:0.8rem;margin-top:8px;">Start exploring our beats!</p></div>';
-                return;
-            }
-
-            list.innerHTML = purchases.map(function(p) {
-                return '<div class="purchase-item">' +
-                    '<div class="purchase-item-header">' +
-                        '<div>' +
-                            '<div class="purchase-item-name">' + p.product_name + '</div>' +
-                            '<div class="purchase-item-type">' + p.product_type + ' &bull; ' + p.order_date + '</div>' +
-                        '</div>' +
-                        '<span class="purchase-item-license">' + p.license + '</span>' +
-                    '</div>' +
-                    '<div class="purchase-item-footer">' +
-                        '<span>₹' + p.price_paid.toFixed(2) + ' &bull; ' + p.download_count + ' downloads</span>' +
-                        '<a href="/download/' + p.product_id + '" class="purchase-download-btn"><i class="fas fa-download"></i> Download</a>' +
-                    '</div>' +
-                '</div>';
-            }).join('');
-
-        } catch (err) {
-            list.innerHTML = '<div class="empty-purchases"><i class="fas fa-exclamation-circle"></i><p>Failed to load purchases</p></div>';
-        }
-    }
 
     // ==================== TOAST SYSTEM ====================
     var toastTimeout = null;
@@ -748,7 +387,6 @@ function bumpCart() {
         if (e.key === 'Escape') {
             closeModal(loginModal);
             closeModal(signupModal);
-            closeUserSidebar();
             closeAccountModal();
         }
     });

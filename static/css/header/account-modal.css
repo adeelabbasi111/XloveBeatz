@@ -1,0 +1,389 @@
+/* ============================================================
+   ACCOUNT-MODAL.CSS — Account sidebar modal (auth only)
+   Loaded on: base.html (all pages)
+   ============================================================ */
+
+/* ── Account Button ── */
+.account-btn {
+    background: linear-gradient(135deg, rgba(124,141,240,0.15), rgba(157,124,236,0.1));
+    border: 1px solid rgba(124,141,240,0.35);
+    color: var(--text-primary);
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    transition: var(--transition-smooth);
+    position: relative;
+    overflow: hidden;
+}
+
+.account-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--accent-soft), var(--accent-purple));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 0;
+}
+
+.account-btn i { position: relative; z-index: 1; }
+
+.account-btn:hover {
+    border-color: var(--accent-soft);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(124,141,240,0.2);
+}
+
+.account-btn:hover::before { opacity: 0.15; }
+.account-btn:active { transform: translateY(0) scale(0.96); }
+
+.account-btn .account-label { display: none; }
+
+.account-btn.logged-in::after {
+    content: '';
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 8px;
+    height: 8px;
+    background: #10b981;
+    border-radius: 50%;
+    border: 2px solid var(--bg-deep);
+    z-index: 2;
+    box-shadow: 0 0 6px rgba(16,185,129,0.5);
+}
+
+/* ── Modal Overlay ── */
+.account-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(12,14,19,0.7);
+    backdrop-filter: blur(6px);
+    z-index: 1999;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.account-modal-overlay.active {
+    display: block;
+    opacity: 1;
+}
+
+/* ── Modal Panel ── */
+.account-modal {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 400px;
+    max-width: 90vw;
+    height: 100vh;
+    background: var(--bg-surface);
+    border-left: 1px solid var(--border-light);
+    z-index: 2000;
+    transform: translateX(100%);
+    transition: transform 0.4s var(--ease-spring);
+    display: flex;
+    flex-direction: column;
+    box-shadow: -20px 0 60px rgba(0,0,0,0.5);
+}
+
+.account-modal.open { transform: translateX(0); }
+
+/* ── Modal Header ── */
+.account-modal-header {
+    padding: 28px 28px 20px;
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    background: linear-gradient(180deg, rgba(124,141,240,0.04), transparent);
+}
+
+.account-modal-profile {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+
+.account-avatar {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, var(--accent-soft), var(--accent-purple));
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    color: white;
+    box-shadow: 0 8px 24px rgba(124,141,240,0.25);
+    transition: transform 0.3s ease;
+    flex-shrink: 0;
+}
+
+.account-avatar:hover { transform: scale(1.05) rotate(-5deg); }
+
+.account-info h3 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+    background: linear-gradient(120deg, #FFFFFF, var(--accent-soft));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.account-info p {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.account-modal-close {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border-light);
+    color: var(--text-secondary);
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+}
+
+.account-modal-close:hover {
+    background: rgba(239,68,68,0.15);
+    color: #ef4444;
+    transform: rotate(90deg);
+}
+
+/* ── Modal Content ── */
+.account-modal-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 28px 28px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ── Auth Prompt (Guest) ── */
+.account-auth-prompt {
+    text-align: center;
+    padding: 40px 0;
+    color: var(--text-secondary);
+}
+
+.account-auth-prompt .guest-icon {
+    width: 72px;
+    height: 72px;
+    background: linear-gradient(135deg, rgba(124,141,240,0.1), rgba(157,124,236,0.1));
+    border: 1px solid rgba(124,141,240,0.2);
+    border-radius: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    color: var(--accent-soft);
+    margin: 0 auto 20px;
+}
+
+.account-auth-prompt p {
+    margin-bottom: 24px;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+/* ── Quick Stats ── */
+.account-quick-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.quick-stat {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-light);
+    border-radius: 16px;
+    padding: 18px 12px;
+    text-align: center;
+    transition: var(--transition-smooth);
+}
+
+.quick-stat:hover {
+    border-color: rgba(124,141,240,0.3);
+    transform: translateY(-2px);
+}
+
+.quick-stat i {
+    font-size: 1.1rem;
+    color: var(--accent-soft);
+    margin-bottom: 8px;
+    display: block;
+    opacity: 0.7;
+}
+
+.quick-stat span {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    display: block;
+    margin-bottom: 4px;
+}
+
+.quick-stat small {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+}
+
+/* ── Dashboard Button ── */
+.account-dashboard-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 15px 20px;
+    background: linear-gradient(135deg, var(--accent-soft), var(--accent-purple));
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-decoration: none;
+    font-family: inherit;
+    margin-bottom: 12px;
+}
+
+.account-dashboard-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 28px rgba(124,141,240,0.35);
+}
+
+/* ── Guest Action Buttons ── */
+.guest-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 240px;
+    margin: 0 auto;
+}
+
+.guest-action-btn {
+    width: 100%;
+    padding: 12px 20px;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: none;
+}
+
+.guest-action-btn.primary {
+    background: linear-gradient(135deg, var(--accent-soft), var(--accent-purple));
+    color: white;
+    box-shadow: 0 6px 18px rgba(124,141,240,0.2);
+}
+
+.guest-action-btn.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 28px rgba(124,141,240,0.35);
+}
+
+.guest-action-btn.secondary {
+    background: transparent;
+    border: 1px solid var(--border-mid);
+    color: var(--text-secondary);
+}
+
+.guest-action-btn.secondary:hover {
+    border-color: var(--accent-soft);
+    color: var(--text-primary);
+    background: rgba(124,141,240,0.08);
+}
+
+/* ── Logout ── */
+.logout-btn {
+    width: 100%;
+    padding: 14px;
+    background: rgba(239,68,68,0.08);
+    border: 1px solid rgba(239,68,68,0.25);
+    color: #ef4444;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.logout-btn:hover {
+    background: rgba(239,68,68,0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(239,68,68,0.15);
+}
+
+/* ── Responsive ── */
+@media (max-width: 700px) {
+    .account-btn {
+        width: auto;
+        padding: 8px 14px;
+        gap: 8px;
+    }
+
+    .account-btn .account-label {
+        display: inline;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .account-modal {
+        width: 100vw;
+        max-width: 100vw;
+        transform: translateY(100%);
+        top: auto;
+        bottom: 0;
+        height: auto;
+        max-height: 85vh;
+        border-radius: 28px 28px 0 0;
+        border-left: none;
+        border-top: 1px solid var(--border-light);
+    }
+
+    .account-modal.open { transform: translateY(0); }
+
+    .account-modal-overlay {
+        background: rgba(12,14,19,0.85);
+    }
+}
+
+@media (max-width: 480px) {
+    .account-btn .account-label { display: none; }
+    .account-btn { width: 40px; height: 40px; padding: 0; }
+
+    .account-modal-header { padding: 20px 20px 16px; }
+    .account-avatar { width: 48px; height: 48px; font-size: 1.5rem; border-radius: 14px; }
+    .account-info h3 { font-size: 1rem; }
+    .account-modal-content { padding: 20px 20px 24px; }
+    .account-quick-stats { gap: 8px; }
+    .quick-stat { padding: 14px 8px; }
+}

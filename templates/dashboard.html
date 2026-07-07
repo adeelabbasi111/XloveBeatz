@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - XLoveBeats{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+
+<section class="dashboard-page">
+    <div class="dashboard-container">
+
+        {# ── Flash Messages ── #}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="dash-flash-container">
+                    {% for category, message in messages %}
+                        <div class="dash-flash dash-flash-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {# ── Header ── #}
+        <div class="dashboard-header">
+            <div class="dashboard-header-left">
+                <h1 class="dashboard-title">Welcome back, <span id="dashUsername">{{ user.username }}</span></h1>
+                <p class="dashboard-subtitle">Manage your purchases, licenses, and account settings</p>
+            </div>
+            <div class="dashboard-header-right">
+                <span class="dashboard-member-since">Member since {{ user.created_at.strftime('%d %b %Y') if user.created_at else '—' }}</span>
+            </div>
+        </div>
+
+        {# ── Stats Cards ── #}
+        <div class="dashboard-stats">
+            <div class="dash-stat-card">
+                <div class="dash-stat-icon"><i class="fas fa-box"></i></div>
+                <div class="dash-stat-value">{{ purchased_products|length }}</div>
+                <div class="dash-stat-label">Products</div>
+            </div>
+            <div class="dash-stat-card">
+                <div class="dash-stat-icon"><i class="fas fa-download"></i></div>
+                <div class="dash-stat-value">{{ downloads|length }}</div>
+                <div class="dash-stat-label">Downloads</div>
+            </div>
+            <div class="dash-stat-card">
+                <div class="dash-stat-icon"><i class="fas fa-file-contract"></i></div>
+                <div class="dash-stat-value">{{ licenses|length }}</div>
+                <div class="dash-stat-label">Licenses</div>
+            </div>
+            <div class="dash-stat-card">
+                <div class="dash-stat-icon"><i class="fas fa-receipt"></i></div>
+                <div class="dash-stat-value">{{ orders|length }}</div>
+                <div class="dash-stat-label">Orders</div>
+            </div>
+        </div>
+
+        {# ── Tabs ── #}
+        <div class="dash-tabs">
+            <button class="dash-tab active" data-tab="products">
+                <i class="fas fa-box"></i> My Products
+            </button>
+            <button class="dash-tab" data-tab="licenses">
+                <i class="fas fa-file-contract"></i> Licenses
+            </button>
+            <button class="dash-tab" data-tab="orders">
+                <i class="fas fa-receipt"></i> Orders
+            </button>
+            <button class="dash-tab" data-tab="settings">
+                <i class="fas fa-cog"></i> Settings
+            </button>
+        </div>
+
+        {# ── Tab: Products ── #}
+        <div class="dash-tab-content active" id="tab-products">
+            <div class="dash-section-header">
+                <h3>My Products</h3>
+                <span class="dash-badge">{{ purchased_items|length }}</span>
+            </div>
+            <div class="dash-products-list">
+                {% if purchased_items %}
+                    {% for item in purchased_items %}
+                    <div class="dash-product-item">
+    <div class="dash-product-left">
+        {% if item.product and item.product.product_type == 'beat' %}
+            <i class="fas fa-music dash-product-icon"></i>
+        {% elif item.product and item.product.product_type == 'pack' %}
+            <i class="fas fa-layer-group dash-product-icon"></i>
+        {% elif item.product and item.product.product_type == 'preset' %}
+            <i class="fas fa-sliders-h dash-product-icon"></i>
+        {% else %}
+            <i class="fas fa-box dash-product-icon"></i>
+        {% endif %}
+        <div>
+            <div class="dash-product-name">{{ item.product.name if item.product else 'Unknown' }}</div>
+            <div class="dash-product-meta">
+                {{ item.product.product_type if item.product else '—' }}
+                &bull; {{ item.license.name if item.license else 'Standard' }}
+                &bull; {{ item.order.created_at.strftime('%d %b %Y') if item.order and item.order.created_at else '—' }}
+                &bull; {{ download_counts.get(item.product_id, 0) }} downloads
+            </div>
+        </div>
+    </div>
+    <div class="dash-product-right">
+        <span class="dash-product-price">₹{{ '%.0f' % (item.price_paid_cents / 100) if item.price_paid_cents else '0' }}</span>
+        <div class="dash-download-actions">
+            <a href="/download/{{ item.product_id }}" class="dash-download-btn">
+                <i class="fas fa-download"></i> Download
+            </a>
+            {% if item.product and item.product.product_type == 'beat' and item.license and item.license.name.lower() in ('premium', 'exclusive') %}
+                <a href="/download/flp/{{ item.product_id }}" class="dash-download-btn dash-flp-btn">
+                    <i class="fas fa-file-code"></i> FLP
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+                    {% endfor %}
+                {% else %}
+                    <div class="dash-empty">
+                        <i class="fas fa-shopping-bag"></i>
+                        <p>No purchases yet</p>
+                        <a href="/" class="dash-empty-link">Browse Beats</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {# ── Tab: Licenses ── #}
+        <div class="dash-tab-content" id="tab-licenses">
+            <div class="dash-section-header">
+                <h3>My Licenses</h3>
+                <span class="dash-badge">{{ licenses|length }}</span>
+            </div>
+            <div class="dash-licenses-list">
+                {% if licenses %}
+                    {% for lic in licenses %}
+                    <div class="dash-license-item">
+                        <div class="dash-license-left">
+                            <div class="dash-license-name">{{ lic.beat_name or 'Unknown' }}</div>
+                            <div class="dash-license-meta">
+                                {{ lic.license_type or 'License' }}
+                                &bull; {{ lic.generated_at.strftime('%d %b %Y') if lic.generated_at else '—' }}
+                            </div>
+                        </div>
+                        <div class="dash-license-right">
+                            <span class="dash-license-badge{% if lic.license_type == 'Exclusive' %} gold{% endif %}">
+                                {{ lic.license_type }}
+                            </span>
+                            {% if lic.pdf_path %}
+                                <a href="/download/license/{{ lic.id }}" class="dash-download-btn">
+                                    <i class="fas fa-file-pdf"></i> PDF
+                                </a>
+                            {% else %}
+                                <span class="dash-no-pdf">No PDF</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="dash-empty">
+                        <i class="fas fa-file-contract"></i>
+                        <p>No licenses yet</p>
+                        <p class="dash-empty-sub">Licenses are generated after purchase</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {# ── Tab: Orders ── #}
+        <div class="dash-tab-content" id="tab-orders">
+            <div class="dash-section-header">
+                <h3>Order History</h3>
+                <span class="dash-badge">{{ orders|length }}</span>
+            </div>
+            <div class="dash-orders-list">
+                {% if orders %}
+                    {% for order in orders %}
+                    <div class="dash-order-card">
+                        <div class="dash-order-header">
+                            <div>
+                                <div class="dash-order-id">Order #{{ order.id }}</div>
+                                <div class="dash-order-date">{{ order.created_at.strftime('%d %b %Y, %I:%M %p') if order.created_at else '—' }}</div>
+                            </div>
+                            <div class="dash-order-right">
+                                <span class="dash-order-total">₹{{ '%.0f' % (order.total_cents / 100) if order.total_cents else '0' }}</span>
+                                <span class="dash-order-status {{ order.payment_status }}">{{ order.payment_status }}</span>
+                            </div>
+                        </div>
+                        <div class="dash-order-items">
+                            {% for item in order.items %}
+                            <div class="dash-order-item">
+                                <span class="dash-order-item-name">{{ item.product.name if item.product else 'Unknown' }}</span>
+                                <span class="dash-order-item-license">{{ item.license.name if item.license else 'Standard' }}</span>
+                                <span class="dash-order-item-price">₹{{ '%.0f' % (item.price_paid_cents / 100) if item.price_paid_cents else '0' }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="dash-empty">
+                        <i class="fas fa-receipt"></i>
+                        <p>No orders yet</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {# ── Tab: Settings ── #}
+        <div class="dash-tab-content" id="tab-settings">
+            <div class="dash-section-header">
+                <h3>Account Details</h3>
+            </div>
+            <div class="dash-settings-card">
+                <div class="dash-profile-row">
+                    <span class="dash-profile-label">Username</span>
+                    <span class="dash-profile-value" id="dashSettingsUsername">{{ user.username }}</span>
+                </div>
+                <div class="dash-profile-row">
+                    <span class="dash-profile-label">Email</span>
+                    <span class="dash-profile-value" id="dashSettingsEmail">{{ user.email }}</span>
+                </div>
+                <div class="dash-profile-row">
+                    <span class="dash-profile-label">Member Since</span>
+                    <span class="dash-profile-value">{{ user.created_at.strftime('%d %b %Y') if user.created_at else '—' }}</span>
+                </div>
+            </div>
+
+            <div class="dash-section-header">
+                <h3>Edit Profile</h3>
+            </div>
+            <div class="dash-settings-card">
+                <div id="dashProfileError" class="dash-alert error"></div>
+                <div id="dashProfileSuccess" class="dash-alert success"></div>
+                <div class="dash-field">
+                    <label class="dash-label" for="dashEditUsername">Username</label>
+                    <input type="text" id="dashEditUsername" placeholder="Enter new username" class="dash-input" value="{{ user.username }}">
+                </div>
+                <div class="dash-field">
+                    <label class="dash-label" for="dashEditEmail">Email</label>
+                    <input type="email" id="dashEditEmail" placeholder="Enter new email" class="dash-input" value="{{ user.email }}">
+                </div>
+                <button id="dashSaveProfileBtn" class="dash-action-btn" type="button">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+            </div>
+
+            <div class="dash-section-header">
+                <h3>Change Password</h3>
+            </div>
+            <div class="dash-settings-card">
+                <div id="dashPasswordError" class="dash-alert error"></div>
+                <div id="dashPasswordSuccess" class="dash-alert success"></div>
+                <div class="dash-field">
+                    <label class="dash-label" for="dashCurrentPassword">Current Password</label>
+                    <input type="password" id="dashCurrentPassword" placeholder="Enter current password" class="dash-input">
+                </div>
+                <div class="dash-field">
+                    <label class="dash-label" for="dashNewPassword">New Password</label>
+                    <input type="password" id="dashNewPassword" placeholder="Enter new password" class="dash-input">
+                </div>
+                <div class="dash-field">
+                    <label class="dash-label" for="dashConfirmPassword">Confirm New Password</label>
+                    <input type="password" id="dashConfirmPassword" placeholder="Confirm new password" class="dash-input">
+                </div>
+                <button id="dashChangePasswordBtn" class="dash-action-btn" type="button">
+                    <i class="fas fa-key"></i> Update Password
+                </button>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,303 @@
+/* ============================================================
+   HOME/CARDS.CSS — Grid, product cards, beats preview, scroll reveal
+   ============================================================ */
+
+/* ── Grid ── */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 28px;
+}
+
+/* ── Card ── */
+.card {
+    background: var(--bg-surface);
+    border-radius: var(--card-radius);
+    padding: 20px;
+    border: 1px solid var(--border-light);
+    transition: var(--transition-smooth);
+    display: flex;
+    flex-direction: column;
+}
+
+.card:hover {
+    transform: translateY(-6px);
+    border-color: rgba(124, 141, 240, 0.5);
+    box-shadow: 0 20px 30px -12px rgba(0, 0, 0, 0.4);
+}
+
+.card-image-wrapper {
+    aspect-ratio: 1;
+    border-radius: 20px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    background: linear-gradient(145deg, #1E212C, #13151C);
+    position: relative;
+}
+
+/* Skeleton shimmer */
+.card-image-wrapper.skeleton::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.card-image-wrapper img {
+    position: relative;
+    z-index: 2;
+}
+
+/* Card badges (HOT / NEW) */
+.grid .card:nth-child(1) .card-image-wrapper::after,
+.grid .card:nth-child(2) .card-image-wrapper::after {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    z-index: 3;
+    letter-spacing: 0.05em;
+    line-height: 1;
+}
+
+.grid .card:nth-child(1) .card-image-wrapper::after {
+    content: 'HOT';
+    background: linear-gradient(135deg, #f59e0b, #ef4444);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.grid .card:nth-child(2) .card-image-wrapper::after {
+    content: 'NEW';
+    background: linear-gradient(135deg, #10b981, #059669);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.card-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.card:hover .card-img {
+    transform: scale(1.05);
+}
+
+.card-title {
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    line-height: 1.2;
+}
+
+.card-meta {
+    display: flex;
+    justify-content: space-between;
+    margin: 14px 0 12px;
+}
+
+.genre-tag {
+    background: rgba(124, 141, 240, 0.15);
+    padding: 4px 12px;
+    border-radius: 40px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--accent-soft);
+}
+
+.price {
+    font-weight: 800;
+    font-size: 1.2rem;
+    color: var(--accent-gold-mute);
+}
+
+.card-desc {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin-bottom: 20px;
+    flex-grow: 1;
+}
+
+/* ── Card Actions ── */
+.card-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.explore-btn {
+    text-align: center;
+    padding: 10px;
+    border-radius: 40px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--accent-soft);
+    border: 1px solid rgba(124, 141, 240, 0.3);
+    background: rgba(124, 141, 240, 0.05);
+    text-decoration: none;
+    transition: var(--transition-smooth);
+}
+
+.explore-btn:hover {
+    background: rgba(124, 141, 240, 0.15);
+}
+
+.button-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.card-btn {
+    padding: 10px 12px;
+    border-radius: 40px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    cursor: pointer;
+    border: none;
+    transition: var(--transition-smooth);
+}
+
+.card-btn.add-to-cart {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-mid);
+    color: var(--text-secondary);
+}
+
+.card-btn.add-to-cart:hover {
+    border-color: var(--accent-soft);
+    color: var(--text-primary);
+}
+
+.card-btn.buy-now {
+    background: var(--accent-soft);
+    color: white;
+}
+
+.card-btn.buy-now:hover {
+    box-shadow: 0 6px 14px var(--accent-glow);
+    transform: translateY(-1px);
+}
+
+/* ── Scroll Reveal ── */
+.reveal-on-scroll {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.6s var(--ease-spring);
+}
+
+.reveal-on-scroll.revealed {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.reveal-stagger-1 { transition-delay: 0.1s; }
+.reveal-stagger-2 { transition-delay: 0.2s; }
+.reveal-stagger-3 { transition-delay: 0.3s; }
+
+/* ── Beats Preview ── */
+.section-subtitle {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+}
+
+.beats-preview {
+    text-align: center;
+}
+
+.beats-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+    margin: 32px 0;
+}
+
+.beat-preview-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-light);
+    border-radius: 20px;
+    overflow: hidden;
+    transition: var(--transition-smooth);
+    cursor: pointer;
+}
+
+.beat-preview-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(124, 141, 240, 0.4);
+}
+
+.beat-preview-art {
+    aspect-ratio: 1;
+    background: linear-gradient(145deg, #1E212C, #13151C);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.beat-preview-play {
+    width: 48px;
+    height: 48px;
+    background: rgba(124, 141, 240, 0.9);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: all 0.3s ease;
+}
+
+.beat-preview-card:hover .beat-preview-play {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.beat-preview-info {
+    padding: 16px;
+    text-align: left;
+}
+
+.beat-preview-info h4 {
+    font-size: 1rem;
+    margin-bottom: 4px;
+}
+
+.beat-preview-meta {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    display: block;
+    margin-bottom: 8px;
+}
+
+.beat-preview-price {
+    font-weight: 700;
+    color: var(--accent-gold-mute);
+    font-size: 1.1rem;
+}
+
+.view-all-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--accent-soft);
+    text-decoration: none;
+    font-weight: 600;
+    margin-top: 16px;
+    transition: var(--transition-smooth);
+}
+
+.view-all-btn:hover {
+    gap: 14px;
+}

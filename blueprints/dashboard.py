@@ -1,16 +1,23 @@
 from flask import (
     Blueprint, render_template, flash, redirect,
-    url_for, send_from_directory,send_file, current_app, request, jsonify, session,
+    url_for, send_from_directory,send_file, current_app, request, jsonify, session,flash
 )
 from helpers.models import (
     db, Order, OrderItem, Download, Product,
-    BeatDetail, VocalPreset, User, GeneratedLicense,
+    BeatDetail, VocalPreset, User, GeneratedLicense, BeatPack
 )
 from helpers.utils import login_required, get_current_user
 from helpers.services import get_user_orders, track_download
+from werkzeug.security import check_password_hash, generate_password_hash
+import os
+import logging
+
+import zipfile
+import io
 import os
 
 bp = Blueprint('dashboard', __name__)
+logger = logging.getLogger(__name__)
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -24,19 +31,41 @@ def dashboard():
     orders = get_user_orders(user.id)
     downloads = Download.query.filter_by(user_id=user.id).all()
 
-    purchased_ids = set()
+    # Build download count map: product_id → count
+    dl_map = {d.product_id: d.download_count for d in downloads}
+
+    # Collect all purchased order items from paid orders
+    purchased_items = []
     for order in orders:
         if order.payment_status == 'paid':
             for item in order.items:
-                purchased_ids.add(item.product_id)
+                purchased_items.append(item)
 
+    # Unique purchased products (for stats card)
+    purchased_ids = set(item.product_id for item in purchased_items)
     purchased = Product.query.filter(Product.id.in_(purchased_ids)).all() if purchased_ids else []
 
-    return render_template(
-        'dashboard.html', user=user, orders=orders,
-        downloads=downloads, purchased_products=purchased,
-    )
+    # Generated licenses for this user's paid order items
+    order_item_ids = [item.id for item in purchased_items]
+    licenses = []
+    if order_item_ids:
+        licenses = (
+            GeneratedLicense.query
+            .filter(GeneratedLicense.order_item_id.in_(order_item_ids))
+            .order_by(GeneratedLicense.generated_at.desc())
+            .all()
+        )
 
+    return render_template(
+        'dashboard.html',
+        user=user,
+        orders=orders,
+        downloads=downloads,
+        purchased_products=purchased,
+        purchased_items=purchased_items,
+        download_counts=dl_map,
+        licenses=licenses,
+    )
 
 # ═══════════════════════════════════════════════════════════════
 #  API: USER PURCHASES
@@ -77,7 +106,7 @@ def api_user_purchases():
             'product_name': product.name,
             'product_type': product.product_type,
             'license': license_name,
-            'price_paid': (item.price_cents or 0) / 100,
+            'price_paid': (item.price_paid_cents or 0) / 100,
             'download_count': dl.download_count if dl else 0,
             'order_date': item.order.created_at.strftime('%d %b %Y') if item.order else '—',
         })
@@ -225,10 +254,44 @@ def api_update_profile():
     })
 
 
-# ═══════════════════════════════════════════════════════════════
-#  DOWNLOAD: PRODUCT FILES
-# ═══════════════════════════════════════════════════════════════
 
+
+@bp.route('/api/user/change-password', methods=['PUT'])
+def api_change_password():
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Not logged in'}), 401
+
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'No data provided'}), 400
+
+    current_password = data.get('current_password', '')
+    new_password = data.get('new_password', '')
+
+    if not current_password or not new_password:
+        return jsonify({'error': 'Both current and new password are required'}), 400
+
+    if not check_password_hash(user.password_hash, current_password):
+        return jsonify({'error': 'Current password is incorrect'}), 400
+
+    if len(new_password) < 6:
+        return jsonify({'error': 'New password must be at least 6 characters'}), 400
+
+    user.password_hash = generate_password_hash(new_password)
+    db.session.commit()
+
+    return jsonify({
+        'success': True,
+        'message': 'Password changed successfully'
+    })
+
+
+# =====================Download=========
 @bp.route('/download/<int:product_id>')
 @login_required
 def download_product(product_id):
@@ -250,55 +313,52 @@ def download_product(product_id):
         flash('Product not found', 'error')
         return redirect(url_for('dashboard.dashboard'))
 
-    # Determine file to serve
-    filename = None
-    subfolder = None
+    # Get the stored file path from DB
+    file_path = None
 
     if product.product_type == 'beat':
         detail = BeatDetail.query.filter_by(product_id=product_id).first()
         if detail:
-            filename = detail.wav_file or detail.mp3_file
-            if filename:
-                subfolder = 'wav' if detail.wav_file else 'mp3'
+            # Prefer WAV, fall back to MP3
+            file_path = detail.wav_file or detail.mp3_file
 
     elif product.product_type == 'preset':
         preset = VocalPreset.query.filter_by(product_id=product_id).first()
-        if preset and preset.preset_zip:
-            filename = preset.preset_zip
-            subfolder = 'presets'
+        if preset:
+            file_path = preset.preset_zip
 
     elif product.product_type == 'pack':
-        flash('Beat packs: download individual beats from the pack page', 'info')
+        pack = BeatPack.query.filter_by(product_id=product_id).first()
+        if pack:
+            file_path = pack.zip_path
+
+    if not file_path:
+        flash('Download file not available', 'error')
         return redirect(url_for('dashboard.dashboard'))
 
-    if not filename:
-        flash('Download file not available', 'error')
+    # file_path from DB looks like: "data/wav/beatname_beat.wav"
+    # Files live at: static/data/wav/beatname_beat.wav
+    abs_path = os.path.join(current_app.root_path, 'static', file_path)
+
+    if not os.path.exists(abs_path):
+        # Fallback: try DATA_DIR config directly
+        data_dir = current_app.config.get('DATA_DIR')
+        if data_dir:
+            # Strip leading "data/" to get relative subfolder path
+            relative = file_path
+            if relative.startswith('data/'):
+                relative = relative[5:]  # "data/wav/x.wav" → "wav/x.wav"
+            abs_path = os.path.join(data_dir, relative)
+
+    if not os.path.exists(abs_path):
+        logger.error("Download file not found: %s (tried static and DATA_DIR)", file_path)
+        flash('File not found on disk', 'error')
         return redirect(url_for('dashboard.dashboard'))
 
     track_download(user.id, product_id)
 
-    # Serve from data directory
-    data_dir = current_app.config.get('DATA_DIR', os.path.join(current_app.root_path, 'static', 'data'))
-    if subfolder:
-        file_dir = os.path.join(data_dir, subfolder)
-    else:
-        file_dir = data_dir
-
-    abs_path = os.path.join(file_dir, os.path.basename(filename))
-    if not os.path.exists(abs_path):
-        # Fallback: try static directory
-        abs_path = os.path.join(current_app.root_path, 'static', filename)
-
-    if not os.path.exists(abs_path):
-        flash('File not found on disk', 'error')
-        return redirect(url_for('dashboard.dashboard'))
-
     return send_file(abs_path, as_attachment=True)
 
-
-# ═══════════════════════════════════════════════════════════════
-#  DOWNLOAD: LICENSE PDF
-# ═══════════════════════════════════════════════════════════════
 
 @bp.route('/download/license/<int:license_id>')
 @login_required
@@ -310,7 +370,6 @@ def download_license(license_id):
         flash('License not found', 'error')
         return redirect(url_for('dashboard.dashboard'))
 
-    # Verify ownership
     order_item = OrderItem.query.get(lic.order_item_id) if lic.order_item_id else None
     if not order_item:
         flash('License not associated with an order', 'error')
@@ -325,9 +384,154 @@ def download_license(license_id):
         flash('No PDF available for this license', 'error')
         return redirect(url_for('dashboard.dashboard'))
 
-    abs_path = os.path.join(current_app.root_path, lic.pdf_path)
+    # FIX: Add 'static' to the path
+    abs_path = os.path.join(current_app.root_path, 'static', lic.pdf_path)
+
     if not os.path.exists(abs_path):
+        logger.error("License PDF not found at: %s", abs_path)
         flash('License PDF file not found', 'error')
         return redirect(url_for('dashboard.dashboard'))
+
+    return send_file(abs_path, as_attachment=True)
+
+import zipfile
+import io
+
+@bp.route('/download/order/<int:order_id>')
+@login_required
+def download_order_files(order_id):
+    user = get_current_user()
+
+    order = Order.query.filter_by(id=order_id, user_id=user.id).first_or_404()
+
+    if order.payment_status != 'paid':
+        flash('Order not paid', 'error')
+        return redirect(url_for('dashboard.dashboard'))
+
+    files_to_zip = []
+
+    for item in order.items:
+        product = item.product
+        if not product:
+            continue
+
+        file_path = None
+
+        if product.product_type == 'beat':
+            detail = BeatDetail.query.filter_by(product_id=product.id).first()
+            if detail:
+                file_path = detail.wav_file or detail.mp3_file
+
+        elif product.product_type == 'preset':
+            preset = VocalPreset.query.filter_by(product_id=product.id).first()
+            if preset:
+                file_path = preset.preset_zip
+
+        elif product.product_type == 'pack':
+            pack = BeatPack.query.filter_by(product_id=product.id).first()
+            if pack:
+                file_path = pack.zip_path
+
+        if file_path:
+            abs_path = os.path.join(current_app.root_path, 'static', file_path)
+            if os.path.exists(abs_path):
+                display_name = os.path.basename(file_path)
+                files_to_zip.append((abs_path, display_name))
+
+    if not files_to_zip:
+        flash('No downloadable files found for this order', 'error')
+        return redirect(url_for('dashboard.dashboard'))
+
+    # If only one file, serve it directly
+    if len(files_to_zip) == 1:
+        track_download(user.id, order.items[0].product_id)
+        return send_file(files_to_zip[0][0], as_attachment=True)
+
+    # Multiple files → create ZIP
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
+        for abs_path, display_name in files_to_zip:
+            zf.write(abs_path, display_name)
+
+    zip_buffer.seek(0)
+
+    # Track downloads for all items
+    for item in order.items:
+        if item.product:
+            track_download(user.id, item.product_id)
+
+    return send_file(
+        zip_buffer,
+        as_attachment=True,
+        download_name=f'XLoveBeats_Order_{order.id}.zip',
+        mimetype='application/zip'
+    )
+
+
+@bp.route('/download/flp/<int:product_id>')
+@login_required
+def download_flp(product_id):
+    user = get_current_user()
+
+    # Get ALL paid order items for this product
+    paid_items = (
+        OrderItem.query.join(Order)
+        .filter(
+            Order.user_id == user.id,
+            Order.payment_status == 'paid',
+            OrderItem.product_id == product_id
+        )
+        .all()
+    )
+
+    if not paid_items:
+        flash('You have not purchased this product', 'error')
+        return redirect(url_for('dashboard.dashboard'))
+
+    # Check if ANY purchased item has Premium or Exclusive license
+    has_access = False
+    for item in paid_items:
+        # Check from order item license
+        if item.license and item.license.name:
+            if item.license.name.strip().lower() in ('premium', 'exclusive'):
+                has_access = True
+                break
+
+        # Fallback: check from GeneratedLicense table
+        gen_lic = GeneratedLicense.query.filter_by(order_item_id=item.id).first()
+        if gen_lic and gen_lic.license_type:
+            if gen_lic.license_type.strip().lower() in ('premium', 'exclusive'):
+                has_access = True
+                break
+
+    if not has_access:
+        flash('FLP files are available for Premium and Exclusive licenses only', 'error')
+        return redirect(url_for('dashboard.dashboard'))
+
+    product = Product.query.get(product_id)
+    if not product or product.product_type != 'beat':
+        flash('Product not found', 'error')
+        return redirect(url_for('dashboard.dashboard'))
+
+    detail = BeatDetail.query.filter_by(product_id=product_id).first()
+    if not detail or not detail.project_file:
+        flash('Project file not available for this beat', 'error')
+        return redirect(url_for('dashboard.dashboard'))
+
+    abs_path = os.path.join(current_app.root_path, 'static', detail.project_file)
+    if not os.path.exists(abs_path):
+        data_dir = current_app.config.get('DATA_DIR')
+        if data_dir:
+            relative = detail.project_file
+            if relative.startswith('data/'):
+                relative = relative[5:]
+            abs_path = os.path.join(data_dir, relative)
+
+    if not os.path.exists(abs_path):
+        logger.error("Project file not found: %s", detail.project_file)
+        flash('Project file not found on disk', 'error')
+        return redirect(url_for('dashboard.dashboard'))
+
+    track_download(user.id, product_id)
 
     return send_file(abs_path, as_attachment=True)

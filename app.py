@@ -45,8 +45,7 @@ def create_app(config_class=Config):
     migrate.init_app(app, db)
     limiter.init_app(app)
 
-    # ---- Upload folder ----
-    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
 
     # ---- Razorpay client ----
     import razorpay

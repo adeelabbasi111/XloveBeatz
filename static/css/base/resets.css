@@ -1,0 +1,159 @@
+/* ============================================================
+   RESET.CSS — Variables, reset, body, scrollbar, typography
+   ============================================================ */
+
+/* ---------- RESET ---------- */
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* ---------- DESIGN TOKENS ---------- */
+:root {
+    /* Backgrounds */
+    --bg-deep:      #0C0E13;
+    --bg-surface:   #13151C;
+    --bg-elevated:  #1B1E27;
+
+    /* Borders */
+    --border-light: rgba(255, 255, 255, 0.06);
+    --border-mid:   rgba(255, 255, 255, 0.1);
+
+    /* Text */
+    --text-primary:   #F1F3F8;
+    --text-secondary: #A0A5B5;
+    --text-muted:     #6C7285;
+
+    /* Accent */
+    --accent-soft:     #7C8DF0;
+    --accent-glow:     rgba(124, 141, 240, 0.25);
+    --accent-gold-mute:#C9AE74;
+    --accent-purple:   #9D7CEC;
+
+    /* Radii */
+    --card-radius:    28px;
+    --element-radius: 18px;
+
+    /* Motion */
+    --ease-spring: cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    --transition-smooth: all 0.3s var(--ease-spring);
+}
+
+/* ---------- BODY ---------- */
+body {
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    font-family: 'Outfit', 'Syne', sans-serif;
+    font-weight: 400;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    position: relative;
+}
+
+/* Ambient background gradient */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+        radial-gradient(circle at 30% 20%, rgba(124, 141, 240, 0.08), transparent 60%),
+        radial-gradient(circle at 80% 70%, rgba(201, 174, 78, 0.04), transparent 70%);
+    pointer-events: none;
+    z-index: -2;
+}
+
+/* Floating music notes */
+#floatingNotes {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.note {
+    position: absolute;
+    bottom: -50px;
+    color: var(--accent-soft);
+    opacity: 0.12;
+    font-size: 1.8rem;
+    font-family: 'Outfit', 'Segoe UI Symbol', sans-serif;
+    filter: blur(0.3px);
+    text-shadow: 0 0 8px rgba(124, 141, 240, 0.3);
+    user-select: none;
+    animation: floatUp linear infinite;
+}
+
+@keyframes floatUp {
+    0%   { transform: translateY(0) rotate(0deg); opacity: 0; }
+    15%  { opacity: 0.15; }
+    85%  { opacity: 0.12; }
+    100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; }
+}
+
+/* ---------- SCROLLBAR ---------- */
+::-webkit-scrollbar       { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-surface); }
+::-webkit-scrollbar-thumb { background: var(--accent-soft); border-radius: 10px; }
+
+/* ---------- TYPOGRAPHY ---------- */
+h1, h2, h3, .logo-text {
+    font-weight: 600;
+    letter-spacing: -0.02em;
+}
+
+a {
+    color: inherit;
+}
+
+/* ---------- COMMON ANIMATIONS ---------- */
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px) scale(0.96); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25%      { transform: translateX(-8px); }
+    75%      { transform: translateX(8px); }
+}
+
+@keyframes shimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+/* Back button (player page) */
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.85rem;
+    padding: 6px 12px;
+    border-radius: 40px;
+    transition: var(--transition-smooth);
+    border: 1px solid transparent;
+}
+
+.back-btn:hover {
+    color: var(--text-primary);
+    border-color: var(--border-mid);
+    background: rgba(255, 255, 255, 0.03);
+}

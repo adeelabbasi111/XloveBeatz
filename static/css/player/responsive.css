@@ -201,7 +201,26 @@ RESPONSIVE — Mobile
   .license-modal-container {
     padding: 20px 14px;
   }
+
+  .player-panel {
+    padding-top: 35px !important; /* Ooper title margin fix */
+  }
+  .panel-header h2 {
+    margin-bottom: 18px !important; /* Heading spacing */
+  }
+  .category-tabs {
+    margin-bottom: 15px !important; /* Tabs spacing */
+  }
+  .track-item {
+    margin-bottom: 12px; /* Tracklist items ke beech spacing */
+  }
+  .track-name-big {
+    font-size: 1.25rem;
+  }
+
 }
+
+
 
 @media (max-width: 480px) {
   .track-name-big {
