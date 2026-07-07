@@ -90,6 +90,11 @@
         window.CSRF_TOKEN = '{{ csrf_token() }}';
     </script>
     <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+    <!-- In admin/base.html, add in the <head>: -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin/upload-progress.css') }}">
+
+<!-- And before </body>: -->
+<script src="{{ url_for('static', filename='js/upload-progress.js') }}"></script>
     {% block admin_scripts %}{% endblock %}
 </body>
 </html>
