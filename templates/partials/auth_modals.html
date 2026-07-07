@@ -1,4 +1,79 @@
+<!-- LOGIN MODAL -->
+<div class="auth-modal-overlay" id="loginModal">
+    <div class="auth-modal">
+        <button class="auth-modal-close magnetic-btn" id="closeLoginBtn">
+            <i class="fas fa-times"></i>
+        </button>
+        <div class="auth-modal-header">
+            <div class="auth-modal-icon"><i class="fas fa-sign-in-alt"></i></div>
+            <h2>Welcome Back</h2>
+            <p>Login to access your beats &amp; licenses</p>
+        </div>
+        <form id="loginForm" class="auth-form" onsubmit="return false;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-group">
+                <label for="loginEmail">Email</label>
+                <input type="email" id="loginEmail" name="email" required placeholder="your@email.com" autocomplete="email">
+            </div>
+            <div class="form-group">
+                <label for="loginPassword">Password</label>
+                <input type="password" id="loginPassword" name="password" required placeholder="••••••••" autocomplete="current-password">
+            </div>
+            <div class="auth-error" id="loginError"></div>
+            <button type="submit" class="auth-submit-btn magnetic-btn" id="loginSubmitBtn">
+                <span class="btn-text">Login</span>
+                <span class="btn-loader" style="display:none;"><i class="fas fa-spinner fa-spin"></i></span>
+            </button>
+            <div class="auth-switch">
+                Don't have an account? <a href="#" id="switchToSignup">Sign up</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- SIGNUP MODAL -->
+<div class="auth-modal-overlay" id="signupModal">
+    <div class="auth-modal">
+        <button class="auth-modal-close magnetic-btn" id="closeSignupBtn">
+            <i class="fas fa-times"></i>
+        </button>
+        <div class="auth-modal-header">
+            <div class="auth-modal-icon"><i class="fas fa-user-plus"></i></div>
+            <h2>Join XLOVEBEATS</h2>
+            <p>Create your account in seconds</p>
+        </div>
+        <form id="signupForm" class="auth-form" onsubmit="return false;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-group">
+                <label for="signupUsername">Username</label>
+                <input type="text" id="signupUsername" name="username" required placeholder="producer_name" minlength="3" autocomplete="username">
+            </div>
+            <div class="form-group">
+                <label for="signupEmail">Email</label>
+                <input type="email" id="signupEmail" name="email" required placeholder="your@email.com" autocomplete="email">
+            </div>
+            <div class="form-group">
+                <label for="signupPassword">Password</label>
+                <input type="password" id="signupPassword" name="password" required placeholder="Min 6 characters" minlength="6" autocomplete="new-password">
+            </div>
+            <div class="form-group">
+                <label for="signupConfirm">Confirm Password</label>
+                <input type="password" id="signupConfirm" name="confirm_password" required placeholder="Re-enter password" autocomplete="new-password">
+            </div>
+            <div class="auth-error" id="signupError"></div>
+            <button type="submit" class="auth-submit-btn magnetic-btn" id="signupSubmitBtn">
+                <span class="btn-text">Create Account</span>
+                <span class="btn-loader" style="display:none;"><i class="fas fa-spinner fa-spin"></i></span>
+            </button>
+            <div class="auth-switch">
+                Already have an account? <a href="#" id="switchToLogin">Login</a>
+            </div>
+        </form>
+    </div>
+</div>
+
 <div class="account-modal-overlay" id="accountModalOverlay"></div>
+
 <aside class="account-modal" id="accountModal">
     <div class="account-modal-header">
         <div class="account-modal-profile">
@@ -16,7 +91,7 @@
     </div>
 
     <div class="account-modal-content">
-        <!-- Logged Out: Login/Signup prompt -->
+        <!-- Guest state -->
         <div class="account-auth-prompt" id="accountAuthPrompt">
             <div class="guest-icon"><i class="fas fa-user-circle"></i></div>
             <p>Sign in to access your purchases, licenses, and settings</p>
@@ -30,30 +105,11 @@
             </div>
         </div>
 
-        <!-- Logged In: Dashboard + Logout -->
+        <!-- Logged-in state (HIDDEN by default) -->
         <div class="account-logged-in" id="accountLoggedIn" style="display:none">
-            <div class="account-quick-stats">
-                <div class="quick-stat">
-                    <i class="fas fa-box"></i>
-                    <span id="accountProductCount">0</span>
-                    <small>Products</small>
-                </div>
-                <div class="quick-stat">
-                    <i class="fas fa-file-contract"></i>
-                    <span id="accountLicenseCount">0</span>
-                    <small>Licenses</small>
-                </div>
-                <div class="quick-stat">
-                    <i class="fas fa-receipt"></i>
-                    <span id="accountOrderCount">0</span>
-                    <small>Orders</small>
-                </div>
-            </div>
-
             <a href="/dashboard" class="account-dashboard-btn">
                 <i class="fas fa-th-large"></i> Go to Dashboard
             </a>
-
             <button class="logout-btn" id="logoutBtn">
                 <i class="fas fa-sign-out-alt"></i> Logout
             </button>

@@ -276,3 +276,51 @@
     font-size: 0.9rem;
     color: var(--text-primary);
 }
+
+/* ── Logged-in Actions inside Auth Modals ── */
+.auth-logged-in-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 8px;
+}
+
+.auth-action-btn {
+    width: 100%;
+    padding: 13px 20px;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-decoration: none;
+    font-family: inherit;
+}
+
+.auth-action-btn.dashboard-btn {
+    background: linear-gradient(135deg, var(--accent-soft), var(--accent-purple));
+    color: #fff;
+    border: none;
+    box-shadow: 0 6px 18px rgba(124, 141, 240, 0.2);
+}
+
+.auth-action-btn.dashboard-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 28px rgba(124, 141, 240, 0.35);
+}
+
+.auth-action-btn.logout-btn {
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    color: #ef4444;
+}
+
+.auth-action-btn.logout-btn:hover {
+    background: rgba(239, 68, 68, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(239, 68, 68, 0.15);
+}
