@@ -2,117 +2,150 @@
    HOME/RESPONSIVE.CSS — All homepage responsive overrides
    ============================================================ */
 
-@media (max-width: 1024px) {
+/* ── TABLET / SMALL DESKTOP ── */
+@media (max-width: 1024px) { /*[cite: 4]*/
     .hero {
-        grid-template-columns: 1fr;
-        text-align: center;
-        padding: 120px 32px 60px;
-        gap: 20px;
+        display: flex; /*[cite: 4]*/
+        flex-direction: column; /*[cite: 4]*/
+        justify-content: flex-end; /* Moves all content to the bottom of the section */
+        text-align: center; /*[cite: 4]*/
+        padding: 0; /* Removed padding so the image reaches the absolute top edge */
+        min-height: 85vh; /* Ensures the hero section is tall enough to show the face */
+    }
+
+    .hero-content {
+        display: flex; /*[cite: 4]*/
+        flex-direction: column; /*[cite: 4]*/
+        align-items: center; /*[cite: 4]*/
+        max-width: 100%; /*[cite: 4]*/
+        width: 100%;
+        padding: 200px 32px 60px; /* Big top padding creates space for the gradient transition */
+
+        /* The black gradient behind the text that fades up into the image */
+        background: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.85) 40%, #000000 100%);
+        z-index: 3;
     }
 
     .hero-slogan {
-        margin-left: auto;
-        margin-right: auto;
-    }
-
-    .hero-visual-wrapper {
-        width: 260px;
-        height: 260px;
-    }
-
-    .main-container {
-        padding: 40px 24px;
+        margin-left: auto; /*[cite: 4]*/
+        margin-right: auto; /*[cite: 4]*/
     }
 
     .hero-cta {
-        align-items: center;
-    }
-}
-
-@media (max-width: 700px) {
-    .hero {
-        padding: 100px 20px 50px;
-        gap: 30px;
+        align-items: center; /*[cite: 4]*/
+        justify-content: center; /*[cite: 4]*/
     }
 
-    .hero-title-spicy {
-        font-size: 2.5rem;
+    /* Redesigned Mobile/Tablet Visual: Full opacity background */
+    .hero-visual-full {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%; /*[cite: 4]*/
+        height: 100%;
+        opacity: 0.95; /* Raised from 0.25 so the subject is completely visible */
+        z-index: 1;
+        pointer-events: none;
     }
 
-    .hero-visual-wrapper {
-        width: 220px;
-        height: 220px;
+    .hero-image-full {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center 15%; /* Focuses the crop near the top so the face isn't cut off */
+
+        /* Smoothly fades the bottom of the image into the black background */
+        -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 100%); /*[cite: 4]*/
+        mask-image: linear-gradient(to bottom, black 50%, transparent 100%); /*[cite: 4]*/
     }
 
     .main-container {
-        padding: 30px 16px 50px;
+        padding: 40px 24px; /*[cite: 4]*/
+        position: relative;
+        z-index: 4;
+        background-color: #000000; /* Ensures the section below seamlessly connects to the hero gradient */
+    }
+}
+
+/* ── LARGE MOBILE ── */
+@media (max-width: 700px) { /*[cite: 4]*/
+    .hero {
+        gap: 0; /* Removed gap since spacing is handled by content padding now */
+    }
+
+    .hero-content {
+        padding: 150px 20px 50px; /* Adjusts the gradient spread and padding for mobile */
+    }
+
+    .hero-title-spicy {
+        font-size: 2.5rem; /*[cite: 4]*/
+    }
+
+    .main-container {
+        padding: 30px 16px 50px; /*[cite: 4]*/
     }
 
     .tabs-nav {
-        gap: 8px;
-        margin-bottom: 32px;
+        gap: 8px; /*[cite: 4]*/
+        margin-bottom: 32px; /*[cite: 4]*/
     }
 
     .tab-btn {
-        padding: 6px 16px;
-        font-size: 0.8rem;
+        padding: 6px 16px; /*[cite: 4]*/
+        font-size: 0.8rem; /*[cite: 4]*/
     }
 
     .button-group {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr; /*[cite: 4]*/
     }
 
     .contact-title {
-        font-size: 1.6rem;
+        font-size: 1.6rem; /*[cite: 4]*/
     }
 
     .social-card {
-        width: 120px;
-        padding: 14px 8px;
+        width: 120px; /*[cite: 4]*/
+        padding: 14px 8px; /*[cite: 4]*/
     }
 
     .trust-strip {
-        gap: 16px;
-        margin-bottom: 32px;
+        gap: 16px; /*[cite: 4]*/
+        margin-bottom: 32px; /*[cite: 4]*/
     }
 
     .testimonials-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr; /*[cite: 4]*/
     }
 
     .beats-preview-grid {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr 1fr; /*[cite: 4]*/
     }
 
     .whatsapp-float {
-        bottom: 80px;
+        bottom: 80px; /*[cite: 4]*/
     }
 }
 
-@media (max-width: 480px) {
-    .hero {
-        padding: 90px 16px 40px;
-    }
-
+/* ── SMALL MOBILE ── */
+@media (max-width: 480px) { /*[cite: 4]*/
     .hero-title-spicy {
-        font-size: 2.2rem;
+        font-size: 2.2rem; /*[cite: 4]*/
     }
 
-    .hero-visual-wrapper {
-        width: 180px;
-        height: 180px;
+    .hero-content {
+        padding: 120px 16px 40px; /* Tighter padding for very small screens */
     }
 
     .cta-btn {
-        padding: 10px 20px;
-        font-size: 0.85rem;
+        padding: 10px 20px; /*[cite: 4]*/
+        font-size: 0.85rem; /*[cite: 4]*/
     }
 
     .main-container {
-        padding: 20px 12px 40px;
+        padding: 20px 12px 40px; /*[cite: 4]*/
     }
 
     .beats-preview-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr; /*[cite: 4]*/
     }
 }
