@@ -391,6 +391,110 @@
         }
     });
 
+    // ── Add these element refs at the top of the IIFE ──
+var forgotModal = document.getElementById('forgotModal');
+var forgotForm = document.getElementById('forgotForm');
+var forgotError = document.getElementById('forgotError');
+var forgotSuccess = document.getElementById('forgotSuccess');
+var forgotPasswordBtn = document.getElementById('forgotPasswordBtn');
+var closeForgotBtn = document.getElementById('closeForgotBtn');
+var backToLogin = document.getElementById('backToLogin');
+
+// ── Add these event listeners ──
+if (forgotPasswordBtn) forgotPasswordBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    closeModal(loginModal);
+    setTimeout(function() { openModal(forgotModal); }, 200);
+});
+
+if (closeForgotBtn) closeForgotBtn.addEventListener('click', function() { closeModal(forgotModal); });
+
+if (backToLogin) backToLogin.addEventListener('click', function(e) {
+    e.preventDefault();
+    closeModal(forgotModal);
+    setTimeout(function() { openModal(loginModal); }, 200);
+});
+
+if (forgotModal) forgotModal.addEventListener('click', function(e) {
+    if (e.target === forgotModal) closeModal(forgotModal);
+});
+
+// ── Add forgot password form handler ──
+if (forgotForm) {
+    forgotForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        var formData = new FormData(forgotForm);
+        var email = formData.get('email');
+
+        var submitBtn = document.getElementById('forgotSubmitBtn');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            var btnText = submitBtn.querySelector('.btn-text');
+            var btnLoader = submitBtn.querySelector('.btn-loader');
+            if (btnText) btnText.style.display = 'none';
+            if (btnLoader) btnLoader.style.display = 'inline';
+        }
+        if (forgotError) { forgotError.classList.remove('show'); forgotError.style.display = 'none'; }
+        if (forgotSuccess) { forgotSuccess.classList.remove('show'); forgotSuccess.style.display = 'none'; }
+
+        try {
+            var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+var res = await fetch('/api/auth/forgot-password', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrfToken
+    },
+    body: JSON.stringify({ email: email })
+});
+            var result = await res.json();
+
+if (result.success) {
+    if (forgotSuccess) {
+        var msg = result.message;
+        // Dev mode: show clickable reset link
+        if (result.dev_reset_url) {
+            msg += '<br><a href="' + result.dev_reset_url + '" style="color:var(--accent-soft);word-break:break-all;">' + result.dev_reset_url + '</a>';
+            forgotSuccess.innerHTML = msg;
+        } else {
+            forgotSuccess.textContent = msg;
+        }
+        forgotSuccess.style.display = 'block';
+    }
+    showToast('Reset link generated!', 'success');
+} else {
+                if (forgotError) {
+                    forgotError.textContent = result.error || 'Something went wrong';
+                    forgotError.style.display = 'block';
+                }
+            }
+        } catch (err) {
+            if (forgotError) {
+                forgotError.textContent = 'Network error. Please try again.';
+                forgotError.style.display = 'block';
+            }
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                var btnText = submitBtn.querySelector('.btn-text');
+                var btnLoader = submitBtn.querySelector('.btn-loader');
+                if (btnText) btnText.style.display = 'inline';
+                if (btnLoader) btnLoader.style.display = 'none';
+            }
+        }
+    });
+}
+
+// ── Also add to Escape key handler ──
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeModal(loginModal);
+        closeModal(signupModal);
+        closeModal(forgotModal);  // ADD THIS
+        closeAccountModal();
+    }
+});
+
     // ==================== AUTH STATUS CHECK ====================
     async function checkAuthStatus() {
         try {

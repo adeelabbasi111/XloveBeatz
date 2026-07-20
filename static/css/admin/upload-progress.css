@@ -281,7 +281,38 @@
 .upload-modal-total-fill.error {
     background: #ef4444;
 }
+/* ── Remove Button ── */
+.upload-remove-btn {
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    color: #ef4444;
+    padding: 6px 14px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    margin-top: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: var(--transition-smooth, all 0.2s ease);
+}
 
+.upload-remove-btn:hover {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.4);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
+}
+
+.upload-remove-btn:active {
+    transform: translateY(0) scale(0.97);
+}
+
+.upload-remove-btn i {
+    font-size: 0.65rem;
+}
 /* ── Mobile ── */
 @media (max-width: 480px) {
     .upload-modal {

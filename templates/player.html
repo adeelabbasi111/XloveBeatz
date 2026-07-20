@@ -119,7 +119,7 @@
     <div class="panel-header">
       <h2 id="tracklistHeading">
         <i class="fas fa-list-ul"></i>
-        <span id="tracklistTitle">All Beats</span>
+        <span id="tracklistTitle">{% if pack_info %}{{ pack_info.product.name }}{% else %}All Beats{% endif %}</span>
         <span class="track-count" id="trackCount">{{ beats|length }} tracks</span>
       </h2>
       <div class="category-tabs" id="categoryTabs">

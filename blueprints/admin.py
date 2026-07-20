@@ -2,10 +2,14 @@ import logging
 import os
 import subprocess
 import zipfile
+import shutil
+import time
+import glob
+import uuid
 
 from flask import (
     Blueprint, render_template, request, redirect,
-    url_for, flash, current_app, send_file,
+    url_for, flash, current_app, send_file, jsonify ,session
 )
 from werkzeug.utils import secure_filename
 
@@ -16,14 +20,13 @@ from helpers.models import (
 )
 from helpers.utils import (
     admin_required, get_current_user,
-    generate_unique_slug, allowed_file, save_upload,
+    generate_unique_slug, allowed_file, save_upload, login_required
 )
 from helpers.services import (
     log_activity, get_site_setting, set_site_setting,
     get_admin_stats, get_monthly_revenue, get_top_products,
     get_genre_distribution,
 )
-
 
 # ═══════════════════════════════════════════════════════════════
 #  FILE STORAGE HELPERS
@@ -36,14 +39,87 @@ FOLDER_FLP      = 'flps'
 FOLDER_IMAGES   = 'images'
 FOLDER_PRESETS  = 'presets'
 FOLDER_PACKS    = 'packs'
-Folder_Licenses        = 'licenses'
+FOLDER_LICENSES = 'licenses'
 
 ALL_DATA_FOLDERS = [
     FOLDER_PREVIEWS, FOLDER_MP3, FOLDER_WAV,
     FOLDER_FLP, FOLDER_IMAGES, FOLDER_PRESETS,
-    FOLDER_PACKS,Folder_Licenses
+    FOLDER_PACKS, FOLDER_LICENSES
 ]
 
+TEMP_UPLOAD_DIR = os.path.join('static', 'data', 'temp_uploads')
+
+logger = logging.getLogger(__name__)
+bp = Blueprint('admin', __name__)
+
+
+# ═══════════════════════════════════════════════════════════════
+#  TEMP FILE HANDLING — upload on select, move on submit
+# ═══════════════════════════════════════════════════════════════
+
+def move_temp_file(form, field_name, dest_subfolder, app, readable_name=None):
+    temp_path = form.get(f'{field_name}_temp_path', '').strip()
+
+    if temp_path:
+        abs_temp = os.path.join(app.root_path, temp_path)
+        if not os.path.exists(abs_temp):
+            logger.warning("Temp file not found: %s", abs_temp)
+            return None
+
+        ext = os.path.splitext(temp_path)[1]
+
+        if readable_name:
+            safe_name = secure_filename(readable_name)
+            filename = f"{safe_name}{ext}"
+        else:
+            filename = f"{uuid.uuid4().hex}{ext}"
+
+        dest_dir = os.path.join(app.root_path, 'static', 'data', dest_subfolder)
+        os.makedirs(dest_dir, exist_ok=True)
+
+        abs_dest = os.path.join(dest_dir, filename)
+        shutil.move(abs_temp, abs_dest)
+
+        return f"data/{dest_subfolder}/{filename}"
+
+    file = request.files.get(field_name)
+    if file and file.filename:
+        ext = os.path.splitext(file.filename)[1]
+
+        if readable_name:
+            safe_name = secure_filename(readable_name)
+            filename = f"{safe_name}{ext}"
+        else:
+            filename = f"{uuid.uuid4().hex}{ext}"
+
+        dest_dir = os.path.join(app.root_path, 'static', 'data', dest_subfolder)
+        os.makedirs(dest_dir, exist_ok=True)
+
+        abs_path = os.path.join(dest_dir, filename)
+        file.save(abs_path)
+        return f"data/{dest_subfolder}/{filename}"
+
+    return None
+
+def cleanup_old_temp_files(app):
+    """Delete temp uploads older than 1 hour."""
+    temp_dir = os.path.join(app.root_path, TEMP_UPLOAD_DIR)
+    if not os.path.exists(temp_dir):
+        return
+
+    cutoff = time.time() - 3600
+    for f in glob.glob(os.path.join(temp_dir, '*')):
+        if os.path.isfile(f) and os.path.getmtime(f) < cutoff:
+            try:
+                os.remove(f)
+                logger.info("Cleaned old temp file: %s", f)
+            except OSError:
+                pass
+
+
+# ═══════════════════════════════════════════════════════════════
+#  EXISTING FILE HELPERS
+# ═══════════════════════════════════════════════════════════════
 
 def get_data_path(subfolder):
     path = os.path.join(current_app.config['DATA_DIR'], subfolder)
@@ -166,11 +242,70 @@ def _regenerate_pack_zip(pack):
 
 
 # ═══════════════════════════════════════════════════════════════
-#  BLUEPRINT SETUP
+#  TEMP UPLOAD API ROUTES
 # ═══════════════════════════════════════════════════════════════
 
-logger = logging.getLogger(__name__)
-bp = Blueprint('admin', __name__)
+@bp.route('/api/admin/upload-temp', methods=['POST'])
+def upload_temp_file():
+    """Upload a file to temp folder immediately. Returns temp path."""
+
+    # Manual auth check — return JSON error instead of HTML redirect
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Not logged in'}), 401
+
+    user = User.query.get(user_id)
+    if not user or not user.is_admin:
+        return jsonify({'error': 'Admin access required'}), 403
+
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file provided'}), 400
+
+    file = request.files['file']
+    if not file or not file.filename:
+        return jsonify({'error': 'Empty file'}), 400
+
+    abs_temp_dir = os.path.join(current_app.root_path, TEMP_UPLOAD_DIR)
+    os.makedirs(abs_temp_dir, exist_ok=True)
+
+    ext = os.path.splitext(file.filename)[1]
+    temp_name = f"{uuid.uuid4().hex}{ext}"
+    temp_path = os.path.join(abs_temp_dir, temp_name)
+
+    file.save(temp_path)
+
+    relative_path = os.path.join(TEMP_UPLOAD_DIR, temp_name).replace('\\', '/')
+
+    return jsonify({
+        'success': True,
+        'temp_path': relative_path,
+        'original_name': file.filename,
+        'size': os.path.getsize(temp_path)
+    })
+
+
+@bp.route('/api/admin/cleanup-temp', methods=['POST'])
+def cleanup_temp():
+    """Delete a temp file if user removes it from form."""
+
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Not logged in'}), 401
+
+    user = User.query.get(user_id)
+    if not user or not user.is_admin:
+        return jsonify({'error': 'Admin access required'}), 403
+
+    data = request.get_json()
+    temp_path = data.get('temp_path', '')
+    if not temp_path:
+        return jsonify({'error': 'No path'}), 400
+
+    abs_path = os.path.join(current_app.root_path, temp_path)
+    if os.path.exists(abs_path):
+        os.remove(abs_path)
+
+    return jsonify({'success': True})
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -180,6 +315,9 @@ bp = Blueprint('admin', __name__)
 @bp.route('/admin')
 @admin_required
 def admin_dashboard():
+    # Clean old temp files on each admin visit
+    cleanup_old_temp_files(current_app)
+
     stats = get_admin_stats()
     limit = current_app.config['ADMIN_RECENT_LIMIT']
     recent_orders = Order.query.order_by(Order.created_at.desc()).limit(limit).all()
@@ -190,7 +328,7 @@ def admin_dashboard():
 
 
 # ═══════════════════════════════════════════════════════════════
-#  PRODUCTS
+#  PRODUCTS — LIST
 # ═══════════════════════════════════════════════════════════════
 
 @bp.route('/admin/products')
@@ -211,6 +349,10 @@ def admin_products():
                            products=pagination.items, pagination=pagination,
                            current_type=product_type)
 
+
+# ═══════════════════════════════════════════════════════════════
+#  PRODUCT — ADD
+# ═══════════════════════════════════════════════════════════════
 
 @bp.route('/admin/product/add', methods=['GET', 'POST'])
 @admin_required
@@ -237,13 +379,12 @@ def admin_product_add():
                     return redirect(url_for('admin.admin_product_add'))
                 price_cents = int(price * 100)
 
+            # ── Cover image (temp or direct) ──
             cover_image_path = None
             if product_type != 'beat':
-                cover_file = request.files.get('cover_image')
-                if cover_file and cover_file.filename and allowed_file(
-                        cover_file.filename, current_app.config['ALLOWED_IMAGE_EXTENSIONS']):
-                    fname = make_filename(slug, 'cover', cover_file.filename)
-                    cover_image_path = save_data_file(cover_file, FOLDER_IMAGES, fname)
+                cover_image_path = move_temp_file(
+                    request.form, 'cover_image', FOLDER_IMAGES, current_app
+                )
 
             product = Product(
                 product_type=product_type, name=name, slug=slug,
@@ -288,6 +429,10 @@ def admin_product_add():
                            exclusive_tags='100% Ownership')
 
 
+# ═══════════════════════════════════════════════════════════════
+#  PRODUCT — EDIT
+# ═══════════════════════════════════════════════════════════════
+
 @bp.route('/admin/product/<int:product_id>/edit', methods=['GET', 'POST'])
 @admin_required
 def admin_product_edit(product_id):
@@ -303,12 +448,13 @@ def admin_product_edit(product_id):
                 if price is not None and price >= 0:
                     product.price_cents = int(price * 100)
 
-                cover_file = request.files.get('cover_image')
-                if cover_file and cover_file.filename and allowed_file(
-                        cover_file.filename, current_app.config['ALLOWED_IMAGE_EXTENSIONS']):
+                # ── Cover image (temp or direct) ──
+                new_cover = move_temp_file(
+                    request.form, 'cover_image', FOLDER_IMAGES, current_app
+                )
+                if new_cover:
                     delete_old_file(product.cover_image)
-                    fname = make_filename(product.slug, 'cover', cover_file.filename)
-                    product.cover_image = save_data_file(cover_file, FOLDER_IMAGES, fname)
+                    product.cover_image = new_cover
 
             if product.product_type == 'beat':
                 detail = BeatDetail.query.filter_by(product_id=product.id).first()
@@ -336,7 +482,6 @@ def admin_product_edit(product_id):
 
                 _update_beat_licenses(product.id)
 
-                # 7b. Sync product price with basic license price
                 basic_price = request.form.get('basic_price', type=float)
                 if basic_price is not None and basic_price > 0:
                     product.price_cents = int(basic_price * 100)
@@ -350,11 +495,14 @@ def admin_product_edit(product_id):
                 preset = VocalPreset.query.filter_by(product_id=product.id).first()
                 if preset:
                     preset.supported_daw = request.form.get('supported_daw')
-                    zip_file = request.files.get('preset_zip')
-                    if zip_file and zip_file.filename:
+
+                    # ── Preset zip (temp or direct) ──
+                    new_zip = move_temp_file(
+                        request.form, 'preset_zip', FOLDER_PRESETS, current_app
+                    )
+                    if new_zip:
                         delete_old_file(preset.preset_zip)
-                        fname = make_filename(product.slug, 'preset', zip_file.filename)
-                        preset.preset_zip = save_data_file(zip_file, FOLDER_PRESETS, fname)
+                        preset.preset_zip = new_zip
 
             db.session.commit()
             log_activity(get_current_user().id, 'update', 'product',
@@ -393,6 +541,10 @@ def admin_product_edit(product_id):
                            premium_tags=license_tags.get('premium', 'Non-Exclusive'),
                            exclusive_tags=license_tags.get('exclusive', '100% Ownership'))
 
+
+# ═══════════════════════════════════════════════════════════════
+#  PRODUCT — DELETE / TOGGLE
+# ═══════════════════════════════════════════════════════════════
 
 @bp.route('/admin/product/<int:product_id>/delete', methods=['POST'])
 @admin_required
@@ -458,31 +610,30 @@ def admin_product_toggle(product_id):
 
 
 # ═══════════════════════════════════════════════════════════════
-#  PRIVATE HELPERS — FILE CREATION
+#  PRIVATE HELPERS — FILE CREATION (TEMP-AWARE)
 # ═══════════════════════════════════════════════════════════════
 
 def _create_beat_details(product):
+    """Create beat detail with files from temp or direct upload."""
     slug = product.slug
 
     # 1. Full MP3 → data/mp3/
-    mp3_db_path = ''
-    mp3_abs_path = ''
-    mp3_file = request.files.get('mp3_file')
-    if mp3_file and mp3_file.filename:
-        fname = make_filename(slug, 'full', mp3_file.filename)
-        mp3_db_path = save_data_file(mp3_file, FOLDER_MP3, fname)
-        mp3_abs_path = os.path.join(get_data_path(FOLDER_MP3), fname)
+    mp3_db_path = move_temp_file(
+        request.form, 'mp3_file', FOLDER_MP3, current_app,
+        readable_name=f"{slug}_full"
+    )
 
     # 2. Preview → data/previews/
     preview_db_path = ''
     preview_start = request.form.get('preview_start', '').strip()
     preview_end = request.form.get('preview_end', '').strip()
 
-    if mp3_abs_path and preview_start and preview_end:
+    if mp3_db_path and preview_start and preview_end:
         try:
-            preview_fname = make_filename(slug, 'preview', mp3_file.filename)
+            abs_mp3 = os.path.join(current_app.root_path, 'static', mp3_db_path)
+            preview_fname = f"{slug}_preview.mp3"
             preview_db_path = create_audio_preview(
-                mp3_abs_path,
+                abs_mp3,
                 float(preview_start),
                 float(preview_end),
                 preview_fname,
@@ -491,18 +642,16 @@ def _create_beat_details(product):
             logger.error("Preview creation failed for %s: %s", slug, e)
 
     # 3. WAV → data/wav/
-    wav_db_path = ''
-    wav_file = request.files.get('wav_file')
-    if wav_file and wav_file.filename:
-        fname = make_filename(slug, 'beat', wav_file.filename)
-        wav_db_path = save_data_file(wav_file, FOLDER_WAV, fname)
+    wav_db_path = move_temp_file(
+        request.form, 'wav_file', FOLDER_WAV, current_app,
+        readable_name=f"{slug}_beat"
+    )
 
     # 4. Project file → data/flps/
-    project_db_path = ''
-    project_file = request.files.get('project_file')
-    if project_file and project_file.filename:
-        fname = make_filename(slug, 'project', project_file.filename)
-        project_db_path = save_data_file(project_file, FOLDER_FLP, fname)
+    project_db_path = move_temp_file(
+        request.form, 'project_file', FOLDER_FLP, current_app,
+        readable_name=f"{slug}_project"
+    )
 
     # 5. Duration
     duration = request.form.get('duration_hidden', '').strip()
@@ -517,9 +666,9 @@ def _create_beat_details(product):
         genre=request.form.get('beat_genre', '').strip(),
         duration=duration,
         preview_audio=preview_db_path,
-        mp3_file=mp3_db_path,
-        wav_file=wav_db_path,
-        project_file=project_db_path,
+        mp3_file=mp3_db_path or '',
+        wav_file=wav_db_path or '',
+        project_file=project_db_path or '',
         pack_id=pack_id,
     )
     db.session.add(beat_detail)
@@ -541,24 +690,27 @@ def _create_beat_details(product):
 
 
 def _update_beat_files(slug, beat_detail):
+    """Update beat files from temp or direct upload."""
     files_changed = False
 
-    # ── MP3 ──
-    mp3_file = request.files.get('mp3_file')
-    if mp3_file and mp3_file.filename:
+    # ── MP3 (temp or direct) ──
+    new_mp3 = move_temp_file(
+        request.form, 'mp3_file', FOLDER_MP3, current_app,
+        readable_name=f"{slug}_full"
+    )
+    if new_mp3:
         delete_old_file(beat_detail.mp3_file)
         delete_old_file(beat_detail.preview_audio)
 
-        fname = make_filename(slug, 'full', mp3_file.filename)
-        beat_detail.mp3_file = save_data_file(mp3_file, FOLDER_MP3, fname)
-        mp3_abs_path = os.path.join(get_data_path(FOLDER_MP3), fname)
+        beat_detail.mp3_file = new_mp3
+        mp3_abs_path = os.path.join(current_app.root_path, 'static', new_mp3)
 
         preview_start = request.form.get('preview_start', '').strip()
         preview_end = request.form.get('preview_end', '').strip()
 
         if preview_start and preview_end:
             try:
-                preview_fname = make_filename(slug, 'preview', mp3_file.filename)
+                preview_fname = f"{slug}_preview.mp3"
                 beat_detail.preview_audio = create_audio_preview(
                     mp3_abs_path,
                     float(preview_start),
@@ -574,22 +726,26 @@ def _update_beat_files(slug, beat_detail):
 
         files_changed = True
 
-    # ── WAV ──
-    wav_file = request.files.get('wav_file')
-    if wav_file and wav_file.filename:
+    # ── WAV (temp or direct) ──
+    new_wav = move_temp_file(
+        request.form, 'wav_file', FOLDER_WAV, current_app,
+        readable_name=f"{slug}_beat"
+    )
+    if new_wav:
         delete_old_file(beat_detail.wav_file)
-        fname = make_filename(slug, 'beat', wav_file.filename)
-        beat_detail.wav_file = save_data_file(wav_file, FOLDER_WAV, fname)
+        beat_detail.wav_file = new_wav
         files_changed = True
 
-    # ── PROJECT FILE ──
-    project_file = request.files.get('project_file')
-    if project_file and project_file.filename:
+    # ── PROJECT FILE (temp or direct) ──
+    new_project = move_temp_file(
+        request.form, 'project_file', FOLDER_FLP, current_app,
+        readable_name=f"{slug}_project"
+    )
+    if new_project:
         delete_old_file(beat_detail.project_file)
-        fname = make_filename(slug, 'project', project_file.filename)
-        beat_detail.project_file = save_data_file(project_file, FOLDER_FLP, fname)
+        beat_detail.project_file = new_project
         files_changed = True
-        logger.info("Project file saved: %s -> %s", project_file.filename, beat_detail.project_file)
+        logger.info("Project file saved: %s", beat_detail.project_file)
 
     # ── Regenerate pack ZIP if files changed ──
     if files_changed and beat_detail.pack_id:
@@ -597,14 +753,15 @@ def _update_beat_files(slug, beat_detail):
         if pack:
             _regenerate_pack_zip(pack)
 
-def _create_preset_details(product, slug):
-    supported_daw = request.form.get('supported_daw')
-    preset_zip_path = ''
 
-    zip_file = request.files.get('preset_zip')
-    if zip_file and zip_file.filename:
-        fname = make_filename(slug, 'preset', zip_file.filename)
-        preset_zip_path = save_data_file(zip_file, FOLDER_PRESETS, fname)
+def _create_preset_details(product, slug):
+    """Create preset with file from temp or direct upload."""
+    supported_daw = request.form.get('supported_daw')
+
+    preset_zip_path = move_temp_file(
+        request.form, 'preset_zip', FOLDER_PRESETS, current_app,
+        readable_name=f"{slug}_preset"
+    ) or ''
 
     db.session.add(VocalPreset(
         product_id=product.id,
@@ -703,12 +860,10 @@ def admin_users():
     page = request.args.get('page', 1, type=int)
     per_page = current_app.config.get('ORDERS_PER_PAGE', 20)
 
-    # ✅ YEH LINE CHANGE KI HAI: Filter add kar diya hai email ke against
     pagination = User.query.filter(User.email != os.getenv('ADMIN_EMAIL')) \
         .order_by(User.created_at.desc()) \
         .paginate(page=page, per_page=per_page, error_out=False)
 
-    # Count orders per user
     user_ids = [u.id for u in pagination.items]
     order_counts = {}
     if user_ids:
@@ -723,6 +878,7 @@ def admin_users():
     return render_template('admin/users.html',
                            users=pagination.items, pagination=pagination,
                            order_counts=order_counts)
+
 
 @bp.route('/admin/user/<int:user_id>')
 @admin_required
@@ -832,13 +988,6 @@ def admin_license_download(lic_id):
 
     return send_file(abs_path, as_attachment=True,
                      download_name=os.path.basename(abs_path))
-
-
-# ═══════════════════════════════════════════════════════════════
-#  LICENSE TIERS
-# ═══════════════════════════════════════════════════════════════
-
-
 
 
 # ═══════════════════════════════════════════════════════════════

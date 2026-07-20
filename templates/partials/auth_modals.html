@@ -19,6 +19,9 @@
                 <label for="loginPassword">Password</label>
                 <input type="password" id="loginPassword" name="password" required placeholder="••••••••" autocomplete="current-password">
             </div>
+            <div class="auth-forgot" id="authForgotLink">
+                <a href="#" id="forgotPasswordBtn">Forgot password?</a>
+            </div>
             <div class="auth-error" id="loginError"></div>
             <button type="submit" class="auth-submit-btn magnetic-btn" id="loginSubmitBtn">
                 <span class="btn-text">Login</span>
@@ -26,6 +29,36 @@
             </button>
             <div class="auth-switch">
                 Don't have an account? <a href="#" id="switchToSignup">Sign up</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- FORGOT PASSWORD MODAL -->
+<div class="auth-modal-overlay" id="forgotModal">
+    <div class="auth-modal">
+        <button class="auth-modal-close magnetic-btn" id="closeForgotBtn">
+            <i class="fas fa-times"></i>
+        </button>
+        <div class="auth-modal-header">
+            <div class="auth-modal-icon"><i class="fas fa-key"></i></div>
+            <h2>Forgot Password</h2>
+            <p>Enter your email to receive a reset link</p>
+        </div>
+        <form id="forgotForm" class="auth-form" onsubmit="return false;">
+            <div class="form-group">
+                <label for="forgotEmail">Email</label>
+                <input type="email" id="forgotEmail" name="email" required
+                       placeholder="your@email.com" autocomplete="email">
+            </div>
+            <div class="auth-error" id="forgotError"></div>
+            <div class="auth-success" id="forgotSuccess"></div>
+            <button type="submit" class="auth-submit-btn magnetic-btn" id="forgotSubmitBtn">
+                <span class="btn-text">Send Reset Link</span>
+                <span class="btn-loader" style="display:none;"><i class="fas fa-spinner fa-spin"></i></span>
+            </button>
+            <div class="auth-switch">
+                <a href="#" id="backToLogin"><i class="fas fa-arrow-left"></i> Back to Login</a>
             </div>
         </form>
     </div>

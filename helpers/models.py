@@ -20,6 +20,9 @@ class User(db.Model):
     email = db.Column(db.String(255), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(255), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
+    # Add these two columns to the User class:
+    password_reset_token = db.Column(db.String(128), nullable=True)
+    password_reset_expires = db.Column(db.DateTime, nullable=True)
 
     created_at = db.Column(db.DateTime, server_default=func.now())
     last_login = db.Column(db.DateTime)

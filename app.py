@@ -83,8 +83,9 @@ def create_app(config_class=Config):
     app.register_blueprint(api_bp)
 
     # ---- CSRF: exempt JSON-only API and payment blueprints ----
-    csrf.exempt(payment_bp)     # Razorpay callbacks are JSON
-    csrf.exempt(api_bp)         #AJAX endpoints use SameSite cookies
+    csrf.exempt(payment_bp)
+    csrf.exempt(api_bp)
+    csrf.exempt(auth_bp)  # ADD THIS — and remove the two string lines
 
     # In app.py, inside create_app(), after registering blueprints:
     from helpers.services import get_site_setting
