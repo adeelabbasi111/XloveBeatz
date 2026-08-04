@@ -15,6 +15,7 @@ from flask import (
 )
 from werkzeug.utils import secure_filename
 from PIL import Image
+from helpers.license_generator import BeatLicenseGenerator
 
 from helpers.models import (
     db, Product, BeatDetail, BeatPack, VocalPreset,
@@ -1337,19 +1338,56 @@ def admin_licenses():
 def admin_license_download(lic_id):
     gen_lic = GeneratedLicense.query.get_or_404(lic_id)
 
-    if not gen_lic.pdf_path:
-        flash('No PDF file associated with this license', 'error')
+    order_item = OrderItem.query.get(gen_lic.order_item_id) if gen_lic.order_item_id else None
+    if not order_item:
+        flash('License not associated with an order item', 'error')
+        return redirect(url_for('admin.admin_licenses'))
+        
+    order = order_item.order
+    product = order_item.product
+    
+    if not product or product.product_type != 'beat':
+        flash('Invalid product for license', 'error')
         return redirect(url_for('admin.admin_licenses'))
 
-    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    abs_path = os.path.join(project_root, gen_lic.pdf_path)
+    license_type = gen_lic.license_type.lower() if gen_lic.license_type else 'basic'
+    beat_detail = BeatDetail.query.filter_by(product_id=product.id).first()
+    
+    effective_date = order.created_at.strftime('%d-%m-%Y') if order and order.created_at else datetime.now().strftime('%d-%m-%Y')
+    
+    user = User.query.get(order.user_id) if order and order.user_id else None
+    licensee_name = gen_lic.buyer_name or (user.username if user else (order.email if order else 'Customer'))
+    beat_name = gen_lic.beat_name or product.name
+    price_paid = order_item.price_paid_cents / 100 if order_item.price_paid_cents else 0
 
-    if not os.path.exists(abs_path):
-        flash('PDF file not found on disk', 'error')
-        return redirect(url_for('admin.admin_licenses'))
+    license_data = {
+        'licensee_legal_name': licensee_name,
+        'artist_stage_name': '',
+        'beat_name': beat_name,
+        'effective_date': effective_date,
+        'beat_price': str(int(price_paid)),
+        'order_id': str(order.id) if order else '',
+        'transaction_id': order.transaction_id if order else '',
+        'buyer_email': user.email if user else (order.email if order else ''),
+        'bpm': beat_detail.bpm if beat_detail else None,
+        'musical_key': beat_detail.musical_key if beat_detail else None,
+        'genre': beat_detail.genre if beat_detail else None,
+        'duration': beat_detail.duration if beat_detail else None,
+    }
 
-    return send_file(abs_path, as_attachment=True,
-                     download_name=os.path.basename(abs_path))
+    generator = BeatLicenseGenerator()
+    if license_type == 'basic':
+        story = generator.generate_basic_license(license_data)
+    elif license_type == 'premium':
+        story = generator.generate_premium_license(license_data)
+    else:
+        story = generator.generate_exclusive_license(license_data)
+        
+    pdf_bytes = generator.generate_pdf_bytes(story)
+    safe_beat = beat_name.replace(' ', '_').replace('/', '_')
+    filename = f'{safe_beat}_{license_type.capitalize()}_License.pdf'
+
+    return send_file(io.BytesIO(pdf_bytes), mimetype='application/pdf', as_attachment=True, download_name=filename)
 
 
 # ═══════════════════════════════════════════════════════════════

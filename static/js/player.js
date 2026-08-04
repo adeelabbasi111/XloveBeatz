@@ -71,7 +71,10 @@ var BASE_RADIUS_STEP = 0.08;
 var ringBaseRadii    = [];
 var ringDistortions  = new Array(NUM_RINGS).fill(0);
 var ringTargets      = new Array(NUM_RINGS).fill(0);
-var time             = 0;
+var time = 0;
+var is808Active = false;
+var bassThreshold = 0.6; // Adjust threshold for 808 detection
+var bassEnergy = 0;
 
 // ════════════════════════════════════════════════════════════
 // TOAST
@@ -384,12 +387,63 @@ if (volumeIcon) {
 // ════════════════════════════════════════════════════════════
 // VISUALIZER — Topographic rings (color-tinted by beat image)
 // ════════════════════════════════════════════════════════════
-function getVizColor(opacity) {
-  var c = window.__beatColor;
-  if (c) {
-    return 'rgba(' + c.r + ',' + c.g + ',' + c.b + ',' + opacity + ')';
+function hslToRgb(h, s, l) {
+  var r, g, b;
+  if (s === 0) {
+    r = g = b = l;
+  } else {
+    var hue2rgb = function hue2rgb(p, q, t) {
+      if (t < 0) t += 1;
+      if (t > 1) t -= 1;
+      if (t < 1/6) return p + (q - p) * 6 * t;
+      if (t < 1/2) return q;
+      if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+      return p;
+    };
+    var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    var p = 2 * l - q;
+    r = hue2rgb(p, q, h + 1/3);
+    g = hue2rgb(p, q, h);
+    b = hue2rgb(p, q, h - 1/3);
   }
-  return 'rgba(124,141,240,' + opacity + ')';
+  return { r: Math.round(r * 255), g: Math.round(g * 255), b: Math.round(b * 255) };
+}
+
+function rgbToHsl(r, g, b) {
+  r /= 255; g /= 255; b /= 255;
+  var max = Math.max(r, g, b), min = Math.min(r, g, b);
+  var h, s, l = (max + min) / 2;
+  if (max === min) { h = s = 0; }
+  else {
+    var d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+      case g: h = ((b - r) / d + 2) / 6; break;
+      case b: h = ((r - g) / d + 4) / 6; break;
+    }
+  }
+  return { h: h, s: s, l: l };
+}
+
+var _lastBeatColorKey = '';
+var _boostedColor = null;
+
+function getBoostedVizColor() {
+  var c = window.__beatColor || { r: 124, g: 141, b: 240 };
+  var key = c.r + ',' + c.g + ',' + c.b;
+  if (key === _lastBeatColorKey && _boostedColor) return _boostedColor;
+  _lastBeatColorKey = key;
+  var hsl = rgbToHsl(c.r, c.g, c.b);
+  hsl.l = Math.max(hsl.l, 0.65); // prevent color from blending into dark background
+  hsl.s = Math.max(hsl.s, 0.60); // keep it vibrant
+  _boostedColor = hslToRgb(hsl.h, hsl.s, hsl.l);
+  return _boostedColor;
+}
+
+function getVizColor(opacity) {
+  var bc = getBoostedVizColor();
+  return 'rgba(' + bc.r + ',' + bc.g + ',' + bc.b + ',' + opacity + ')';
 }
 
 function setupCanvas() {
@@ -454,10 +508,11 @@ function drawTopographyFrame() {
     if (w < 1 || h < 1 || !isFinite(cx) || !isFinite(cy) || ringBaseRadii.length === 0) return;
     vizCtx.clearRect(0, 0, w, h);
     for (var idx = 0; idx < ringBaseRadii.length; idx++) {
-      var baseR = ringBaseRadii[idx];
+      var bassExpand = Math.max(0, (bassEnergy - 0.45) * 2.0); // 0.0 when low, scales up smoothly
+      var baseR = ringBaseRadii[idx] * (1 + bassExpand * 0.15); // Max 15% bigger, very contained
       var distortion = ringDistortions[idx];
       var opacity = 0.09 + idx * 0.03 + Math.min(distortion * 0.5, 0.4);
-      var lineWidth = 1 + distortion * 0.04;
+      var lineWidth = 1 + distortion * 0.04 + (bassExpand * 1.5);
       vizCtx.beginPath();
       for (var j = 0; j <= POINTS_PER_RING; j++) {
         var angle = (j / POINTS_PER_RING) * Math.PI * 2;
@@ -478,14 +533,9 @@ function drawTopographyFrame() {
       var gradR = innerR * 0.5;
       if (isFinite(gradR) && gradR > 0) {
         var grad = vizCtx.createRadialGradient(cx, cy, gradR, cx, cy, innerR);
-        var c = window.__beatColor;
-        if (c) {
-          grad.addColorStop(0, 'rgba(' + c.r + ',' + c.g + ',' + c.b + ',0.06)');
-          grad.addColorStop(1, 'rgba(' + c.r + ',' + c.g + ',' + c.b + ',0)');
-        } else {
-          grad.addColorStop(0, 'rgba(124,141,240,0.06)');
-          grad.addColorStop(1, 'rgba(124,141,240,0)');
-        }
+        var bc = getBoostedVizColor();
+        grad.addColorStop(0, 'rgba(' + bc.r + ',' + bc.g + ',' + bc.b + ',0.06)');
+        grad.addColorStop(1, 'rgba(' + bc.r + ',' + bc.g + ',' + bc.b + ',0)');
         vizCtx.fillStyle = grad;
         vizCtx.beginPath();
         vizCtx.arc(cx, cy, innerR, 0, Math.PI * 2);
@@ -512,6 +562,17 @@ function updateRingDistortionsFromAudio() {
     var avg = count > 0 ? sum / count / 255 : 0;
     var targetDist = avg * 70;
     ringDistortions[r] += (targetDist - ringDistortions[r]) * 0.55;
+    // After processing all rings, compute bass energy for 808 detection (once per call)
+    if (r === NUM_RINGS - 1) {
+      var bassBins = Math.max(1, Math.floor(bins * 0.05));
+      var bassSum = 0;
+      for (var b = 0; b < bassBins; b++) {
+        bassSum += freqData[b];
+      }
+      var currentBassEnergy = bassBins > 0 ? bassSum / bassBins / 255 : 0;
+      bassEnergy += (currentBassEnergy - bassEnergy) * 0.25; // smooths the bass reading so it doesn't flutter
+      is808Active = bassEnergy > bassThreshold;
+    }
   }
 }
 

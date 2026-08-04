@@ -5,7 +5,7 @@ import os
 from datetime import datetime
 
 from flask import Blueprint, request, jsonify, render_template, session, current_app, redirect, url_for, flash
-from helpers.models import Product, License, BeatLicensePrice, Cart, db, Order, OrderItem, User, GeneratedLicense
+from helpers.models import Product, License, BeatLicensePrice, Cart, db, Order, OrderItem, User, GeneratedLicense, BeatDetail
 from helpers.utils import get_current_user, login_required
 from helpers.services import create_order, add_order_item, mark_order_paid, clear_cart, track_download
 from flask import Blueprint, request, jsonify, render_template, session, current_app, redirect, url_for, flash, send_file
@@ -25,7 +25,7 @@ BYPASS_RAZORPAY = True
 # ═══════════════════════════════════════════════════════════════
 
 def _generate_licenses_for_order(order):
-    """Generate license PDFs for each beat item in the order."""
+    """DEPRECATED: Generate license PDFs for each beat item in the order."""
 
     generator = BeatLicenseGenerator()
     user = User.query.get(order.user_id) if order.user_id else None
@@ -256,7 +256,9 @@ def verify_payment():
             # Generate licenses
             order = Order.query.get(db_order_id)
             if order:
-                _generate_licenses_for_order(order)
+                # License PDFs are now generated on-demand when downloaded
+                # _generate_licenses_for_order(order)
+                pass
 
             logger.info("[TEST] Order %s marked as paid (bypass)", db_order_id)
             return jsonify({
@@ -294,7 +296,9 @@ def verify_payment():
         # Generate licenses
         order = Order.query.get(db_order_id)
         if order:
-            _generate_licenses_for_order(order)
+            # License PDFs are now generated on-demand when downloaded
+            # _generate_licenses_for_order(order)
+            pass
 
         return jsonify({"status": "success", "message": "Payment verified!", "order_id": db_order_id})
     except Exception as e:

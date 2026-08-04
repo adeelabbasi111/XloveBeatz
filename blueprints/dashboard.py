@@ -11,6 +11,10 @@ from helpers.services import get_user_orders, track_download
 from werkzeug.security import check_password_hash, generate_password_hash
 import os
 import logging
+from io import BytesIO
+from datetime import datetime
+from helpers.license_generator import BeatLicenseGenerator
+from helpers.models import BeatLicensePrice
 
 import zipfile
 import io
@@ -380,19 +384,56 @@ def download_license(license_id):
         flash('You do not have access to this license', 'error')
         return redirect(url_for('dashboard.dashboard'))
 
-    if not lic.pdf_path:
-        flash('No PDF available for this license', 'error')
+    # Generate on-the-fly
+    product = order_item.product
+    if not product or product.product_type != 'beat':
+        flash('Invalid product for license', 'error')
         return redirect(url_for('dashboard.dashboard'))
 
-    # FIX: Add 'static' to the path
-    abs_path = os.path.join(current_app.root_path, 'static', lic.pdf_path)
-
-    if not os.path.exists(abs_path):
-        logger.error("License PDF not found at: %s", abs_path)
-        flash('License PDF file not found', 'error')
+    if not order_item.license:
+        flash('No license type found', 'error')
         return redirect(url_for('dashboard.dashboard'))
 
-    return send_file(abs_path, as_attachment=True)
+    license_type = order_item.license.name.lower()
+    if license_type not in ('basic', 'premium', 'exclusive'):
+        flash('Invalid license type', 'error')
+        return redirect(url_for('dashboard.dashboard'))
+
+    beat_detail = BeatDetail.query.filter_by(product_id=product.id).first()
+    
+    effective_date = order.created_at.strftime('%d-%m-%Y') if order.created_at else datetime.now().strftime('%d-%m-%Y')
+    licensee_name = user.username if user else (order.email or 'Customer')
+    beat_name = product.name
+    price_paid = order_item.price_paid_cents / 100 if order_item.price_paid_cents else 0
+
+    license_data = {
+        'licensee_legal_name': licensee_name,
+        'artist_stage_name': '',
+        'beat_name': beat_name,
+        'effective_date': effective_date,
+        'beat_price': str(int(price_paid)),
+        'order_id': str(order.id),
+        'transaction_id': order.transaction_id or '',
+        'buyer_email': user.email if user else (order.email or ''),
+        'bpm': beat_detail.bpm if beat_detail else None,
+        'musical_key': beat_detail.musical_key if beat_detail else None,
+        'genre': beat_detail.genre if beat_detail else None,
+        'duration': beat_detail.duration if beat_detail else None,
+    }
+
+    generator = BeatLicenseGenerator()
+    if license_type == 'basic':
+        story = generator.generate_basic_license(license_data)
+    elif license_type == 'premium':
+        story = generator.generate_premium_license(license_data)
+    else:
+        story = generator.generate_exclusive_license(license_data)
+        
+    pdf_bytes = generator.generate_pdf_bytes(story)
+    safe_beat = beat_name.replace(' ', '_').replace('/', '_')
+    filename = f'{safe_beat}_{license_type.capitalize()}_License.pdf'
+
+    return send_file(BytesIO(pdf_bytes), mimetype='application/pdf', as_attachment=True, download_name=filename)
 
 import zipfile
 import io
