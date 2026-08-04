@@ -1,0 +1,265 @@
+{% extends 'admin/base.html' %}
+
+{% block admin_title %}Offers{% endblock %}
+{% block page_heading %}🎁 Promotional Offers{% endblock %}
+
+{% block content %}
+
+{# ─── CREATE FORM ─── #}
+<div class="form-container">
+  <form method="POST" action="{{ url_for('admin.admin_offer_add') }}" class="admin-form" id="offerForm">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div class="form-section">
+      <h3><i class="fas fa-gift"></i> Create New Offer</h3>
+
+      <div class="form-row">
+        <div class="form-group" style="flex:2;">
+          <label for="offer_name">Offer Name <small class="text-muted">internal label</small></label>
+          <input type="text" name="name" id="offer_name" required placeholder="e.g. Buy 1 Get 2 Free Beats">
+        </div>
+        <div class="form-group">
+          <label for="offer_type">Offer Type</label>
+          <select name="offer_type" id="offer_type" onchange="showOfferFields(this.value)">
+            <option value="bogo">🎁 Buy X Get Y Free (BOGO)</option>
+            <option value="bulk_percent">📦 Buy X Get % Off</option>
+            <option value="spend_amount_off">💸 Spend ₹X Get ₹Y Off</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="applicable_product_type">Applies To</label>
+          <select name="applicable_product_type" id="applicable_product_type">
+            <option value="all">🌐 All Products</option>
+            <option value="beat">🎵 Beats Only</option>
+            <option value="pack">📦 Packs Only</option>
+            <option value="preset">🎛️ Presets Only</option>
+          </select>
+        </div>
+      </div>
+
+      {# ── BOGO Fields ── #}
+      <div id="fields_bogo" class="offer-fields">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Buy Quantity <small class="text-muted">(items needed to trigger)</small></label>
+            <input type="number" name="buy_quantity" min="1" value="1" placeholder="e.g. 1">
+          </div>
+          <div class="form-group">
+            <label>Get Quantity Free <small class="text-muted">(cheapest items go free)</small></label>
+            <input type="number" name="get_quantity" min="1" value="1" placeholder="e.g. 1">
+          </div>
+        </div>
+      </div>
+
+      {# ── Bulk % Off Fields ── #}
+      <div id="fields_bulk_percent" class="offer-fields" style="display:none;">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Min Items in Cart <small class="text-muted">(to trigger the offer)</small></label>
+            <input type="number" name="bulk_min_qty" min="1" value="2" placeholder="e.g. 2">
+          </div>
+          <div class="form-group">
+            <label>Discount %</label>
+            <input type="number" name="discount_percentage" min="1" max="100" value="20" placeholder="e.g. 20">
+          </div>
+        </div>
+      </div>
+
+      {# ── Spend ₹X Get ₹Y Off Fields ── #}
+      <div id="fields_spend_amount_off" class="offer-fields" style="display:none;">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Min Spend (₹) <small class="text-muted">cart subtotal threshold</small></label>
+            <input type="number" name="min_spend" step="0.01" min="0" value="500" placeholder="e.g. 500">
+          </div>
+          <div class="form-group">
+            <label>Discount Amount (₹)</label>
+            <input type="number" name="discount_fixed" step="0.01" min="1" value="100" placeholder="e.g. 100">
+          </div>
+        </div>
+      </div>
+
+      {# ── Toggles ── #}
+      <div class="form-row" style="gap: 2rem; margin-top:1rem;">
+        <label class="toggle-wrap">
+          <span class="toggle-switch-wrap">
+            <input type="checkbox" name="stacks_with_coupons" id="stacks_with_coupons" checked>
+            <span class="toggle-switch"></span>
+          </span>
+          <span class="toggle-label">Stacks with Coupon Codes</span>
+        </label>
+      </div>
+
+      {# ── Strip ── #}
+      <h4 style="margin-top:1.5rem;"><i class="fas fa-bullhorn"></i> Announcement Strip</h4>
+      <div class="form-row">
+        <div class="form-group" style="flex:2;">
+          <label for="offer_strip_message">Strip Message <small class="text-muted">shown in the scrolling header when active</small></label>
+          <input type="text" name="strip_message" id="offer_strip_message" placeholder="e.g. 🔥 Buy 1 Beat Get 2 FREE — Limited Time!">
+        </div>
+        <div class="form-group" style="display:flex; align-items:flex-end; gap:12px;">
+          <label class="toggle-wrap">
+            <span class="toggle-switch-wrap">
+              <input type="checkbox" name="post_to_strip" id="offer_post_to_strip">
+              <span class="toggle-switch"></span>
+            </span>
+            <span class="toggle-label">Auto-post to strip</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Create Offer</button>
+    </div>
+  </form>
+</div>
+
+{# ─── OFFER LIST ─── #}
+<div class="data-table-wrapper" style="margin-top:2rem;">
+  {% if offers %}
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Details</th>
+        <th>Applies To</th>
+        <th>Stacks</th>
+        <th>Strip</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for offer in offers %}
+      <tr>
+        <td><strong>{{ offer.name }}</strong></td>
+        <td>
+          {% if offer.offer_type == 'bogo' %}
+            <span class="status-badge" style="background:rgba(139,92,246,0.15);color:#a78bfa;">🎁 BOGO</span>
+          {% elif offer.offer_type == 'bulk_percent' %}
+            <span class="status-badge" style="background:rgba(59,130,246,0.15);color:#60a5fa;">📦 Bulk %</span>
+          {% else %}
+            <span class="status-badge" style="background:rgba(16,185,129,0.15);color:#34d399;">💸 Spend & Save</span>
+          {% endif %}
+        </td>
+        <td class="text-muted" style="font-size:0.85rem;">
+          {% if offer.offer_type == 'bogo' %}
+            Buy {{ offer.buy_quantity }}, Get {{ offer.get_quantity }} Free
+          {% elif offer.offer_type == 'bulk_percent' %}
+            Buy ≥{{ offer.buy_quantity }}, Get {{ offer.discount_percentage }}% Off
+          {% else %}
+            Spend ₹{{ '%.0f' % (offer.min_spend_cents / 100) }}, Get ₹{{ '%.0f' % (offer.discount_fixed_cents / 100) }} Off
+          {% endif %}
+        </td>
+        <td>
+          {% if offer.applicable_product_type == 'all' %}🌐 All
+          {% elif offer.applicable_product_type == 'beat' %}🎵 Beats
+          {% elif offer.applicable_product_type == 'pack' %}📦 Packs
+          {% else %}🎛️ Presets{% endif %}
+        </td>
+        <td>
+          {% if offer.stacks_with_coupons %}
+            <span class="status-badge status-active" style="font-size:0.75rem;">✔ Yes</span>
+          {% else %}
+            <span class="status-badge status-inactive" style="font-size:0.75rem;">✘ No</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if offer.post_to_strip and offer.strip_message %}
+            <span class="status-badge status-active" title="{{ offer.strip_message }}"><i class="fas fa-bullhorn"></i> On</span>
+          {% else %}
+            <span class="text-muted">Off</span>
+          {% endif %}
+        </td>
+        <td>
+          <form method="POST" action="{{ url_for('admin.admin_offer_toggle', offer_id=offer.id) }}" style="display:inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="status-badge {% if offer.is_active %}status-active{% else %}status-inactive{% endif %}"
+                    style="cursor:pointer; border:none; font-size:0.8rem;">
+              <i class="fas fa-power-off"></i> {{ 'Active' if offer.is_active else 'Inactive' }}
+            </button>
+          </form>
+        </td>
+        <td>
+          <form method="POST" action="{{ url_for('admin.admin_offer_delete', offer_id=offer.id) }}" style="display:inline;"
+                onsubmit="return confirm('Delete offer \'{{ offer.name }}\'?')">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn-icon" title="Delete" style="color:#ef4444;"><i class="fas fa-trash"></i></button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div style="text-align:center; padding:3rem; color:var(--text-muted);">
+    <i class="fas fa-tags" style="font-size:3rem; margin-bottom:1rem; display:block;"></i>
+    <p>No offers yet. Create your first promotional offer above.</p>
+  </div>
+  {% endif %}
+</div>
+
+<style>
+.toggle-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+.toggle-switch-wrap {
+  position: relative;
+  display: inline-block;
+  width: 46px;
+  height: 24px;
+  flex-shrink: 0;
+}
+.toggle-switch-wrap input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+.toggle-switch {
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.1);
+  border-radius: 24px;
+  transition: 0.3s;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.toggle-switch::before {
+  content: '';
+  position: absolute;
+  height: 18px; width: 18px;
+  left: 2px; top: 2px;
+  background: #aaa;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+.toggle-switch-wrap input:checked + .toggle-switch {
+  background: linear-gradient(135deg, #7c8df0, #9d7cec);
+  border-color: #7c8df0;
+}
+.toggle-switch-wrap input:checked + .toggle-switch::before {
+  transform: translateX(22px);
+  background: #fff;
+}
+.toggle-label {
+  font-size: 0.88rem;
+  color: var(--text-primary, #f0ece4);
+}
+.offer-fields { margin-top: 0.5rem; }
+</style>
+
+<script>
+function showOfferFields(type) {
+  document.querySelectorAll('.offer-fields').forEach(el => el.style.display = 'none');
+  const el = document.getElementById('fields_' + type);
+  if (el) el.style.display = 'block';
+}
+document.addEventListener('DOMContentLoaded', () => showOfferFields(document.getElementById('offer_type').value));
+</script>
+{% endblock %}
