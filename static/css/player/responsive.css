@@ -1,19 +1,117 @@
 /* ============================================================
-RESPONSIVE — Tablet
-========================================================== */
-@media (max-width: 1024px) {
-  .track-name-big { font-size: 1.3rem; }
-  .player-card { padding: 20px 18px 14px; }
-  .artwork-zone { width: 80px; height: 80px; }
+RESPONSIVE — Large desktop
+============================================================ */
+@media (min-width: 1600px) {
+  .player-card {
+    width: 540px;
+    min-width: 500px;
+    max-width: 580px;
+    padding: 32px 30px 24px;
+    gap: 18px;
+  }
+
+  .artwork-zone {
+    width: 140px;
+    height: 140px;
+  }
+
+  .track-name-big {
+    font-size: 1.9rem;
+  }
+
+  .play-btn-big {
+    width: 58px;
+    height: 58px;
+    font-size: 1.15rem;
+  }
+
+  .ctrl-btn-sm {
+    width: 42px;
+    height: 42px;
+    font-size: 0.9rem;
+  }
+
+  .btn {
+    padding: 13px 18px;
+    font-size: 0.88rem;
+  }
+}
+
+@media (min-width: 2000px) {
+  .player-card {
+    width: 600px;
+    min-width: 560px;
+    max-width: 640px;
+    padding: 36px 34px 28px;
+    gap: 20px;
+  }
+
+  .artwork-zone {
+    width: 160px;
+    height: 160px;
+  }
+
+  .track-name-big {
+    font-size: 2.1rem;
+  }
+
+  .play-btn-big {
+    width: 64px;
+    height: 64px;
+    font-size: 1.25rem;
+  }
+
+  .ctrl-btn-sm {
+    width: 46px;
+    height: 46px;
+    font-size: 1rem;
+  }
+
+  .btn {
+    padding: 15px 20px;
+    font-size: 0.95rem;
+  }
 }
 
 /* ============================================================
-RESPONSIVE — Mobile
-========================================================== */
+RESPONSIVE — Tablet
+============================================================ */
+@media (max-width: 1024px) {
+  .player-page {
+    grid-template-columns: 1.5fr 1fr;
+  }
+
+  .player-card {
+    width: 360px;
+    min-width: 320px;
+  }
+
+  .track-name-big {
+    font-size: 1.5rem;
+  }
+
+  .artwork-zone {
+    width: 90px;
+    height: 90px;
+  }
+
+  .track-num {
+    width: 60px;
+    height: 60px;
+  }
+
+  .track-name {
+    font-size: 1rem;
+  }
+}
+
+/* ============================================================
+RESPONSIVE — Mobile (horizontal card)
+============================================================ */
 @media (max-width: 900px) {
   body.player-page {
-    overflow: hidden;
-    height: 100vh;
+    overflow-y: auto;
+    height: auto;
   }
 
   body.player-page .site-header,
@@ -22,103 +120,194 @@ RESPONSIVE — Mobile
     display: none !important;
   }
 
-  .main-container {
+  .player-page {
     display: flex;
     flex-direction: column;
-    height: 100vh;
-    padding-top: 0;
-    overflow: hidden;
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
   }
 
-  .player-panel {
-    padding: 12px 14px 10px;
+  .player-section {
+    position: relative;
     border-right: none;
     border-bottom: 1px solid var(--border-light);
-    overflow: visible;
+    padding: 16px 14px 12px;
     flex-shrink: 0;
-    min-height: 0;
   }
 
-  .track-header-info {
-    margin-bottom: 6px;
+  .player-card-wrapper {
+    padding: 8px;
   }
 
-  .track-title-row {
-    gap: 8px;
-    margin-bottom: 6px;
-  }
-
-  .track-name-big {
-    font-size: 1.35rem;
-    max-width: 100%;
-    width: 100%;
-    word-break: break-word;
-    overflow-wrap: break-word;
-    white-space: normal;
-    line-height: 1.25;
-  }
-
-  .meta-row { gap: 5px; }
-  .meta-pill {
-    font-size: 0.65rem;
-    padding: 3px 8px;
-  }
-
-  .visualizer-stage {
-    height: auto;
-    min-height: 140px;
-    max-height: 180px;
-  }
-
-  .artwork-zone {
+  .player-glow-bg {
     display: none;
   }
 
+  .visualizer-stage {
+    position: absolute;
+    inset: 0;
+  }
+
+  /* ── Card → horizontal grid ── */
   .player-card {
     width: 100%;
+    min-width: 0;
     max-width: none;
-    padding: 14px 12px 12px;
-    gap: 10px;
+    padding: 16px 14px 14px;
+    margin-top: 0;
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    grid-template-rows: auto auto auto;
+    grid-template-areas:
+      "artwork header"
+      "artwork controls"
+      "artwork actions";
+    gap: 8px 14px;
+    align-items: center;
   }
 
-  .waveform-progress { height: 26px; }
-  .waveform-reflection { height: 8px; }
-  .ctrl-row { gap: 8px; }
-  .ctrl-btn-sm,
-  .volume-trigger {
-    width: 34px;
-    height: 34px;
-    font-size: 0.75rem;
+  /* ── Artwork — left column ── */
+  .artwork-zone {
+    grid-area: artwork;
+    width: 80px;
+    height: 80px;
+    border-radius: 14px;
+    border: 1px solid var(--border-mid);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    /* Stop circular animations on mobile */
+    animation: none !important;
   }
-  .play-btn-big {
-    width: 46px;
-    height: 46px;
-    font-size: 0.95rem;
+
+  .artwork-zone::before,
+  .artwork-zone::after {
+    display: none;
   }
-  .time-display {
-    font-size: 0.65rem;
+
+  .artwork-zone .artwork-glow-ring {
+    display: none;
+  }
+
+  .player-cover-image {
+    border-radius: 14px;
+  }
+
+  .playing-dots {
+    display: none;
+  }
+
+  /* ── Header — right of artwork ── */
+  .track-header-info {
+    grid-area: header;
+    margin-bottom: 0;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+  }
+
+  .track-title-row {
+    justify-content: flex-start;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+
+  .track-name-big {
+    font-size: 1.15rem;
+    font-weight: 700;
+    text-align: left;
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: normal;
+    width: auto;
+  }
+
+  .price-pill {
+    font-size: 0.72rem;
     padding: 3px 8px;
-    min-width: 75px;
-  }
-  .action-row { gap: 6px; }
-  .btn {
-    padding: 10px 12px;
-    font-size: 0.76rem;
+    flex-shrink: 0;
   }
 
-  /* Tracklist */
+  .meta-row {
+    justify-content: flex-start;
+    margin-top: 4px;
+    gap: 4px;
+  }
+
+  .meta-pill {
+    font-size: 0.6rem;
+    padding: 2px 7px;
+  }
+
+  /* ── Waveform — full width below ── */
+  .waveform-container {
+    grid-area: 4 / 1 / 5 / 3;
+    margin-top: 4px;
+  }
+
+  .waveform-bars {
+    height: 28px;
+  }
+
+  .waveform-reflection {
+    height: 8px;
+  }
+
+  /* ── Controls — below artwork row ── */
+  .controls-wrapper {
+    grid-area: controls;
+    width: 100%;
+  }
+
+  .ctrl-row {
+    gap: 6px;
+    justify-content: flex-start;
+  }
+
+  .ctrl-btn-sm,
+  .volume-icon-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 0.72rem;
+  }
+
+  .play-btn-big {
+    width: 40px;
+    height: 40px;
+    font-size: 0.88rem;
+  }
+
+  /* ── Action buttons — bottom right ── */
+  .action-row {
+    grid-area: actions;
+    gap: 6px;
+    width: 100%;
+  }
+
+  .btn {
+    padding: 8px 10px;
+    font-size: 0.72rem;
+    gap: 5px;
+    border-radius: 40px;
+  }
+
+  /* ── Tracklist ── */
   .tracklist-panel {
     flex: 1;
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    min-height: 0;
+    min-height: 45vh;
   }
 
   .panel-header {
-    padding: 14px 16px 0;
+    padding: 12px 14px 0;
     flex-shrink: 0;
-    background: rgba(12, 14, 19, 0.5);
+    background: rgba(12, 14, 19, 0.95);
+    backdrop-filter: blur(10px);
   }
 
   .panel-header h2 {
@@ -127,24 +316,12 @@ RESPONSIVE — Mobile
   }
 
   .category-tabs {
-    display: flex;
-    flex-wrap: nowrap;
-    gap: 6px;
     margin-bottom: 10px;
-    overflow-x: auto;
-    padding-bottom: 6px;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
-
-  .category-tabs::-webkit-scrollbar {
-    display: none;
   }
 
   .cat-tab {
-    font-size: 0.72rem;
-    padding: 5px 12px;
-    flex-shrink: 0;
+    font-size: 0.7rem;
+    padding: 5px 11px;
   }
 
   .tracklist-scroll {
@@ -156,15 +333,21 @@ RESPONSIVE — Mobile
   }
 
   .track-item {
-    grid-template-columns: 30px 1fr auto 38px;
+    grid-template-columns: 52px 1fr auto 34px;
     gap: 10px;
-    padding: 12px 12px;
+    padding: 10px 12px;
     margin-bottom: 6px;
-    border-radius: 14px;
+    border-radius: 12px;
+  }
+
+  .track-num {
+    width: 52px;
+    height: 52px;
+    border-radius: 8px;
   }
 
   .track-name {
-    font-size: 0.88rem;
+    font-size: 0.95rem;
     white-space: normal;
     overflow: visible;
     text-overflow: clip;
@@ -173,11 +356,11 @@ RESPONSIVE — Mobile
 
   .track-details-row {
     gap: 4px;
-    margin-top: 4px;
+    margin-top: 3px;
   }
 
   .detail-badge {
-    padding: 2px 7px;
+    padding: 2px 6px;
     font-size: 0.62rem;
   }
 
@@ -187,12 +370,12 @@ RESPONSIVE — Mobile
   }
 
   .play-track-icon {
-    width: 32px;
-    height: 32px;
+    width: 34px;
+    height: 34px;
     font-size: 0.7rem;
   }
 
-  /* License modal mobile */
+  /* License modal */
   .license-options {
     grid-template-columns: 1fr;
     gap: 12px;
@@ -201,58 +384,90 @@ RESPONSIVE — Mobile
   .license-modal-container {
     padding: 20px 14px;
   }
-
-  .player-panel {
-    padding-top: 35px !important; /* Ooper title margin fix */
-  }
-  .panel-header h2 {
-    margin-bottom: 18px !important; /* Heading spacing */
-  }
-  .category-tabs {
-    margin-bottom: 15px !important; /* Tabs spacing */
-  }
-  .track-item {
-    margin-bottom: 12px; /* Tracklist items ke beech spacing */
-  }
-  .track-name-big {
-    font-size: 1.25rem;
-  }
-
 }
 
-
-
+/* ============================================================
+RESPONSIVE — Small mobile
+============================================================ */
 @media (max-width: 480px) {
-  .track-name-big {
-    font-size: 1.15rem;
-    line-height: 1.2;
+  .player-card {
+    grid-template-columns: 68px 1fr;
+    gap: 6px 10px;
+    padding: 12px 10px 10px;
   }
 
+  .artwork-zone {
+    width: 68px;
+    height: 68px;
+    border-radius: 12px;
+  }
+
+  .player-cover-image {
+    border-radius: 12px;
+  }
+
+  .track-name-big {
+    font-size: 1rem;
+  }
+
+  .price-pill {
+    font-size: 0.65rem;
+    padding: 2px 6px;
+  }
+
+  .meta-pill {
+    font-size: 0.55rem;
+    padding: 2px 5px;
+  }
+
+  .ctrl-btn-sm,
+  .volume-icon-btn {
+    width: 30px;
+    height: 30px;
+    font-size: 0.68rem;
+  }
+
+  .play-btn-big {
+    width: 36px;
+    height: 36px;
+    font-size: 0.8rem;
+  }
+
+  .btn {
+    padding: 7px 8px;
+    font-size: 0.68rem;
+  }
+
+  .waveform-bars { height: 22px; }
+  .waveform-reflection { height: 6px; }
+
   .track-item {
-    grid-template-columns: 26px 1fr auto 34px;
+    grid-template-columns: 44px 1fr auto 30px;
     gap: 8px;
-    padding: 10px 10px;
+    padding: 8px 10px;
+  }
+
+  .track-num {
+    width: 44px;
+    height: 44px;
   }
 
   .track-name {
-    font-size: 0.82rem;
+    font-size: 0.85rem;
   }
 
-  .detail-badge {
-    padding: 2px 6px;
-    font-size: 0.58rem;
+  .volume-popover {
+    display: none;
   }
-
-  .cat-tab {
-    font-size: 0.68rem;
-    padding: 4px 10px;
-  }
-
-  .volume-popover { display: none; }
 }
 
+/* ============================================================
+ACCESSIBILITY — Reduced motion
+============================================================ */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

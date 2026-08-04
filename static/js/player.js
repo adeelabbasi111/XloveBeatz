@@ -1,4 +1,4 @@
-// player.js — Beat player: audio, visualizer, tracklist, license modal
+// player.js — Beat player: audio, visualizer, tracklist, license modal, beat images, download
 'use strict';
 (function () {
 
@@ -23,14 +23,18 @@ var prevBtn          = document.getElementById('prevBtn');
 var nextBtn          = document.getElementById('nextBtn');
 var addToCartBtn     = document.getElementById('addToCartBtn');
 var buyNowBtn        = document.getElementById('buyNowBtn');
+var downloadBtn      = document.getElementById('downloadPreviewBtn');
 var categoryTabs     = document.getElementById('categoryTabs');
 var tracklistScroll  = document.getElementById('tracklistScroll');
 var trackCount       = document.getElementById('trackCount');
 var toastEl          = document.getElementById('toast');
-
-// NEW: Tracklist heading elements
 var tracklistTitle   = document.getElementById('tracklistTitle');
 var tracklistHeading = document.getElementById('tracklistHeading');
+
+// NEW: Image and glow elements
+var playerCoverImage = document.getElementById('playerCoverImage');
+var playerGlow       = document.getElementById('playerGlow');
+var artworkGlowRing  = document.getElementById('artworkGlowRing');
 
 // Volume controls
 var volumeSlider  = document.getElementById('volumeSlider');
@@ -54,18 +58,16 @@ var cachedDpr         = Math.min(window.devicePixelRatio || 1, 2);
 var isDraggingWaveform = false;
 var lastVolume        = 0.7;
 var isMuted           = false;
+var currentBeatColor  = null;
 
 // Waveform
 var realWaveformData = null;
 var WAVEFORM_BARS    = 70;
 
 // Visualizer
-var VIZ_HUE          = 232;
-var VIZ_SAT          = 68;
-var VIZ_LIGHT        = 72;
-var NUM_RINGS        = 6;
-var POINTS_PER_RING  = 120;
-var BASE_RADIUS_STEP = 0.10;
+var NUM_RINGS        = 8;
+var POINTS_PER_RING  = 140;
+var BASE_RADIUS_STEP = 0.08;
 var ringBaseRadii    = [];
 var ringDistortions  = new Array(NUM_RINGS).fill(0);
 var ringTargets      = new Array(NUM_RINGS).fill(0);
@@ -85,17 +87,111 @@ function showToast(msg) {
 }
 
 // ════════════════════════════════════════════════════════════
-// TRACKLIST HEADING — Update based on active category
+// TRACKLIST HEADING
 // ════════════════════════════════════════════════════════════
 function updateTracklistHeading(category) {
   if (!tracklistTitle) return;
-
   if (category === 'all') {
     tracklistTitle.textContent = 'All Beats';
   } else {
-    // Capitalize first letter of category
     var displayName = category.charAt(0).toUpperCase() + category.slice(1);
     tracklistTitle.textContent = displayName + ' Beats';
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// COLOR EXTRACTION — Get dominant color from image
+// ════════════════════════════════════════════════════════════
+function extractDominantColor(imageUrl, callback) {
+  var img = new Image();
+  img.crossOrigin = 'Anonymous';
+  img.onload = function () {
+    try {
+      var canvas = document.createElement('canvas');
+      var size = 40;
+      canvas.width = size;
+      canvas.height = size;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, size, size);
+      var data = ctx.getImageData(0, 0, size, size).data;
+      var r = 0, g = 0, b = 0, count = 0;
+      for (var i = 0; i < data.length; i += 16) {
+        r += data[i];
+        g += data[i + 1];
+        b += data[i + 2];
+        count++;
+      }
+      r = Math.round(r / count);
+      g = Math.round(g / count);
+      b = Math.round(b / count);
+      callback(r, g, b);
+    } catch (e) {
+      callback(124, 141, 240); // fallback blue
+    }
+  };
+  img.onerror = function () {
+    callback(124, 141, 240);
+  };
+  img.src = imageUrl;
+}
+
+// ════════════════════════════════════════════════════════════
+// BEAT IMAGE — Update artwork zone, glow, and visualizer tint
+// ════════════════════════════════════════════════════════════
+function updateBeatImage(imagePath) {
+  if (!artworkZone) return;
+
+  // Reset playing state briefly to prevent animation glitch
+  artworkZone.classList.remove("playing");
+
+  var hasImage = imagePath && imagePath.length > 0;
+
+  if (hasImage && playerCoverImage) {
+    var fullUrl = "/static/" + imagePath;
+    playerCoverImage.src = fullUrl;
+    playerCoverImage.style.display = "block";
+    artworkZone.classList.add("has-image");
+
+    // Extract color for glow effects
+    extractDominantColor(fullUrl, function (r, g, b) {
+      var rgb = r + "," + g + "," + b;
+      currentBeatColor = { r: r, g: g, b: b };
+
+      if (playerGlow) {
+        playerGlow.style.backgroundColor = "rgba(" + rgb + ", 0.18)";
+        playerGlow.style.opacity = "1";
+      }
+
+      if (artworkGlowRing) {
+        artworkGlowRing.style.backgroundColor = "rgba(" + rgb + ", 0.5)";
+      }
+
+      if (vizCtx) {
+        window.__beatColor = { r: r, g: g, b: b };
+      }
+    });
+  } else {
+    if (playerCoverImage) {
+      playerCoverImage.src = "";
+      playerCoverImage.style.display = "none";
+    }
+    artworkZone.classList.remove("has-image");
+    currentBeatColor = null;
+    window.__beatColor = null;
+
+    if (playerGlow) {
+      playerGlow.style.opacity = "0";
+    }
+    if (artworkGlowRing) {
+      artworkGlowRing.style.backgroundColor = "transparent";
+    }
+  }
+
+  // Restore playing state if audio is playing
+  if (isPlaying) {
+    setTimeout(function () {
+      artworkZone.classList.add("playing");
+    }, 50);
   }
 }
 
@@ -106,7 +202,6 @@ function extractWaveformData(audioBuffer, numBars) {
   var rawData = audioBuffer.getChannelData(0);
   var samplesPerBar = Math.floor(rawData.length / numBars);
   var peaks = [];
-
   for (var i = 0; i < numBars; i++) {
     var start = i * samplesPerBar;
     var end = Math.min(start + samplesPerBar, rawData.length);
@@ -117,7 +212,6 @@ function extractWaveformData(audioBuffer, numBars) {
     }
     peaks.push(peak);
   }
-
   var maxPeak = 0.01;
   for (var i = 0; i < peaks.length; i++) {
     if (peaks[i] > maxPeak) maxPeak = peaks[i];
@@ -126,28 +220,23 @@ function extractWaveformData(audioBuffer, numBars) {
     peaks[i] = peaks[i] / maxPeak;
     peaks[i] = Math.max(0.12, peaks[i]);
   }
-
   return peaks;
 }
 
 function loadRealWaveform(audioUrl) {
   realWaveformData = null;
-
   if (!audioUrl) {
     buildWaveformUI(null);
     return;
   }
-
   var xhr = new XMLHttpRequest();
   xhr.open('GET', audioUrl, true);
   xhr.responseType = 'arraybuffer';
-
   xhr.onload = function () {
     if (xhr.status !== 200) {
       buildWaveformUI(null);
       return;
     }
-
     var tempCtx = new (window.AudioContext || window.webkitAudioContext)();
     tempCtx.decodeAudioData(xhr.response, function (buffer) {
       realWaveformData = extractWaveformData(buffer, WAVEFORM_BARS);
@@ -159,38 +248,29 @@ function loadRealWaveform(audioUrl) {
       tempCtx.close();
     });
   };
-
   xhr.onerror = function () {
     buildWaveformUI(null);
   };
-
   xhr.send();
 }
 
 function buildWaveformUI(peaks) {
   if (!waveformProgress) return;
   waveformProgress.innerHTML = '';
-
   var reflection = document.querySelector('.waveform-reflection');
   if (reflection) reflection.innerHTML = '';
-
   if (!peaks || peaks.length === 0) {
     peaks = [];
     for (var i = 0; i < WAVEFORM_BARS; i++) {
       peaks.push(0.15 + Math.random() * 0.6);
     }
   }
-
   for (var i = 0; i < peaks.length; i++) {
     var height = Math.max(0.1, peaks[i]);
-
-    // Main bar
     var bar = document.createElement('div');
     bar.className = 'wave-bar';
     bar.style.height = (height * 100) + '%';
     waveformProgress.appendChild(bar);
-
-    // Reflection bar
     if (reflection) {
       var refBar = document.createElement('div');
       refBar.className = 'wave-bar-ref';
@@ -205,10 +285,8 @@ function updateWaveformProgress(percent) {
   var bars = waveformProgress.children;
   var total = bars.length;
   var activeCount = Math.floor((percent / 100) * total);
-
   var reflection = document.querySelector('.waveform-reflection');
   var refBars = reflection ? reflection.children : [];
-
   for (var i = 0; i < total; i++) {
     if (i < activeCount) {
       bars[i].classList.add('played');
@@ -234,33 +312,28 @@ if (waveformProgress) {
     isDraggingWaveform = true;
     seekFromWaveform(e.clientX);
   });
-
   document.addEventListener('mousemove', function (e) {
     if (isDraggingWaveform) seekFromWaveform(e.clientX);
   });
-
   document.addEventListener('mouseup', function () {
     isDraggingWaveform = false;
   });
-
   waveformProgress.addEventListener('touchstart', function (e) {
     e.preventDefault();
     isDraggingWaveform = true;
     seekFromWaveform(e.touches[0].clientX);
   }, { passive: false });
-
   waveformProgress.addEventListener('touchmove', function (e) {
     e.preventDefault();
     if (isDraggingWaveform) seekFromWaveform(e.touches[0].clientX);
   }, { passive: false });
-
   waveformProgress.addEventListener('touchend', function () {
     isDraggingWaveform = false;
   });
 }
 
 // ════════════════════════════════════════════════════════════
-// VOLUME CONTROL (vertical popover)
+// VOLUME CONTROL
 // ════════════════════════════════════════════════════════════
 function setVolume(val) {
   if (!audio) return;
@@ -301,7 +374,6 @@ if (volumeSlider) {
     setVolume(parseFloat(this.value));
   });
 }
-
 if (volumeIcon) {
   volumeIcon.addEventListener('click', function (e) {
     e.stopPropagation();
@@ -310,180 +382,175 @@ if (volumeIcon) {
 }
 
 // ════════════════════════════════════════════════════════════
-// VISUALIZER — Topographic rings
+// VISUALIZER — Topographic rings (color-tinted by beat image)
 // ════════════════════════════════════════════════════════════
-var NUM_RINGS        = 8;
-var POINTS_PER_RING  = 140;
-var BASE_RADIUS_STEP = 0.08;
-var ringBaseRadii    = [];
-var ringDistortions  = new Array(NUM_RINGS).fill(0);
-var ringTargets      = new Array(NUM_RINGS).fill(0);
-var time             = 0;
+function getVizColor(opacity) {
+  var c = window.__beatColor;
+  if (c) {
+    return 'rgba(' + c.r + ',' + c.g + ',' + c.b + ',' + opacity + ')';
+  }
+  return 'rgba(124,141,240,' + opacity + ')';
+}
 
 function setupCanvas() {
-    if (!vizCanvas || !vizCtx) return;
-    var stage = document.getElementById('visualizerStage');
-    if (!stage) return;
-    var rect = stage.getBoundingClientRect();
-    var w = rect.width;
-    var h = rect.height;
-    if (w === 0 || h === 0) return;
-
-    cachedDpr = Math.min(window.devicePixelRatio || 1, 2);
-    vizCanvas.width = w * cachedDpr;
-    vizCanvas.height = h * cachedDpr;
-    vizCanvas.style.width = w + 'px';
-    vizCanvas.style.height = h + 'px';
-    vizCtx.setTransform(1, 0, 0, 1, 0, 0);
-    vizCtx.scale(cachedDpr, cachedDpr);
-
-    ringBaseRadii = [];
-    var size = Math.min(w, h);
-    for (var i = 0; i < NUM_RINGS; i++) {
-        ringBaseRadii.push(size * (0.32 + i * BASE_RADIUS_STEP));
-    }
+  if (!vizCanvas || !vizCtx) return;
+  var stage = document.getElementById('visualizerStage');
+  if (!stage) return;
+  var rect = stage.getBoundingClientRect();
+  var w = rect.width;
+  var h = rect.height;
+  if (w === 0 || h === 0) return;
+  cachedDpr = Math.min(window.devicePixelRatio || 1, 2);
+  vizCanvas.width = w * cachedDpr;
+  vizCanvas.height = h * cachedDpr;
+  vizCanvas.style.width = w + 'px';
+  vizCanvas.style.height = h + 'px';
+  vizCtx.setTransform(1, 0, 0, 1, 0, 0);
+  vizCtx.scale(cachedDpr, cachedDpr);
+  ringBaseRadii = [];
+  var size = Math.min(w, h);
+  for (var i = 0; i < NUM_RINGS; i++) {
+    ringBaseRadii.push(size * (0.32 + i * BASE_RADIUS_STEP));
+  }
 }
 
 function drawIdleTopography() {
-    if (!vizCanvas || !vizCtx) return;
-    try {
-        var w = vizCanvas.width / cachedDpr;
-        var h = vizCanvas.height / cachedDpr;
-        var cx = w / 2;
-        var cy = h / 2;
-        if (w < 1 || h < 1 || ringBaseRadii.length === 0) return;
-        vizCtx.clearRect(0, 0, w, h);
-
-        for (var idx = 0; idx < ringBaseRadii.length; idx++) {
-            var baseR = ringBaseRadii[idx];
-            var opacity = 0.08 + idx * 0.02;
-
-            vizCtx.beginPath();
-            for (var j = 0; j <= POINTS_PER_RING; j++) {
-                var angle = (j / POINTS_PER_RING) * Math.PI * 2;
-                var x = cx + Math.cos(angle) * baseR;
-                var y = cy + Math.sin(angle) * baseR;
-                if (j === 0) vizCtx.moveTo(x, y);
-                else vizCtx.lineTo(x, y);
-            }
-            vizCtx.closePath();
-            vizCtx.strokeStyle = 'rgba(124,141,240,' + opacity + ')';
-            vizCtx.lineWidth = 1.2;
-            vizCtx.stroke();
-        }
-    } catch (e) {
-        console.warn('Visualizer draw error:', e);
+  if (!vizCanvas || !vizCtx) return;
+  try {
+    var w = vizCanvas.width / cachedDpr;
+    var h = vizCanvas.height / cachedDpr;
+    var cx = w / 2;
+    var cy = h / 2;
+    if (w < 1 || h < 1 || ringBaseRadii.length === 0) return;
+    vizCtx.clearRect(0, 0, w, h);
+    for (var idx = 0; idx < ringBaseRadii.length; idx++) {
+      var baseR = ringBaseRadii[idx];
+      var opacity = 0.08 + idx * 0.02;
+      vizCtx.beginPath();
+      for (var j = 0; j <= POINTS_PER_RING; j++) {
+        var angle = (j / POINTS_PER_RING) * Math.PI * 2;
+        var x = cx + Math.cos(angle) * baseR;
+        var y = cy + Math.sin(angle) * baseR;
+        if (j === 0) vizCtx.moveTo(x, y);
+        else vizCtx.lineTo(x, y);
+      }
+      vizCtx.closePath();
+      vizCtx.strokeStyle = getVizColor(opacity);
+      vizCtx.lineWidth = 1.2;
+      vizCtx.stroke();
     }
+  } catch (e) {
+    console.warn('Visualizer draw error:', e);
+  }
 }
 
 function drawTopographyFrame() {
-    if (!vizCanvas || !vizCtx) return;
-    try {
-        var w = vizCanvas.width / cachedDpr;
-        var h = vizCanvas.height / cachedDpr;
-        var cx = w / 2;
-        var cy = h / 2;
-        if (w < 1 || h < 1 || !isFinite(cx) || !isFinite(cy) || ringBaseRadii.length === 0) return;
-        vizCtx.clearRect(0, 0, w, h);
-
-        for (var idx = 0; idx < ringBaseRadii.length; idx++) {
-            var baseR = ringBaseRadii[idx];
-            var distortion = ringDistortions[idx];
-            var opacity = 0.09 + idx * 0.03 + Math.min(distortion * 0.5, 0.4);
-            var lineWidth = 1 + distortion * 0.04;
-
-            vizCtx.beginPath();
-            for (var j = 0; j <= POINTS_PER_RING; j++) {
-                var angle = (j / POINTS_PER_RING) * Math.PI * 2;
-                var noise = Math.sin(angle * 5 + idx) * 0.4 + Math.cos(angle * 3 - idx) * 0.3;
-                var r = baseR + noise * distortion;
-                var x = cx + Math.cos(angle) * r;
-                var y = cy + Math.sin(angle) * r;
-                if (j === 0) vizCtx.moveTo(x, y);
-                else vizCtx.lineTo(x, y);
-            }
-            vizCtx.closePath();
-            vizCtx.strokeStyle = 'rgba(124,141,240,' + Math.min(opacity, 0.8) + ')';
-            vizCtx.lineWidth = lineWidth;
-            vizCtx.stroke();
-        }
-
-        // Center glow
-        var innerR = ringBaseRadii[0];
-        if (innerR > 5 && isFinite(cx) && isFinite(cy)) {
-            var gradR = innerR * 0.5;
-            if (isFinite(gradR) && gradR > 0) {
-                var grad = vizCtx.createRadialGradient(cx, cy, gradR, cx, cy, innerR);
-                grad.addColorStop(0, 'rgba(124,141,240,0.06)');
-                grad.addColorStop(1, 'rgba(124,141,240,0)');
-                vizCtx.fillStyle = grad;
-                vizCtx.beginPath();
-                vizCtx.arc(cx, cy, innerR, 0, Math.PI * 2);
-                vizCtx.fill();
-            }
-        }
-    } catch (e) {
-        console.warn('Visualizer draw error:', e);
+  if (!vizCanvas || !vizCtx) return;
+  try {
+    var w = vizCanvas.width / cachedDpr;
+    var h = vizCanvas.height / cachedDpr;
+    var cx = w / 2;
+    var cy = h / 2;
+    if (w < 1 || h < 1 || !isFinite(cx) || !isFinite(cy) || ringBaseRadii.length === 0) return;
+    vizCtx.clearRect(0, 0, w, h);
+    for (var idx = 0; idx < ringBaseRadii.length; idx++) {
+      var baseR = ringBaseRadii[idx];
+      var distortion = ringDistortions[idx];
+      var opacity = 0.09 + idx * 0.03 + Math.min(distortion * 0.5, 0.4);
+      var lineWidth = 1 + distortion * 0.04;
+      vizCtx.beginPath();
+      for (var j = 0; j <= POINTS_PER_RING; j++) {
+        var angle = (j / POINTS_PER_RING) * Math.PI * 2;
+        var noise = Math.sin(angle * 5 + idx) * 0.4 + Math.cos(angle * 3 - idx) * 0.3;
+        var r = baseR + noise * distortion;
+        var x = cx + Math.cos(angle) * r;
+        var y = cy + Math.sin(angle) * r;
+        if (j === 0) vizCtx.moveTo(x, y);
+        else vizCtx.lineTo(x, y);
+      }
+      vizCtx.closePath();
+      vizCtx.strokeStyle = getVizColor(Math.min(opacity, 0.8));
+      vizCtx.lineWidth = lineWidth;
+      vizCtx.stroke();
     }
+    var innerR = ringBaseRadii[0];
+    if (innerR > 5 && isFinite(cx) && isFinite(cy)) {
+      var gradR = innerR * 0.5;
+      if (isFinite(gradR) && gradR > 0) {
+        var grad = vizCtx.createRadialGradient(cx, cy, gradR, cx, cy, innerR);
+        var c = window.__beatColor;
+        if (c) {
+          grad.addColorStop(0, 'rgba(' + c.r + ',' + c.g + ',' + c.b + ',0.06)');
+          grad.addColorStop(1, 'rgba(' + c.r + ',' + c.g + ',' + c.b + ',0)');
+        } else {
+          grad.addColorStop(0, 'rgba(124,141,240,0.06)');
+          grad.addColorStop(1, 'rgba(124,141,240,0)');
+        }
+        vizCtx.fillStyle = grad;
+        vizCtx.beginPath();
+        vizCtx.arc(cx, cy, innerR, 0, Math.PI * 2);
+        vizCtx.fill();
+      }
+    }
+  } catch (e) {
+    console.warn('Visualizer draw error:', e);
+  }
 }
 
 function updateRingDistortionsFromAudio() {
-    if (!freqData || !analyser) return;
-    var bins = freqData.length;
-
-    for (var r = 0; r < NUM_RINGS; r++) {
-        var startBin = Math.floor((r / NUM_RINGS) * bins);
-        var endBin = Math.floor(((r + 1) / NUM_RINGS) * bins);
-        var sum = 0;
-        var count = 0;
-
-        for (var b = startBin; b < endBin; b++) {
-            sum += freqData[b];
-            count++;
-        }
-
-        var avg = count > 0 ? sum / count / 255 : 0;
-        var targetDist = avg * 70;
-        ringDistortions[r] += (targetDist - ringDistortions[r]) * 0.55;
+  if (!freqData || !analyser) return;
+  var bins = freqData.length;
+  for (var r = 0; r < NUM_RINGS; r++) {
+    var startBin = Math.floor((r / NUM_RINGS) * bins);
+    var endBin = Math.floor(((r + 1) / NUM_RINGS) * bins);
+    var sum = 0;
+    var count = 0;
+    for (var b = startBin; b < endBin; b++) {
+      sum += freqData[b];
+      count++;
     }
+    var avg = count > 0 ? sum / count / 255 : 0;
+    var targetDist = avg * 70;
+    ringDistortions[r] += (targetDist - ringDistortions[r]) * 0.55;
+  }
 }
 
 function decayRingDistortions() {
-    var allQuiet = true;
-    for (var r = 0; r < NUM_RINGS; r++) {
-        ringDistortions[r] *= 0.88;
-        if (ringDistortions[r] < 0.3) ringDistortions[r] = 0;
-        if (ringDistortions[r] > 0) allQuiet = false;
-    }
-    return allQuiet;
+  var allQuiet = true;
+  for (var r = 0; r < NUM_RINGS; r++) {
+    ringDistortions[r] *= 0.88;
+    if (ringDistortions[r] < 0.3) ringDistortions[r] = 0;
+    if (ringDistortions[r] > 0) allQuiet = false;
+  }
+  return allQuiet;
 }
 
 function startVisualizerLoop() {
-    if (animFrameId) return;
-    function loop() {
-        if (isPlaying && analyser) {
-            analyser.getByteFrequencyData(freqData);
-            updateRingDistortionsFromAudio();
-            drawTopographyFrame();
-        } else {
-            var quiet = decayRingDistortions();
-            if (quiet) {
-                drawIdleTopography();
-                animFrameId = null;
-                return;
-            }
-            drawTopographyFrame();
-        }
-        animFrameId = requestAnimationFrame(loop);
+  if (animFrameId) return;
+  function loop() {
+    if (isPlaying && analyser) {
+      analyser.getByteFrequencyData(freqData);
+      updateRingDistortionsFromAudio();
+      drawTopographyFrame();
+    } else {
+      var quiet = decayRingDistortions();
+      if (quiet) {
+        drawIdleTopography();
+        animFrameId = null;
+        return;
+      }
+      drawTopographyFrame();
     }
     animFrameId = requestAnimationFrame(loop);
+  }
+  animFrameId = requestAnimationFrame(loop);
 }
 
 function stopVisualizerLoop() {
-    if (animFrameId) {
-        cancelAnimationFrame(animFrameId);
-        animFrameId = null;
-    }
+  if (animFrameId) {
+    cancelAnimationFrame(animFrameId);
+    animFrameId = null;
+  }
 }
 
 // ════════════════════════════════════════════════════════════
@@ -520,7 +587,7 @@ window.addEventListener('beforeunload', function () {
 });
 
 // ════════════════════════════════════════════════════════════
-// PLAYER UI
+// PLAYER UI — UPDATED with beat image support
 // ════════════════════════════════════════════════════════════
 function updatePlayerUI(trackData) {
   if (playerTrackName) playerTrackName.textContent = trackData.name;
@@ -534,6 +601,9 @@ function updatePlayerUI(trackData) {
   if (buyNowBtn) buyNowBtn.dataset.id = trackData.id;
 
   currentTrackIndex = parseInt(trackData.index, 10);
+
+  // Update beat image + glow
+  updateBeatImage(trackData.beatImage || '');
 
   // Reset progress
   updateWaveformProgress(0);
@@ -582,7 +652,7 @@ function highlightTrackItem(index) {
 }
 
 // ════════════════════════════════════════════════════════════
-// PLAYBACK — FIXED: stops previous track properly
+// PLAYBACK
 // ════════════════════════════════════════════════════════════
 function stopCurrentAudio() {
   if (!audio) return;
@@ -602,9 +672,9 @@ function loadAndPlayTrack(index) {
   });
   if (!trackItem) return;
 
-  // KEY FIX: Stop previous audio BEFORE loading new one
   stopCurrentAudio();
 
+  // Pass dataset including beatImage
   updatePlayerUI(trackItem.dataset);
   highlightTrackItem(index);
   showLoadingState(true);
@@ -619,7 +689,6 @@ function loadAndPlayTrack(index) {
   audio.src = previewUrl;
   audio.load();
 
-  // Auto-play the new track
   ensureAudioContext();
   var playPromise = audio.play();
   if (playPromise !== undefined) {
@@ -637,15 +706,12 @@ function loadAndPlayTrack(index) {
 
 function togglePlayPause() {
   if (!audio) return;
-
-  // If no track loaded, load first one
   if (!audio.src || audio.src === window.location.href || audio.src === '') {
     if (allTrackItems.length > 0) {
       loadAndPlayTrack(currentTrackIndex);
     }
     return;
   }
-
   if (isPlaying) {
     audio.pause();
     setPlayingState(false);
@@ -682,7 +748,32 @@ if (nextBtn) nextBtn.addEventListener('click', function () {
   loadAndPlayTrack(parseInt(filtered[next].dataset.index, 10));
 });
 
-// ── Audio events (attached ONCE, outside loadAndPlayTrack) ──
+// ── Download Preview ──
+if (downloadBtn) {
+  downloadBtn.addEventListener('click', function () {
+    var trackItem = allTrackItems.find(function (t) {
+      return parseInt(t.dataset.index, 10) === currentTrackIndex;
+    });
+    if (!trackItem) {
+      showToast('No track selected');
+      return;
+    }
+    var previewUrl = trackItem.dataset.preview || '';
+    if (!previewUrl) {
+      showToast('No preview available');
+      return;
+    }
+    var link = document.createElement('a');
+    link.href = previewUrl;
+    link.download = (trackItem.dataset.name || 'preview') + '_preview.mp3';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast('Downloading preview...');
+  });
+}
+
+// ── Audio events ──
 if (audio) {
   audio.addEventListener('timeupdate', function () {
     if (!audio.duration || isNaN(audio.duration)) return;
@@ -732,7 +823,6 @@ if (tracklistScroll) {
     var trackItem = e.target.closest('.track-item');
     if (!trackItem) return;
     var index = parseInt(trackItem.dataset.index, 10);
-
     if (e.target.closest('.play-track-icon')) {
       if (index === currentTrackIndex && isPlaying) {
         audio.pause();
@@ -771,17 +861,12 @@ function applyFilter(category) {
                      t.dataset.genre.toLowerCase() === category.toLowerCase();
     t.style.display = (category === 'all' || genreMatch) ? '' : 'none';
   });
-
   var visible = getFilteredTracks();
   if (trackCount) trackCount.textContent = visible.length + ' tracks';
-
   document.querySelectorAll('.cat-tab').forEach(function (tab) {
     tab.classList.toggle('active', tab.dataset.category === category);
   });
-
-  // NEW: Update heading based on category
   updateTracklistHeading(category);
-
   var currentTrackVisible = visible.find(function (t) {
     return parseInt(t.dataset.index, 10) === currentTrackIndex;
   });
@@ -840,15 +925,12 @@ function openLicenseModal(beatData, action) {
   currentModalBeat = beatData;
   currentActionType = action;
   selectedLicenseType = 'basic';
-
   if (modalBeatName) modalBeatName.textContent = beatData.name;
-
   var tiers = ['basic', 'premium', 'exclusive'];
   tiers.forEach(function (tier) {
     var priceEl = document.getElementById('price-' + tier);
     var filesEl = document.getElementById('files-' + tier);
     if (!beatData.license_tiers[tier]) return;
-
     var tierData = beatData.license_tiers[tier];
     if (priceEl) {
       if (tier === 'exclusive' && (tierData.price === 0 || tierData.price === 'Negotiable')) {
@@ -857,13 +939,20 @@ function openLicenseModal(beatData, action) {
         priceEl.textContent = '₹' + tierData.price;
       }
     }
-    if (filesEl) filesEl.textContent = tierData.files;
+    if (filesEl) {
+      // filesEl is now a <ul class="card-features"> — render as list items
+      var fileStr = typeof tierData.files === 'string' ? tierData.files : '';
+      if (fileStr) {
+        var parts = fileStr.split(/[+,]/);
+        filesEl.innerHTML = parts.map(function(f) {
+          return '<li><i class="fas fa-check"></i> ' + f.trim() + '</li>';
+        }).join('');
+      }
+    }
   });
-
   document.querySelectorAll('.license-card').forEach(function (card) {
     card.classList.toggle('selected', card.dataset.license === 'basic');
   });
-
   if (confirmBtnText) {
     confirmBtnText.textContent = action === 'cart' ? 'Add to Cart' : 'Buy Now';
   }
@@ -886,7 +975,6 @@ if (closeModalBtn) closeModalBtn.addEventListener('click', closeLicenseModal);
 if (confirmLicenseBtn) {
   confirmLicenseBtn.addEventListener('click', function () {
     if (!currentModalBeat) return;
-
     if (selectedLicenseType === 'exclusive') {
       var message = 'Hello, I am interested in buying the Exclusive License ' +
                     'for the beat "' + currentModalBeat.name + '". ' +
@@ -897,10 +985,8 @@ if (confirmLicenseBtn) {
       closeLicenseModal();
       return;
     }
-
     var tierData = currentModalBeat.license_tiers[selectedLicenseType];
     if (!tierData) return;
-
     if (typeof window.addToGlobalCart === 'function') {
       window.addToGlobalCart({
         id: currentModalBeat.id,
@@ -919,10 +1005,8 @@ if (confirmLicenseBtn) {
 function triggerPurchaseFlow(beatId, action) {
   var trackItem = document.querySelector('.track-item[data-id="' + beatId + '"]');
   if (!trackItem) return;
-
   var d = trackItem.dataset;
   var basePrice = parseFloat(d.price) || 0;
-
   var beatData = {
     id: parseInt(d.id, 10),
     name: d.name,
@@ -941,9 +1025,10 @@ function triggerPurchaseFlow(beatId, action) {
       }
     }
   };
-
   openLicenseModal(beatData, action);
 }
+
+
 
 if (addToCartBtn) {
   addToCartBtn.addEventListener('click', function (e) {
@@ -968,7 +1053,6 @@ function init() {
     if (volumeSlider) volumeSlider.value = 0.7;
     updateVolumeIcon(0.7);
   }
-
   if (allTrackItems.length > 0) {
     updatePlayerUI(allTrackItems[0].dataset);
     highlightTrackItem(0);
@@ -977,6 +1061,7 @@ function init() {
   if (trackCount) trackCount.textContent = allTrackItems.length + ' tracks';
   drawIdleTopography();
 }
+
 
 setupCanvas();
 init();
@@ -994,4 +1079,62 @@ window.addEventListener('resize', function () {
   }, 200);
 });
 
+})();
+
+/* ============================================================
+VOLUME POPOVER — hover with delay
+============================================================ */
+(function () {
+  var wrapper = document.getElementById('volumeWrapper');
+  if (!wrapper) return;
+
+  var hideTimeout = null;
+  var isDragging = false;
+
+  function showPopover() {
+    if (hideTimeout) {
+      clearTimeout(hideTimeout);
+      hideTimeout = null;
+    }
+    wrapper.classList.add('popover-open');
+  }
+
+  function scheduleHide() {
+    // Don't hide while slider is being dragged
+    if (isDragging) return;
+    hideTimeout = setTimeout(function () {
+      wrapper.classList.remove('popover-open');
+      hideTimeout = null;
+    }, 400);
+  }
+
+  wrapper.addEventListener('mouseenter', showPopover);
+  wrapper.addEventListener('mouseleave', scheduleHide);
+
+  // Track slider dragging so it doesn't close mid-drag
+  var slider = document.getElementById('volumeSlider');
+  if (slider) {
+    slider.addEventListener('mousedown', function () {
+      isDragging = true;
+    });
+    slider.addEventListener('touchstart', function () {
+      isDragging = true;
+    });
+
+    document.addEventListener('mouseup', function () {
+      if (isDragging) {
+        isDragging = false;
+        // Start hide timer only if cursor is outside the wrapper
+        if (!wrapper.matches(':hover')) {
+          scheduleHide();
+        }
+      }
+    });
+    document.addEventListener('touchend', function () {
+      if (isDragging) {
+        isDragging = false;
+        scheduleHide();
+      }
+    });
+  }
 })();

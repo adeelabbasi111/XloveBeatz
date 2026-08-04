@@ -84,7 +84,7 @@
                         </div>
                         <p class="card-desc">{{ pack.description }}</p>
                         <div class="card-actions">
-                            <a href="{{ url_for('public.player_page', pack_id=pack.id) }}" class="explore-btn magnetic-btn">
+                            <a href="{{ url_for('public.player_page', pack_id=pack.beat_pack.id) }}" class="explore-btn magnetic-btn">
                                 Explore Pack
                             </a>
                             <div class="button-group">
@@ -208,30 +208,38 @@
     </section>
 
 
-    {# ============ CONTACT ============ #}
-    <section class="contact-section" id="contact">
-        <h2 class="contact-title">connect &middot; create &middot; elevate</h2>
-        <p class="contact-subtitle">collaborations, licensing, or custom sound design — let's talk.</p>
-        <div class="social-grid">
-            <a href="{{ get_site_setting('instagram_url', '#') }}" class="social-card magnetic-btn" target="_blank" rel="noopener">
-                <div class="social-icon"><i class="fab fa-instagram"></i></div>
-                <span>@xlovebeatz</span>
-            </a>
-            <a href="{{ get_site_setting('spotify_url', '#') }}" class="social-card magnetic-btn" target="_blank" rel="noopener">
-                <div class="social-icon"><i class="fab fa-spotify"></i></div>
-                <span>Spotify</span>
-            </a>
-            <a href="{{ get_site_setting('youtube_url', '#') }}" class="social-card magnetic-btn" target="_blank" rel="noopener">
-                <div class="social-icon"><i class="fab fa-youtube"></i></div>
-                <span>YouTube</span>
-            </a>
-        </div>
-        <a href="https://wa.me/{{ get_site_setting('whatsapp_number', '1234567890') }}"
-           class="whatsapp-float" id="whatsappFloat" target="_blank" rel="noopener">
-            <i class="fab fa-whatsapp"></i>
-            <span class="whatsapp-tooltip">Chat on WhatsApp</span>
+{# ============ CONTACT ============ #}
+<section class="contact-section" id="contact">
+    <h2 class="contact-title">connect &middot; create &middot; elevate</h2>
+    <p class="contact-subtitle">collaborations, licensing, or custom sound design — let's talk.</p>
+    <div class="social-grid">
+        {% if instagram_url and instagram_url != '#' %}
+        <a href="{{ instagram_url }}" class="social-card magnetic-btn" target="_blank" rel="noopener">
+            <div class="social-icon"><i class="fab fa-instagram"></i></div>
+            <span>@xlovebeatz</span>
         </a>
-    </section>
+        {% endif %}
+        {% if spotify_url and spotify_url != '#' %}
+        <a href="{{ spotify_url }}" class="social-card magnetic-btn" target="_blank" rel="noopener">
+            <div class="social-icon"><i class="fab fa-spotify"></i></div>
+            <span>Spotify</span>
+        </a>
+        {% endif %}
+        {% if youtube_url and youtube_url != '#' %}
+        <a href="{{ youtube_url }}" class="social-card magnetic-btn" target="_blank" rel="noopener">
+            <div class="social-icon"><i class="fab fa-youtube"></i></div>
+            <span>YouTube</span>
+        </a>
+        {% endif %}
+    </div>
+    {% if whatsapp_number %}
+    <a href="https://wa.me/{{ whatsapp_number }}"
+       class="whatsapp-float" id="whatsappFloat" target="_blank" rel="noopener">
+        <i class="fab fa-whatsapp"></i>
+        <span class="whatsapp-tooltip">Chat on WhatsApp</span>
+    </a>
+    {% endif %}
+</section>
 </main>
 {% endblock %}
 

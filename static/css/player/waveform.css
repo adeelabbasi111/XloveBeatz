@@ -10,27 +10,12 @@ WAVEFORM (with reflection)
   cursor: pointer;
 }
 
-.waveform-progress {
-  width: 100%;
-  height: 34px;
+.waveform-bars {
   display: flex;
   align-items: flex-end;
   gap: 2px;
-  padding: 0 4px;
-}
-
-.waveform-reflection {
+  height: 40px;
   width: 100%;
-  height: 12px;
-  display: flex;
-  align-items: flex-start;
-  gap: 2px;
-  padding: 0 4px;
-  opacity: 0.25;
-  transform: scaleY(-1);
-  mask-image: linear-gradient(to bottom, rgba(0,0,0,0.6), transparent 90%);
-  -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.6), transparent 90%);
-  pointer-events: none;
 }
 
 .wave-bar {
@@ -45,4 +30,28 @@ WAVEFORM (with reflection)
 .wave-bar.played {
   background: linear-gradient(to top, var(--accent-soft), #B8C3FF);
   box-shadow: 0 0 6px rgba(124, 141, 240, 0.35);
+}
+
+.waveform-reflection {
+  display: flex;
+  align-items: flex-start;
+  gap: 2px;
+  height: 18px;
+  width: 100%;
+  opacity: 0.25;
+  transform: scaleY(-1);
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,0.6), transparent 90%);
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.6), transparent 90%);
+  pointer-events: none;
+}
+
+.wave-bar-ref {
+  flex: 1;
+  background: rgba(124, 141, 240, 0.15);
+  border-radius: 0 0 2px 2px;
+  min-height: 2px;
+}
+
+.wave-bar-ref.played {
+  background: var(--accent-soft);
 }

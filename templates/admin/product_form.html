@@ -8,9 +8,6 @@
 <div class="form-container">
     <form method="POST" enctype="multipart/form-data" class="admin-form" id="productForm">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <input type="hidden" name="duration_hidden" id="durationHidden" value="{{ beat_detail.duration if beat_detail else '' }}">
-        <input type="hidden" name="preview_start" id="previewStart" value="">
-        <input type="hidden" name="preview_end" id="previewEnd" value="">
 
         {# ═══════════════════════════════════════════ #}
         {#  BASIC INFORMATION                          #}
@@ -42,7 +39,7 @@
                        placeholder="e.g. Midnight Trap Beat">
             </div>
 
-            {# ─── Description, Price, Cover — hidden for beats ─── #}
+            {# Description, Price, Cover — hidden for beats #}
             <div class="non-beat-fields" id="nonBeatFields"
                  style="{{ 'display:none;' if (not product or product.product_type == 'beat') else '' }}">
 
@@ -96,22 +93,10 @@
                 </div>
             </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="genre">Genre</label>
-                    <input type="text" name="beat_genre" id="genre"
-                           value="{{ beat_detail.genre if beat_detail else '' }}" placeholder="e.g. Trap, Drill, Lo-Fi">
-                </div>
-                <div class="form-group">
-                    <label for="duration">Duration</label>
-                    <input type="text" name="duration" id="duration" readonly
-                           value="{{ beat_detail.duration if beat_detail else '' }}"
-                           placeholder="Auto-detected from MP3"
-                           style="cursor:default; opacity:0.7;">
-                    <small style="color:var(--text-muted); font-size:0.7rem;">
-                        <i class="fas fa-magic"></i> Auto-filled when you upload an MP3
-                    </small>
-                </div>
+            <div class="form-group">
+                <label for="genre">Genre</label>
+                <input type="text" name="beat_genre" id="genre"
+                       value="{{ beat_detail.genre if beat_detail else '' }}" placeholder="e.g. Trap, Drill, Lo-Fi">
             </div>
 
             <div class="form-group">
@@ -119,85 +104,38 @@
                 <select name="pack_id" id="pack_id">
                     <option value="">No Pack (standalone beat)</option>
                     {% for pack in packs %}
-                    <option value="{{ pack.id }}"
-                        {% if beat_detail and beat_detail.pack_id == pack.id %}selected{% endif %}>
+                    <option value="{{ pack.beat_pack.id if pack.beat_pack else '' }}"
+                        {% if beat_detail and beat_detail.pack_id == pack.beat_pack.id %}selected{% endif %}>
                         {{ pack.name }}
                     </option>
                     {% endfor %}
                 </select>
             </div>
 
+            {# Beat Cover Image #}
+            <div class="form-group">
+                <label for="beat_image">Beat Cover Image</label>
+                <input type="file" name="beat_image" id="beat_image" accept="image/*">
+                {% if beat_detail and beat_detail.beat_image %}
+                <div class="current-image" style="margin-top:0.5rem;">
+                    <img src="{{ url_for('static', filename=beat_detail.beat_image) }}"
+                         alt="Beat cover"
+                         style="max-width:100px; border-radius:8px; border:1px solid rgba(255,255,255,0.1);">
+                </div>
+                {% endif %}
+                <small class="form-hint">JPG/PNG/WebP. Auto-compressed to max 600x600.</small>
+            </div>
+
             {# ───────────────────────────────────────── #}
-            {#  AUDIO FILES — MP3 first, WAV, Project    #}
+            {#  AUDIO FILES — WAV and Project             #}
             {# ───────────────────────────────────────── #}
             <h4 style="margin-top:1.5rem;"><i class="fas fa-headphones"></i> Audio Files</h4>
             <p class="text-muted" style="margin-bottom:1rem;">
-                Upload your full beat MP3, then select the preview region using the waveform trimmer.
+                Upload your beat files below.
             </p>
 
-            {# ── 1. MP3 Upload ── #}
+            {# WAV Upload #}
             <div class="form-group">
-                <label for="mp3_file"><i class="fas fa-file-audio"></i> MP3 File (Full Beat)</label>
-                {% if beat_detail and beat_detail.mp3_file %}
-                <div class="current-file-badge">
-                    <i class="fas fa-check-circle"></i> {{ beat_detail.mp3_file }}
-                </div>
-                {% endif %}
-                <input type="file" name="mp3_file" id="mp3_file" accept=".mp3"
-                       onchange="handleMp3Upload(this)">
-            </div>
-
-            {# ── 2. Waveform Trimmer (appears after MP3 selected) ── #}
-            <div class="waveform-trimmer" id="trimmerWrapper" style="display:none;">
-                <div class="trimmer-header">
-                    <span class="trimmer-title"><i class="fas fa-cut"></i> Select Preview Region</span>
-                    <span class="trimmer-info">Drag handles to adjust &bull; Drag center to move selection</span>
-                </div>
-
-                <div id="trimmerLoading" class="trimmer-loading" style="display:none;">
-                    <i class="fas fa-spinner fa-spin"></i> Loading waveform…
-                </div>
-
-                <div id="trimmerContent" style="display:none;">
-                    <div class="trimmer-canvas-wrapper" id="trimmerCanvasWrapper">
-                        <canvas id="trimmerCanvas"></canvas>
-                    </div>
-                    <div class="trimmer-times">
-                        <div class="trim-time-item">
-                            <span class="trim-label">Start</span>
-                            <span class="trim-value" id="trimStartTime">0:00</span>
-                        </div>
-                        <div class="trim-time-item">
-                            <span class="trim-label">Selection</span>
-                            <span class="trim-value" id="trimDuration">0:00</span>
-                        </div>
-                        <div class="trim-time-item">
-                            <span class="trim-label">End</span>
-                            <span class="trim-value" id="trimEndTime">0:00</span>
-                        </div>
-                    </div>
-                    <div class="trimmer-actions">
-                        <button type="button" class="btn trim-play-btn" id="trimPlayBtn" onclick="togglePreview()">
-                            <i class="fas fa-play"></i> Preview Selection
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            {# Existing preview info (edit mode, when no new MP3 uploaded) #}
-            {% if beat_detail and beat_detail.preview_audio %}
-            <div id="existingPreviewInfo" class="form-group" style="margin-top:0.25rem;">
-                <div class="current-file-badge">
-                    <i class="fas fa-play-circle"></i> Preview: {{ beat_detail.preview_audio }}
-                </div>
-                <small style="color:var(--text-muted); font-size:0.7rem;">
-                    Upload a new MP3 to regenerate the preview
-                </small>
-            </div>
-            {% endif %}
-
-            {# ── 3. WAV Upload ── #}
-            <div class="form-group" style="margin-top:1rem;">
                 <label for="wav_file"><i class="fas fa-file-audio"></i> WAV File (Downloadable)</label>
                 {% if beat_detail and beat_detail.wav_file %}
                 <div class="current-file-badge">
@@ -207,7 +145,7 @@
                 <input type="file" name="wav_file" id="wav_file" accept=".wav">
             </div>
 
-            {# ── 4. Project File Upload ── #}
+            {# Project File Upload #}
             <div class="form-group">
                 <label for="project_file"><i class="fas fa-file-archive"></i> Project File (FLP, ALS, etc.)</label>
                 {% if beat_detail and beat_detail.project_file %}
@@ -219,15 +157,15 @@
             </div>
 
             {# ───────────────────────────────────────── #}
-            {#  LICENSE PRICING — Compact Layout          #}
+            {#  LICENSE PRICING                           #}
             {# ───────────────────────────────────────── #}
             <h4 style="margin-top:2rem;"><i class="fas fa-tags"></i> License Pricing</h4>
             <p class="text-muted" style="margin-bottom:1rem;">
-                Set price and included files for each tier.
+                Set price for each tier.
             </p>
 
             <div class="license-tier-row">
-                {# ── BASIC ── #}
+                {# BASIC #}
                 <div class="license-tier-card tier-basic">
                     <div class="tier-header"><i class="fas fa-music"></i> Basic</div>
                     <div class="form-group">
@@ -238,7 +176,7 @@
                     </div>
                 </div>
 
-                {# ── PREMIUM ── #}
+                {# PREMIUM #}
                 <div class="license-tier-card tier-premium">
                     <div class="tier-header"><i class="fas fa-layer-group"></i> Premium</div>
                     <div class="form-group">
@@ -247,11 +185,8 @@
                                value="{{ '%.2f' % license_prices.premium if license_prices.get('premium') else '' }}"
                                placeholder="e.g. 499">
                     </div>
-
                 </div>
             </div>
-
-
         </div>
 
         {# ═══════════════════════════════════════════ #}
@@ -301,6 +236,4 @@
         </div>
     </form>
 </div>
-<script src="{{ url_for('static', filename='js/trimmer.js') }}"></script>
 {% endblock %}
-

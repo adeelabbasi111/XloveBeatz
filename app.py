@@ -22,6 +22,10 @@ csrf = CSRFProtect()
 migrate = Migrate()
 limiter = Limiter(key_func=get_remote_address, storage_uri="memory://")
 
+import json
+from helpers.services import get_site_setting
+
+
 
 def create_app(config_class=Config):
     app = Flask(__name__)
@@ -85,11 +89,51 @@ def create_app(config_class=Config):
     # ---- CSRF: exempt JSON-only API and payment blueprints ----
     csrf.exempt(payment_bp)
     csrf.exempt(api_bp)
-    csrf.exempt(auth_bp)  # ADD THIS — and remove the two string lines
+    csrf.exempt(auth_bp)
+    csrf.exempt(cart_bp)  # cart has /api/cart/offer-check GET endpoint
 
     # In app.py, inside create_app(), after registering blueprints:
-    from helpers.services import get_site_setting
     app.jinja_env.globals['get_site_setting'] = get_site_setting
+
+    @app.context_processor
+    def inject_site_settings():
+        from helpers.models import Offer
+        # Parse strip messages from JSON
+        raw = get_site_setting('strip_messages', '[]')
+        try:
+            strip_messages = json.loads(raw)
+        except (json.JSONDecodeError, TypeError):
+            strip_messages = []
+
+        # Also pull strip messages from active offers with post_to_strip=True
+        try:
+            active_offer_msgs = [
+                o.strip_message for o in
+                Offer.query.filter_by(is_active=True, post_to_strip=True).all()
+                if o.strip_message
+            ]
+            # Merge: avoid duplicates
+            for msg in active_offer_msgs:
+                if msg not in strip_messages:
+                    strip_messages.append(msg)
+        except Exception:
+            pass
+
+        # Fallback default if empty
+        if not strip_messages:
+            strip_messages = [
+                '🔥 NEW BEAT PACK "MIDNIGHT TRAP" OUT NOW',
+                '⚡ INSTANT DELIVERY & SECURE CHECKOUT',
+                '🎧 50% OFF ALL VOCAL PRESETS',
+            ]
+
+        return {
+            'strip_messages': strip_messages,
+            'instagram_url': get_site_setting('instagram_url', '#'),
+            'spotify_url': get_site_setting('spotify_url', '#'),
+            'youtube_url': get_site_setting('youtube_url', '#'),
+            'whatsapp_number': get_site_setting('whatsapp_number', ''),
+        }
 
     # ---- Error handlers ----
     @app.errorhandler(404)

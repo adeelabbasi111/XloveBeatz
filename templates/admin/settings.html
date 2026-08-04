@@ -9,26 +9,6 @@
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
         <div class="form-section">
-            <h3><i class="fas fa-store"></i> Store Info</h3>
-            <div class="form-group">
-                <label for="site_title">Site Title</label>
-                <input type="text" name="site_title" id="site_title" value="{{ settings.site_title }}" placeholder="XLOVEBEATZ">
-            </div>
-            <div class="form-group">
-                <label for="site_slogan">Slogan</label>
-                <input type="text" name="site_slogan" id="site_slogan" value="{{ settings.site_slogan }}" placeholder="Crafted for artists who move the world">
-            </div>
-            <div class="form-group">
-                <label for="contact_email">Contact Email</label>
-                <input type="email" name="contact_email" id="contact_email" value="{{ settings.contact_email }}" placeholder="hello@xlovebeats.com">
-            </div>
-            <div class="form-group">
-                <label for="whatsapp_number">WhatsApp Number (with country code)</label>
-                <input type="text" name="whatsapp_number" id="whatsapp_number" value="{{ settings.whatsapp_number }}" placeholder="918329189796">
-            </div>
-        </div>
-
-        <div class="form-section">
             <h3><i class="fas fa-share-alt"></i> Social Links</h3>
             <div class="form-group">
                 <label for="instagram_url"><i class="fab fa-instagram"></i> Instagram URL</label>
@@ -42,11 +22,95 @@
                 <label for="youtube_url"><i class="fab fa-youtube"></i> YouTube URL</label>
                 <input type="url" name="youtube_url" id="youtube_url" value="{{ settings.youtube_url }}" placeholder="https://youtube.com/@xlovebeatz">
             </div>
+            <div class="form-group">
+                <label for="whatsapp_number"><i class="fab fa-whatsapp"></i> Whatsapp</label>
+                <input type="tel" name="whatsapp_number" id="whatsapp_number" value="{{ settings.whatsapp_number }}" placeholder="92xxxxxxxxxx">
+            </div>
+        </div>
+            {# ─── Announcement Strip Messages ─── #}
+        <h3><i class="fas fa-bullhorn"></i> Announcement Strip</h3>
+        <p class="text-muted" style="margin-bottom:1rem;">
+            Messages loop continuously across the top of every page.
+            Add, remove, or reorder as needed.
+        </p>
+
+        <div id="stripMessagesContainer">
+            {% for msg in strip_messages %}
+            <div class="strip-message-row">
+                <div class="strip-input-group">
+                    <span class="strip-handle"><i class="fas fa-grip-vertical"></i></span>
+                    <input type="text"
+                           name="strip_message"
+                           class="strip-message-input"
+                           value="{{ msg }}"
+                           placeholder="Enter announcement message…">
+                    <button type="button" class="strip-btn strip-btn-remove" onclick="removeStripMessage(this)" title="Remove">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
         </div>
 
+        <button type="button" class="strip-btn strip-btn-add" onclick="addStripMessage()">
+            <i class="fas fa-plus"></i> Add Message
+        </button>
         <div class="form-actions">
             <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Settings</button>
         </div>
     </form>
+
+
 </div>
+<script>
+function addStripMessage() {
+    var container = document.getElementById('stripMessagesContainer');
+
+    // Remove empty state if present
+    var emptyMsg = container.querySelector('.strip-empty-msg');
+    if (emptyMsg) emptyMsg.remove();
+
+    var row = document.createElement('div');
+    row.className = 'strip-message-row';
+    row.innerHTML = [
+        '<div class="strip-input-group">',
+        '    <span class="strip-handle"><i class="fas fa-grip-vertical"></i></span>',
+        '    <input type="text" name="strip_message" class="strip-message-input"',
+        '           placeholder="Enter announcement message…">',
+        '    <button type="button" class="strip-btn strip-btn-remove"',
+        '            onclick="removeStripMessage(this)" title="Remove">',
+        '        <i class="fas fa-times"></i>',
+        '    </button>',
+        '</div>'
+    ].join('\n');
+
+    container.appendChild(row);
+
+    // Focus the new input
+    var input = row.querySelector('.strip-message-input');
+    if (input) input.focus();
+}
+
+function removeStripMessage(btn) {
+    var row = btn.closest('.strip-message-row');
+    if (!row) return;
+
+    row.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+    row.style.opacity = '0';
+    row.style.transform = 'translateX(20px)';
+
+    setTimeout(function () {
+        row.remove();
+
+        // Show empty state if no messages left
+        var container = document.getElementById('stripMessagesContainer');
+        if (container && container.children.length === 0) {
+            var empty = document.createElement('div');
+            empty.className = 'strip-empty-msg';
+            empty.textContent = 'No messages added. Click "Add Message" to create one.';
+            container.appendChild(empty);
+        }
+    }, 250);
+}
+</script>
 {% endblock %}

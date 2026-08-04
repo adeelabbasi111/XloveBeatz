@@ -5,52 +5,96 @@
 
 {% block content %}
 {# ─── ADD FORM ─── #}
-<div class="admin-form" style="margin-bottom:2rem;">
-    <form method="POST" action="{{ url_for('admin.admin_discount_add') }}">
+<div class="form-container">
+    <form method="POST" action="{{ url_for('admin.admin_discount_add') }}" class="admin-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <div class="form-row">
-            <div class="form-group">
-                <label for="code">Code</label>
-                <input type="text" name="code" id="code" required placeholder="e.g. SUMMER30" style="text-transform:uppercase;">
+
+        <div class="form-section">
+            <h3><i class="fas fa-tag"></i> Create Coupon</h3>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="code">Coupon Code</label>
+                    <input type="text" name="code" id="code" required
+                           placeholder="e.g. SUMMER30" style="text-transform:uppercase;">
+                </div>
+                <div class="form-group">
+                    <label for="discount_type">Discount Type</label>
+                    <select name="discount_type" id="discount_type">
+                        <option value="percentage">Percentage (%)</option>
+                        <option value="fixed">Fixed Amount (₹)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="discount_value">Value</label>
+                    <input type="number" name="discount_value" id="discount_value"
+                           required min="1" placeholder="e.g. 30">
+                </div>
             </div>
-            <div class="form-group">
-                <label for="discount_type">Type</label>
-                <select name="discount_type" id="discount_type">
-                    <option value="percentage">Percentage (%)</option>
-                    <option value="fixed">Fixed Amount (₹)</option>
-                </select>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="max_discount">Max Discount (₹) <small class="text-muted">for % type, 0 = no cap</small></label>
+                    <input type="number" name="max_discount" id="max_discount"
+                           step="0.01" min="0" value="0">
+                </div>
+                <div class="form-group">
+                    <label for="min_order">Min Order (₹)</label>
+                    <input type="number" name="min_order" id="min_order"
+                           step="0.01" min="0" value="0">
+                </div>
+                <div class="form-group">
+                    <label for="max_uses">Max Uses <small class="text-muted">0 = unlimited</small></label>
+                    <input type="number" name="max_uses" id="max_uses" min="0" value="0">
+                </div>
             </div>
-            <div class="form-group">
-                <label for="discount_value">Value</label>
-                <input type="number" name="discount_value" id="discount_value" required min="1" placeholder="e.g. 30">
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="expires_at">Expiry Date <small class="text-muted">leave empty = never</small></label>
+                    <input type="datetime-local" name="expires_at" id="expires_at">
+                </div>
             </div>
-            <div class="form-group">
-                <label for="min_order">Min Order (₹)</label>
-                <input type="number" name="min_order" id="min_order" step="0.01" min="0" value="0">
+
+            <h4 style="margin-top:1.5rem;"><i class="fas fa-bullhorn"></i> Announcement Strip</h4>
+
+            <div class="form-row">
+                <div class="form-group" style="flex:2;">
+                    <label for="strip_message">Strip Message</label>
+                    <input type="text" name="strip_message" id="strip_message"
+                           placeholder="e.g. 🔥 SUMMER SALE — Use code SUMMER30 for 30% off!">
+                </div>
+                <div class="form-group" style="display:flex; align-items:flex-end; gap:12px;">
+                    <label class="toggle-wrap">
+                        <input type="checkbox" name="post_to_strip" id="post_to_strip">
+                        <span class="toggle-label">Auto-post to strip</span>
+                    </label>
+                </div>
             </div>
-            <div class="form-group">
-                <label for="max_uses">Max Uses (0 = unlimited)</label>
-                <input type="number" name="max_uses" id="max_uses" min="0" value="0">
-            </div>
-            <div class="form-group" style="display:flex; align-items:flex-end;">
-                <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Create Code</button>
-            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Create Coupon
+            </button>
         </div>
     </form>
 </div>
 
 {# ─── CODES LIST ─── #}
-<div class="data-table-wrapper">
+<div class="data-table-wrapper" style="margin-top:2rem;">
     <table class="data-table">
         <thead>
             <tr>
                 <th>Code</th>
                 <th>Type</th>
                 <th>Value</th>
+                <th>Max Discount</th>
                 <th>Min Order</th>
                 <th>Uses</th>
+                <th>Expires</th>
+                <th>Strip</th>
                 <th>Status</th>
-                <th>Created</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -59,9 +103,40 @@
             <tr>
                 <td><strong style="letter-spacing:0.05em;">{{ code.code }}</strong></td>
                 <td class="text-muted">{{ code.discount_type | capitalize }}</td>
-                <td>{% if code.discount_type == 'percentage' %}{{ code.discount_value }}%{% else %}{{ code.discount_value | rupees }}{% endif %}</td>
+                <td>
+                    {% if code.discount_type == 'percentage' %}
+                        {{ code.discount_value }}%
+                    {% else %}
+                        {{ code.discount_value | rupees }}
+                    {% endif %}
+                </td>
+                <td>
+                    {% if code.max_discount_cents > 0 %}
+                        {{ code.max_discount_cents | rupees }}
+                    {% else %}
+                        <span class="text-muted">No cap</span>
+                    {% endif %}
+                </td>
                 <td>{{ code.min_order_cents | rupees }}</td>
                 <td>{{ code.used_count }}{% if code.max_uses > 0 %} / {{ code.max_uses }}{% else %} / ∞{% endif %}</td>
+                <td>
+                    {% if code.expires_at %}
+                        <span class="{% if code.expires_at < now %}text-muted{% endif %}">
+                            {{ code.expires_at.strftime('%d %b %Y %H:%M') }}
+                        </span>
+                    {% else %}
+                        <span class="text-muted">Never</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if code.post_to_strip and code.strip_message %}
+                        <span class="status-badge status-active" title="{{ code.strip_message }}">
+                            <i class="fas fa-bullhorn"></i> On
+                        </span>
+                    {% else %}
+                        <span class="text-muted">Off</span>
+                    {% endif %}
+                </td>
                 <td>
                     <form method="POST" action="{{ url_for('admin.admin_discount_toggle', discount_id=code.id) }}" style="display:inline;">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -70,11 +145,17 @@
                         </button>
                     </form>
                 </td>
-                <td class="text-muted">{{ code.created_at.strftime('%d %b %Y') if code.created_at else '' }}</td>
                 <td>
                     <form method="POST" action="{{ url_for('admin.admin_discount_toggle', discount_id=code.id) }}" style="display:inline;">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="btn-icon" title="Toggle"><i class="fas fa-power-off"></i></button>
+                    </form>
+                    <form method="POST" action="{{ url_for('admin.admin_discount_delete', discount_id=code.id) }}" style="display:inline;"
+                          onsubmit="return confirm('Delete coupon {{ code.code }}?')">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn-icon" title="Delete" style="color:#ef4444;">
+                            <i class="fas fa-trash"></i>
+                        </button>
                     </form>
                 </td>
             </tr>
@@ -82,4 +163,25 @@
         </tbody>
     </table>
 </div>
+
+<style>
+    .toggle-wrap {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        padding-bottom: 4px;
+    }
+    .toggle-wrap input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        accent-color: var(--accent-soft, #7C8DF0);
+        cursor: pointer;
+    }
+    .toggle-label {
+        font-size: 0.85rem;
+        white-space: nowrap;
+        color: var(--text-primary, #f0ece4);
+    }
+</style>
 {% endblock %}

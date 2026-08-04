@@ -16,7 +16,6 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/cart/main.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header/main.css') }}">
 
-
     {# Page-specific CSS #}
     {% block head_css %}{% endblock %}
 
@@ -26,6 +25,28 @@
     {% include 'partials/preloader.html' %}
 
     <div id="floatingNotes"></div>
+
+{# ============ GLOBAL LOOPING ANNOUNCEMENT STRIP ============ #}
+{% if strip_messages %}
+<div class="looping-strip-wrapper">
+    <div class="looping-strip-track">
+        {# First Set #}
+        <div class="looping-content">
+            {% for msg in strip_messages %}
+            <span>{{ msg }}</span>
+            {% if not loop.last %}<span class="strip-separator">✦</span>{% endif %}
+            {% endfor %}
+        </div>
+        {# Second Set (duplicate for seamless loop) #}
+        <div class="looping-content">
+            {% for msg in strip_messages %}
+            <span>{{ msg }}</span>
+            {% if not loop.last %}<span class="strip-separator">✦</span>{% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
 
     {% include 'partials/header.html' %}
 

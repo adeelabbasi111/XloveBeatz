@@ -6,17 +6,20 @@ import shutil
 import time
 import glob
 import uuid
+import io
+import json
 
 from flask import (
     Blueprint, render_template, request, redirect,
-    url_for, flash, current_app, send_file, jsonify ,session
+    url_for, flash, current_app, send_file, jsonify, session
 )
 from werkzeug.utils import secure_filename
+from PIL import Image
 
 from helpers.models import (
     db, Product, BeatDetail, BeatPack, VocalPreset,
     License, BeatLicensePrice, Order, OrderItem, User,
-    Download, DiscountCode, ActivityLog, GeneratedLicense,
+    Download, DiscountCode, ActivityLog, GeneratedLicense, Offer,
 )
 from helpers.utils import (
     admin_required, get_current_user,
@@ -27,30 +30,87 @@ from helpers.services import (
     get_admin_stats, get_monthly_revenue, get_top_products,
     get_genre_distribution,
 )
-
+from datetime import datetime
 # ═══════════════════════════════════════════════════════════════
 #  FILE STORAGE HELPERS
 # ═══════════════════════════════════════════════════════════════
 
-FOLDER_PREVIEWS = 'previews'
-FOLDER_MP3      = 'mp3'
-FOLDER_WAV      = 'wav'
-FOLDER_FLP      = 'flps'
-FOLDER_IMAGES   = 'images'
-FOLDER_PRESETS  = 'presets'
-FOLDER_PACKS    = 'packs'
-FOLDER_LICENSES = 'licenses'
+FOLDER_PREVIEWS    = 'previews'
+FOLDER_WAV         = 'wav'
+FOLDER_FLP         = 'flps'
+FOLDER_IMAGES      = 'images'
+FOLDER_BEAT_IMAGES = 'beat_images'
+FOLDER_PRESETS     = 'presets'
+FOLDER_PACKS       = 'packs'
+FOLDER_LICENSES    = 'licenses'
 
 ALL_DATA_FOLDERS = [
-    FOLDER_PREVIEWS, FOLDER_MP3, FOLDER_WAV,
-    FOLDER_FLP, FOLDER_IMAGES, FOLDER_PRESETS,
-    FOLDER_PACKS, FOLDER_LICENSES
+    FOLDER_PREVIEWS, FOLDER_WAV,
+    FOLDER_FLP, FOLDER_IMAGES, FOLDER_BEAT_IMAGES,
+    FOLDER_PRESETS, FOLDER_PACKS, FOLDER_LICENSES
 ]
 
 TEMP_UPLOAD_DIR = os.path.join('static', 'data', 'temp_uploads')
 
+# Image compression settings
+IMG_MAX_WIDTH  = 600
+IMG_MAX_HEIGHT = 600
+IMG_QUALITY    = 72
+
 logger = logging.getLogger(__name__)
 bp = Blueprint('admin', __name__)
+
+
+# ═══════════════════════════════════════════════════════════════
+#  IMAGE COMPRESSION
+# ═══════════════════════════════════════════════════════════════
+
+def compress_image_at_path(abs_path, max_w=IMG_MAX_WIDTH, max_h=IMG_MAX_HEIGHT, quality=IMG_QUALITY):
+    """Compress an image file in-place. Returns True on success."""
+    try:
+        img = Image.open(abs_path)
+        if img.mode in ('RGBA', 'P'):
+            img = img.convert('RGB')
+
+        if img.width > max_w or img.height > max_h:
+            img.thumbnail((max_w, max_h), Image.LANCZOS)
+
+        ext = os.path.splitext(abs_path)[1].lower()
+        save_kwargs = {'optimize': True}
+        if ext in ('.jpg', '.jpeg', '.webp'):
+            save_kwargs['quality'] = quality
+
+        img.save(abs_path, **save_kwargs)
+        return True
+    except Exception as e:
+        logger.error("Image compression failed for %s: %s", abs_path, e)
+        return False
+
+
+def compress_and_save_image(file_storage, dest_abs_path, max_w=IMG_MAX_WIDTH, max_h=IMG_MAX_HEIGHT, quality=IMG_QUALITY):
+    """
+    Save a Werkzeug FileStorage to dest_abs_path with compression.
+    Returns True on success, False on failure.
+    """
+    try:
+        img = Image.open(file_storage.stream)
+        if img.mode in ('RGBA', 'P'):
+            img = img.convert('RGB')
+
+        if img.width > max_w or img.height > max_h:
+            img.thumbnail((max_w, max_h), Image.LANCZOS)
+
+        ext = os.path.splitext(dest_abs_path)[1].lower()
+        save_kwargs = {'optimize': True}
+        if ext in ('.jpg', '.jpeg', '.webp'):
+            save_kwargs['quality'] = quality
+
+        os.makedirs(os.path.dirname(dest_abs_path), exist_ok=True)
+        img.save(dest_abs_path, **save_kwargs)
+        return True
+    except Exception as e:
+        logger.error("Image compress+save failed: %s", e)
+        return False
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -58,6 +118,10 @@ bp = Blueprint('admin', __name__)
 # ═══════════════════════════════════════════════════════════════
 
 def move_temp_file(form, field_name, dest_subfolder, app, readable_name=None):
+    """
+    Move a previously-uploaded temp file to its final destination.
+    Falls back to direct file upload if no temp path is provided.
+    """
     temp_path = form.get(f'{field_name}_temp_path', '').strip()
 
     if temp_path:
@@ -100,6 +164,63 @@ def move_temp_file(form, field_name, dest_subfolder, app, readable_name=None):
         return f"data/{dest_subfolder}/{filename}"
 
     return None
+
+
+def move_temp_image_compressed(form, field_name, dest_subfolder, app, readable_name=None):
+    """
+    Like move_temp_file but compresses the image after moving.
+    If the file comes from temp, it's moved then compressed in-place.
+    If it's a direct upload, it's saved compressed.
+    """
+    temp_path = form.get(f'{field_name}_temp_path', '').strip()
+
+    if temp_path:
+        abs_temp = os.path.join(app.root_path, temp_path)
+        if not os.path.exists(abs_temp):
+            logger.warning("Temp image not found: %s", abs_temp)
+            return None
+
+        ext = os.path.splitext(temp_path)[1]
+
+        if readable_name:
+            safe_name = secure_filename(readable_name)
+            filename = f"{safe_name}{ext}"
+        else:
+            filename = f"{uuid.uuid4().hex}{ext}"
+
+        dest_dir = os.path.join(app.root_path, 'static', 'data', dest_subfolder)
+        os.makedirs(dest_dir, exist_ok=True)
+
+        abs_dest = os.path.join(dest_dir, filename)
+        shutil.move(abs_temp, abs_dest)
+
+        # Compress in-place
+        compress_image_at_path(abs_dest)
+
+        return f"data/{dest_subfolder}/{filename}"
+
+    file = request.files.get(field_name)
+    if file and file.filename:
+        ext = os.path.splitext(file.filename)[1]
+        if ext.lower() not in ('.jpg', '.jpeg', '.png', '.webp'):
+            return None
+
+        if readable_name:
+            safe_name = secure_filename(readable_name)
+            filename = f"{safe_name}{ext}"
+        else:
+            filename = f"{uuid.uuid4().hex}{ext}"
+
+        dest_dir = os.path.join(app.root_path, 'static', 'data', dest_subfolder)
+        os.makedirs(dest_dir, exist_ok=True)
+
+        abs_path = os.path.join(dest_dir, filename)
+        compress_and_save_image(file, abs_path)
+
+        return f"data/{dest_subfolder}/{filename}"
+
+    return None
+
 
 def cleanup_old_temp_files(app):
     """Delete temp uploads older than 1 hour."""
@@ -154,10 +275,14 @@ def delete_old_file(db_relative_path):
 
 
 # ═══════════════════════════════════════════════════════════════
-#  AUDIO PREVIEW TRIMMER
+#  AUDIO PREVIEW GENERATOR (WAV → MP3 preview via ffmpeg)
 # ═══════════════════════════════════════════════════════════════
 
-def create_audio_preview(full_mp3_abs_path, start_sec, end_sec, output_filename):
+def create_audio_preview(full_audio_abs_path, start_sec, end_sec, output_filename):
+    """
+    Create a trimmed MP3 preview from any audio file (WAV, MP3, etc.)
+    using ffmpeg. Returns the relative path (from static/).
+    """
     duration = end_sec - start_sec
     if duration <= 0:
         raise ValueError("End time must be after start time")
@@ -167,7 +292,7 @@ def create_audio_preview(full_mp3_abs_path, start_sec, end_sec, output_filename)
 
     cmd = [
         'ffmpeg', '-y',
-        '-i', full_mp3_abs_path,
+        '-i', full_audio_abs_path,
         '-ss', str(start_sec),
         '-t', str(duration),
         '-acodec', 'libmp3lame',
@@ -183,11 +308,53 @@ def create_audio_preview(full_mp3_abs_path, start_sec, end_sec, output_filename)
     return f"data/{FOLDER_PREVIEWS}/{output_filename}"
 
 
+def convert_wav_to_full_preview(wav_abs_path, beat_slug, max_seconds=90):
+    """
+    Convert a WAV file to a full-length (or capped) MP3 preview.
+    If the WAV is longer than max_seconds, trim it with a fade-out.
+    Returns the relative path (from static/) or None.
+    """
+    if not wav_abs_path or not os.path.exists(wav_abs_path):
+        return None
+
+    try:
+        preview_dir = get_data_path(FOLDER_PREVIEWS)
+        output_filename = f"{secure_filename(beat_slug)}_preview.mp3"
+        abs_output = os.path.join(preview_dir, output_filename)
+
+        # Use ffmpeg to convert WAV → MP3 with optional trimming
+        cmd = [
+            'ffmpeg', '-y',
+            '-i', wav_abs_path,
+            '-t', str(max_seconds),
+            '-af', f'afade=t=out:st={max_seconds - 3}:d=3',
+            '-acodec', 'libmp3lame',
+            '-b:a', '128k',
+            '-loglevel', 'error',
+            abs_output,
+        ]
+
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        if result.returncode != 0:
+            logger.error("WAV→MP3 preview failed: %s", result.stderr)
+            return None
+
+        return f"data/{FOLDER_PREVIEWS}/{output_filename}"
+
+    except Exception as e:
+        logger.error("WAV→MP3 conversion error for %s: %s", beat_slug, e)
+        return None
+
+
 # ═══════════════════════════════════════════════════════════════
 #  BEAT PACK ZIP GENERATOR
 # ═══════════════════════════════════════════════════════════════
 
 def _regenerate_pack_zip(pack):
+    """
+    Regenerate the pack ZIP. Includes WAV files and project files.
+    No separate MP3 — preview MP3s are not included in the pack.
+    """
     pack_product = Product.query.get(pack.product_id)
     if not pack_product:
         return
@@ -227,15 +394,18 @@ def _regenerate_pack_zip(pack):
             beat_name = secure_filename(beat_product.name) or 'beat'
             folder_in_zip = f"{pack_name}/{beat_name}"
 
-            if beat.mp3_file:
-                mp3_abs = os.path.join(static_root, beat.mp3_file)
-                if os.path.exists(mp3_abs):
-                    zf.write(mp3_abs, f"{folder_in_zip}/{beat_name}.mp3")
-
+            # Include WAV file
             if beat.wav_file:
                 wav_abs = os.path.join(static_root, beat.wav_file)
                 if os.path.exists(wav_abs):
                     zf.write(wav_abs, f"{folder_in_zip}/{beat_name}.wav")
+
+            # Include project file if present
+            if beat.project_file:
+                proj_abs = os.path.join(static_root, beat.project_file)
+                if os.path.exists(proj_abs):
+                    proj_ext = os.path.splitext(beat.project_file)[1]
+                    zf.write(proj_abs, f"{folder_in_zip}/{beat_name}_project{proj_ext}")
 
     pack.zip_path = f"data/{FOLDER_PACKS}/{zip_filename}"
     logger.info("Pack ZIP regenerated: %s (%d beats)", zip_filename, len(beats))
@@ -249,7 +419,6 @@ def _regenerate_pack_zip(pack):
 def upload_temp_file():
     """Upload a file to temp folder immediately. Returns temp path."""
 
-    # Manual auth check — return JSON error instead of HTML redirect
     user_id = session.get('user_id')
     if not user_id:
         return jsonify({'error': 'Not logged in'}), 401
@@ -315,7 +484,6 @@ def cleanup_temp():
 @bp.route('/admin')
 @admin_required
 def admin_dashboard():
-    # Clean old temp files on each admin visit
     cleanup_old_temp_files(current_app)
 
     stats = get_admin_stats()
@@ -379,7 +547,7 @@ def admin_product_add():
                     return redirect(url_for('admin.admin_product_add'))
                 price_cents = int(price * 100)
 
-            # ── Cover image (temp or direct) ──
+            # ── Cover image (temp or direct) — non-beat products only ──
             cover_image_path = None
             if product_type != 'beat':
                 cover_image_path = move_temp_file(
@@ -496,7 +664,6 @@ def admin_product_edit(product_id):
                 if preset:
                     preset.supported_daw = request.form.get('supported_daw')
 
-                    # ── Preset zip (temp or direct) ──
                     new_zip = move_temp_file(
                         request.form, 'preset_zip', FOLDER_PRESETS, current_app
                     )
@@ -557,10 +724,13 @@ def admin_product_delete(product_id):
             if detail:
                 affected_pack_id = detail.pack_id
 
-                delete_old_file(detail.mp3_file)
+                # Delete audio files (preview, wav, project — no separate mp3)
                 delete_old_file(detail.preview_audio)
                 delete_old_file(detail.wav_file)
                 delete_old_file(detail.project_file)
+
+                # Delete beat image
+                delete_old_file(detail.beat_image)
 
                 BeatDetail.query.filter_by(product_id=product.id).delete()
 
@@ -614,49 +784,63 @@ def admin_product_toggle(product_id):
 # ═══════════════════════════════════════════════════════════════
 
 def _create_beat_details(product):
-    """Create beat detail with files from temp or direct upload."""
+    """
+    Create beat detail record. Workflow:
+    1. Upload WAV file
+    2. Auto-convert WAV → MP3 preview (trimmed + faded)
+    3. Upload beat cover image (compressed)
+    4. Upload project file
+    5. Create license price records
+    6. Regenerate pack ZIP if assigned
+    """
     slug = product.slug
 
-    # 1. Full MP3 → data/mp3/
-    mp3_db_path = move_temp_file(
-        request.form, 'mp3_file', FOLDER_MP3, current_app,
-        readable_name=f"{slug}_full"
-    )
-
-    # 2. Preview → data/previews/
-    preview_db_path = ''
-    preview_start = request.form.get('preview_start', '').strip()
-    preview_end = request.form.get('preview_end', '').strip()
-
-    if mp3_db_path and preview_start and preview_end:
-        try:
-            abs_mp3 = os.path.join(current_app.root_path, 'static', mp3_db_path)
-            preview_fname = f"{slug}_preview.mp3"
-            preview_db_path = create_audio_preview(
-                abs_mp3,
-                float(preview_start),
-                float(preview_end),
-                preview_fname,
-            )
-        except Exception as e:
-            logger.error("Preview creation failed for %s: %s", slug, e)
-
-    # 3. WAV → data/wav/
+    # ── 1. WAV → data/wav/ ──
     wav_db_path = move_temp_file(
         request.form, 'wav_file', FOLDER_WAV, current_app,
         readable_name=f"{slug}_beat"
     )
 
-    # 4. Project file → data/flps/
+    # ── 2. Auto-generate MP3 preview from WAV ──
+    preview_db_path = ''
+    if wav_db_path:
+        abs_wav = os.path.join(current_app.root_path, 'static', wav_db_path)
+
+        # Check if user specified custom preview start/end
+        preview_start = request.form.get('preview_start', '').strip()
+        preview_end = request.form.get('preview_end', '').strip()
+
+        if preview_start and preview_end:
+            try:
+                preview_fname = f"{secure_filename(slug)}_preview.mp3"
+                preview_db_path = create_audio_preview(
+                    abs_wav,
+                    float(preview_start),
+                    float(preview_end),
+                    preview_fname,
+                )
+            except Exception as e:
+                logger.error("Trimmed preview creation failed for %s: %s", slug, e)
+        else:
+            # Default: convert entire WAV to 90-second preview with fade
+            preview_db_path = convert_wav_to_full_preview(abs_wav, slug) or ''
+
+    # ── 3. Beat cover image (compressed) ──
+    beat_image_path = move_temp_image_compressed(
+        request.form, 'beat_image', FOLDER_BEAT_IMAGES, current_app,
+        readable_name=f"{slug}_cover"
+    )
+
+    # ── 4. Project file → data/flps/ ──
     project_db_path = move_temp_file(
         request.form, 'project_file', FOLDER_FLP, current_app,
         readable_name=f"{slug}_project"
     )
 
-    # 5. Duration
+    # ── 5. Duration ──
     duration = request.form.get('duration_hidden', '').strip()
 
-    # 6. Pack assignment
+    # ── 6. Pack assignment ──
     pack_id = request.form.get('pack_id', type=int) or None
 
     beat_detail = BeatDetail(
@@ -666,23 +850,23 @@ def _create_beat_details(product):
         genre=request.form.get('beat_genre', '').strip(),
         duration=duration,
         preview_audio=preview_db_path,
-        mp3_file=mp3_db_path or '',
         wav_file=wav_db_path or '',
         project_file=project_db_path or '',
+        beat_image=beat_image_path or None,
         pack_id=pack_id,
     )
     db.session.add(beat_detail)
     db.session.flush()
 
-    # 7. Create license price records
+    # ── 7. Create license price records ──
     _update_beat_licenses(product.id)
 
-    # 7b. Sync product price with basic license price
+    # ── 7b. Sync product price with basic license price ──
     basic_price = request.form.get('basic_price', type=float)
     if basic_price is not None and basic_price > 0:
         product.price_cents = int(basic_price * 100)
 
-    # 8. Regenerate pack ZIP if assigned to a pack
+    # ── 8. Regenerate pack ZIP if assigned ──
     if pack_id:
         pack = BeatPack.query.get(pack_id)
         if pack:
@@ -690,41 +874,14 @@ def _create_beat_details(product):
 
 
 def _update_beat_files(slug, beat_detail):
-    """Update beat files from temp or direct upload."""
+    """
+    Update beat files during edit. Handles:
+    - WAV upload (+ auto-regenerate MP3 preview)
+    - Beat cover image (compressed)
+    - Project file
+    No separate MP3 handling.
+    """
     files_changed = False
-
-    # ── MP3 (temp or direct) ──
-    new_mp3 = move_temp_file(
-        request.form, 'mp3_file', FOLDER_MP3, current_app,
-        readable_name=f"{slug}_full"
-    )
-    if new_mp3:
-        delete_old_file(beat_detail.mp3_file)
-        delete_old_file(beat_detail.preview_audio)
-
-        beat_detail.mp3_file = new_mp3
-        mp3_abs_path = os.path.join(current_app.root_path, 'static', new_mp3)
-
-        preview_start = request.form.get('preview_start', '').strip()
-        preview_end = request.form.get('preview_end', '').strip()
-
-        if preview_start and preview_end:
-            try:
-                preview_fname = f"{slug}_preview.mp3"
-                beat_detail.preview_audio = create_audio_preview(
-                    mp3_abs_path,
-                    float(preview_start),
-                    float(preview_end),
-                    preview_fname,
-                )
-            except Exception as e:
-                logger.error("Preview creation failed for %s: %s", slug, e)
-
-        duration = request.form.get('duration_hidden', '').strip()
-        if duration:
-            beat_detail.duration = duration
-
-        files_changed = True
 
     # ── WAV (temp or direct) ──
     new_wav = move_temp_file(
@@ -735,6 +892,39 @@ def _update_beat_files(slug, beat_detail):
         delete_old_file(beat_detail.wav_file)
         beat_detail.wav_file = new_wav
         files_changed = True
+
+        # Auto-regenerate MP3 preview from new WAV
+        abs_wav = os.path.join(current_app.root_path, 'static', new_wav)
+
+        # Delete old preview
+        delete_old_file(beat_detail.preview_audio)
+
+        preview_start = request.form.get('preview_start', '').strip()
+        preview_end = request.form.get('preview_end', '').strip()
+
+        if preview_start and preview_end:
+            try:
+                preview_fname = f"{secure_filename(slug)}_preview.mp3"
+                beat_detail.preview_audio = create_audio_preview(
+                    abs_wav,
+                    float(preview_start),
+                    float(preview_end),
+                    preview_fname,
+                )
+            except Exception as e:
+                logger.error("Preview regeneration failed for %s: %s", slug, e)
+                beat_detail.preview_audio = ''
+        else:
+            beat_detail.preview_audio = convert_wav_to_full_preview(abs_wav, slug) or ''
+
+    # ── Beat cover image (compressed) ──
+    new_beat_image = move_temp_image_compressed(
+        request.form, 'beat_image', FOLDER_BEAT_IMAGES, current_app,
+        readable_name=f"{slug}_cover"
+    )
+    if new_beat_image:
+        delete_old_file(beat_detail.beat_image)
+        beat_detail.beat_image = new_beat_image
 
     # ── PROJECT FILE (temp or direct) ──
     new_project = move_temp_file(
@@ -771,6 +961,7 @@ def _create_preset_details(product, slug):
 
 
 def _update_beat_licenses(product_id):
+    """Create or update Basic/Premium/Exclusive license prices for a beat."""
     licenses = {l.name: l for l in License.query.all()}
     for tier in ('Basic', 'Premium', 'Exclusive'):
         tier_price = request.form.get(f"{tier.lower()}_price", type=float)
@@ -913,7 +1104,7 @@ def admin_user_toggle_admin(user_id):
 @admin_required
 def admin_discounts():
     codes = DiscountCode.query.order_by(DiscountCode.created_at.desc()).all()
-    return render_template('admin/discounts.html', codes=codes)
+    return render_template('admin/discounts.html', codes=codes,now=datetime.utcnow())
 
 
 @bp.route('/admin/discount/add', methods=['POST'])
@@ -927,16 +1118,41 @@ def admin_discount_add():
         flash('Code already exists!', 'error')
         return redirect(url_for('admin.admin_discounts'))
 
+    discount_type = request.form.get('discount_type')
+    discount_value = request.form.get('discount_value', 0, type=int)
+    max_discount = request.form.get('max_discount', 0, type=float)
+    expires_str = request.form.get('expires_at', '').strip()
+    strip_message = request.form.get('strip_message', '').strip()
+    post_to_strip = request.form.get('post_to_strip') == 'on'
+
+    expires_at = None
+    if expires_str:
+        for fmt in ('%Y-%m-%dT%H:%M:%S', '%Y-%m-%dT%H:%M', '%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M'):
+            try:
+                expires_at = datetime.strptime(expires_str, fmt)
+                break
+            except ValueError:
+                continue
+
     discount = DiscountCode(
         code=code,
-        discount_type=request.form.get('discount_type'),
-        discount_value=request.form.get('discount_value', type=int),
+        discount_type=discount_type,
+        discount_value=discount_value,
         min_order_cents=int(request.form.get('min_order', 0, type=float) * 100),
+        max_discount_cents=int(max_discount * 100),
         max_uses=request.form.get('max_uses', 0, type=int),
+        expires_at=expires_at,
+        strip_message=strip_message,
+        post_to_strip=post_to_strip,
         is_active=True,
     )
     db.session.add(discount)
     db.session.commit()
+
+    # Auto-post to strip if enabled
+    if post_to_strip and strip_message:
+        _sync_strip_messages()
+
     flash(f'Discount code {code} created!', 'success')
     return redirect(url_for('admin.admin_discounts'))
 
@@ -947,10 +1163,156 @@ def admin_discount_toggle(discount_id):
     discount = DiscountCode.query.get_or_404(discount_id)
     discount.is_active = not discount.is_active
     db.session.commit()
+
+    # Sync strip when toggling
+    if discount.post_to_strip:
+        _sync_strip_messages()
+
     status = "activated" if discount.is_active else "deactivated"
     flash(f'Code {discount.code} {status}!', 'success')
     return redirect(url_for('admin.admin_discounts'))
 
+
+@bp.route('/admin/discount/<int:discount_id>/delete', methods=['POST'])
+@admin_required
+def admin_discount_delete(discount_id):
+    discount = DiscountCode.query.get_or_404(discount_id)
+    code = discount.code
+    had_strip = discount.post_to_strip and discount.strip_message
+
+    db.session.delete(discount)
+    db.session.commit()
+
+    if had_strip:
+        _sync_strip_messages()
+
+    flash(f'Discount code {code} deleted!', 'success')
+    return redirect(url_for('admin.admin_discounts'))
+
+
+def _sync_strip_messages():
+    """
+    Collect strip_message from all active coupons AND active offers with post_to_strip=True,
+    merge them with manual strip_messages, and save.
+    """
+    # Collect all auto-generated messages (from coupons + offers)
+    auto_msgs = set()
+
+    # Active coupon messages
+    for c in DiscountCode.query.filter_by(post_to_strip=True, is_active=True).all():
+        if c.strip_message:
+            auto_msgs.add(c.strip_message.strip())
+
+    # Active offer messages
+    for o in Offer.query.filter_by(post_to_strip=True, is_active=True).all():
+        if o.strip_message:
+            auto_msgs.add(o.strip_message.strip())
+
+    # Collect ALL auto messages ever (to know which to purge from manual list)
+    all_auto = set()
+    for c in DiscountCode.query.filter_by(post_to_strip=True).all():
+        if c.strip_message:
+            all_auto.add(c.strip_message.strip())
+    for o in Offer.query.filter_by(post_to_strip=True).all():
+        if o.strip_message:
+            all_auto.add(o.strip_message.strip())
+
+    # Get current strip, keep only manually-typed messages
+    raw_all = get_site_setting('strip_messages', '[]')
+    try:
+        current_all = json.loads(raw_all)
+    except (json.JSONDecodeError, TypeError):
+        current_all = []
+
+    manual_messages = [m for m in current_all if m.strip() not in all_auto]
+
+    # Final: manual first, then sorted active auto messages
+    final = manual_messages + sorted(auto_msgs)
+    set_site_setting('strip_messages', json.dumps(final))
+
+
+# ═══════════════════════════════════════════════════════════════
+#  OFFERS
+# ═══════════════════════════════════════════════════════════════
+
+@bp.route('/admin/offers')
+@admin_required
+def admin_offers():
+    offers = Offer.query.order_by(Offer.created_at.desc()).all()
+    return render_template('admin/offers.html', offers=offers)
+
+
+@bp.route('/admin/offers/add', methods=['POST'])
+@admin_required
+def admin_offer_add():
+    name = request.form.get('name', '').strip()
+    offer_type = request.form.get('offer_type', '').strip()
+    applicable = request.form.get('applicable_product_type', 'all')
+    stacks = request.form.get('stacks_with_coupons') == 'on'
+    strip_message = request.form.get('strip_message', '').strip()
+    post_to_strip = request.form.get('post_to_strip') == 'on'
+
+    if not name or not offer_type:
+        flash('Name and offer type are required.', 'error')
+        return redirect(url_for('admin.admin_offers'))
+
+    offer = Offer(
+        name=name,
+        offer_type=offer_type,
+        applicable_product_type=applicable,
+        stacks_with_coupons=stacks,
+        strip_message=strip_message,
+        post_to_strip=post_to_strip,
+        is_active=True,
+    )
+
+    if offer_type == 'bogo':
+        offer.buy_quantity = request.form.get('buy_quantity', 1, type=int)
+        offer.get_quantity = request.form.get('get_quantity', 1, type=int)
+    elif offer_type == 'bulk_percent':
+        offer.buy_quantity = request.form.get('bulk_min_qty', 2, type=int)
+        offer.discount_percentage = request.form.get('discount_percentage', 20, type=int)
+    elif offer_type == 'spend_amount_off':
+        offer.min_spend_cents = int(request.form.get('min_spend', 0, type=float) * 100)
+        offer.discount_fixed_cents = int(request.form.get('discount_fixed', 0, type=float) * 100)
+
+    db.session.add(offer)
+    db.session.commit()
+
+    if post_to_strip and strip_message:
+        _sync_strip_messages()
+
+    flash(f'Offer "{name}" created!', 'success')
+    return redirect(url_for('admin.admin_offers'))
+
+
+@bp.route('/admin/offers/<int:offer_id>/toggle', methods=['POST'])
+@admin_required
+def admin_offer_toggle(offer_id):
+    offer = Offer.query.get_or_404(offer_id)
+    offer.is_active = not offer.is_active
+    db.session.commit()
+
+    if offer.post_to_strip:
+        _sync_strip_messages()
+
+    status = 'activated' if offer.is_active else 'deactivated'
+    flash(f'Offer "{offer.name}" {status}!', 'success')
+    return redirect(url_for('admin.admin_offers'))
+
+
+@bp.route('/admin/offers/<int:offer_id>/delete', methods=['POST'])
+@admin_required
+def admin_offer_delete(offer_id):
+    offer = Offer.query.get_or_404(offer_id)
+    name = offer.name
+    had_strip = offer.post_to_strip and offer.strip_message
+    db.session.delete(offer)
+    db.session.commit()
+    if had_strip:
+        _sync_strip_messages()
+    flash(f'Offer "{name}" deleted!', 'success')
+    return redirect(url_for('admin.admin_offers'))
 
 # ═══════════════════════════════════════════════════════════════
 #  GENERATED LICENSES
@@ -1001,16 +1363,40 @@ def admin_settings():
             'whatsapp_number', 'instagram_url', 'spotify_url', 'youtube_url']
 
     if request.method == 'POST':
+        # Handle regular text settings
         for key in keys:
             val = request.form.get(key)
             if val is not None:
                 set_site_setting(key, val.strip())
+
+        # Handle strip messages (dynamic list)
+        strip_messages = request.form.getlist('strip_message')
+        # Remove empty entries
+        strip_messages = [m.strip() for m in strip_messages if m.strip()]
+        set_site_setting('strip_messages', json.dumps(strip_messages))
+
         flash('Settings updated successfully!', 'success')
         return redirect(url_for('admin.admin_settings'))
 
     settings = {k: get_site_setting(k, '') for k in keys}
-    return render_template('admin/settings.html', settings=settings)
 
+    # Parse strip messages for the template
+    raw = get_site_setting('strip_messages', '[]')
+    try:
+        strip_messages = json.loads(raw)
+    except (json.JSONDecodeError, TypeError):
+        strip_messages = []
+
+    if not strip_messages:
+        strip_messages = [
+            '🔥 NEW BEAT PACK "MIDNIGHT TRAP" OUT NOW',
+            '⚡ INSTANT DELIVERY & SECURE CHECKOUT',
+            '🎧 50% OFF ALL VOCAL PRESETS',
+        ]
+
+    return render_template('admin/settings.html',
+                           settings=settings,
+                           strip_messages=strip_messages)
 
 # ═══════════════════════════════════════════════════════════════
 #  ACTIVITY LOGS

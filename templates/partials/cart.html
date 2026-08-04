@@ -51,13 +51,62 @@
 
     {# Footer #}
     <div class="cart-footer" id="cartFooter">
+        {# ── Coupon Section ── #}
+        <div class="coupon-section" id="couponSection">
+            <div class="coupon-toggle" id="couponToggle">
+                <i class="fas fa-tag"></i>
+                <span>Have a coupon?</span>
+                <i class="fas fa-chevron-down coupon-toggle-arrow"></i>
+            </div>
+
+            <div class="coupon-body" id="couponBody" style="display:none;">
+                {# Input state #}
+                <div class="coupon-input-wrap" id="couponInputWrap">
+                    <input type="text"
+                           id="couponInput"
+                           class="coupon-input"
+                           placeholder="Enter coupon code"
+                           autocomplete="off"
+                           spellcheck="false">
+                    <button class="coupon-apply-btn" id="couponApplyBtn">
+                        <span class="coupon-apply-text">Apply</span>
+                        <i class="fas fa-spinner fa-spin" style="display:none;"></i>
+                    </button>
+                </div>
+
+                {# Applied state (hidden by default) #}
+                <div class="coupon-applied" id="couponApplied" style="display:none;">
+                    <div class="coupon-applied-info">
+                        <i class="fas fa-check-circle"></i>
+                        <span class="coupon-applied-code" id="couponAppliedCode"></span>
+                        <span class="coupon-applied-desc" id="couponAppliedDesc"></span>
+                    </div>
+                    <button class="coupon-remove-btn" id="couponRemoveBtn" title="Remove coupon">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                {# Error message #}
+                <div class="coupon-error" id="couponError" style="display:none;"></div>
+            </div>
+        </div>
+
         <div class="cart-summary">
+            {# ── Active Offer Savings (injected by JS from /api/cart/offer-check) ── #}
+            <div id="offerSavingsSection" style="display:none; margin-bottom:0.5rem;">
+              <div id="offerSavingsRows"></div>
+            </div>
+
             <div class="summary-row">
                 <span>Subtotal</span>
                 <span id="cartSubtotal">₹0.00</span>
             </div>
+            <div class="summary-row discount" id="offerDiscountRow" style="display:none;">
+                <span style="color:#34d399;"><i class="fas fa-gift" style="margin-right:4px;"></i>Offer Savings</span>
+                <span id="cartOfferDiscount" style="color:#34d399;">-₹0.00</span>
+            </div>
             <div class="summary-row discount" id="discountRow" style="display:none;">
-                <span>Discount</span>
+                <span>Coupon <span class="discount-label" id="discountLabel"></span></span>
                 <span id="cartDiscount">-₹0.00</span>
             </div>
             <div class="summary-row">
@@ -83,6 +132,52 @@
             <span><i class="fas fa-shield-alt"></i> Secure</span>
             <span><i class="fas fa-bolt"></i> Instant</span>
             <span><i class="fas fa-undo"></i> 7-Day Refund</span>
+        </div>
+    </div>
+</div>
+
+<!-- REGION SELECTOR MODAL -->
+<div class="region-selector-overlay" id="regionSelectorOverlay">
+    <div class="region-selector-modal">
+        <button class="region-close-btn" id="regionCloseBtn"><i class="fas fa-times"></i></button>
+        
+        <div class="region-header">
+            <div class="region-icon">
+                <i class="fas fa-globe-asia"></i>
+            </div>
+            <h3>Select Payment Region</h3>
+            <p class="region-subtitle">Choose your preferred payment method</p>
+        </div>
+
+        <div class="region-options">
+            <button class="region-card" id="regionIndia" data-region="india">
+                <div class="region-flag">🇮🇳</div>
+                <div class="region-card-info">
+                    <div class="region-card-title">India</div>
+                    <div class="region-card-desc">Pay with UPI, Cards, Net Banking</div>
+                </div>
+                <div class="region-card-badge">₹ INR</div>
+                <div class="region-card-gateway">via Razorpay</div>
+            </button>
+
+            <button class="region-card international" id="regionInternational" data-region="international">
+                <div class="region-flag">🌍</div>
+                <div class="region-card-info">
+                    <div class="region-card-title">International</div>
+                    <div class="region-card-desc">Pay with Credit/Debit Card</div>
+                </div>
+                <div class="region-card-badge">$ USD</div>
+                <div class="region-card-coming-soon">
+                    <i class="fas fa-clock"></i> Coming Soon
+                </div>
+            </button>
+        </div>
+
+        <div class="region-footer">
+            <div class="region-trust">
+                <i class="fas fa-shield-alt"></i>
+                <span>256-bit SSL Encrypted &bull; Secure Checkout</span>
+            </div>
         </div>
     </div>
 </div>

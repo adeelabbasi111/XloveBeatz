@@ -4,7 +4,7 @@ Database models only. No business logic, no service functions.
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func, UniqueConstraint
 import os
-
+from datetime import datetime
 db = SQLAlchemy()
 
 
@@ -69,13 +69,13 @@ class BeatDetail(db.Model):
 
     preview_audio = db.Column(db.String(500))
     wav_file = db.Column(db.String(500))
-    mp3_file = db.Column(db.String(500))
+    # mp3_file REMOVED — auto-generated preview, no separate storage
     project_file = db.Column(db.String(500))
+    beat_image = db.Column(db.String(500), nullable=True)  # NEW
 
     pack_id = db.Column(db.Integer, db.ForeignKey("beat_packs.id"), nullable=True, index=True)
 
     product = db.relationship("Product", backref=db.backref("beat_detail", uselist=False))
-
 
 class VocalPreset(db.Model):
     __tablename__ = "vocal_presets"
@@ -149,6 +149,8 @@ class Order(db.Model):
     payment_method = db.Column(db.String(50))
     transaction_id = db.Column(db.String(255), index=True)
     created_at = db.Column(db.DateTime, server_default=func.now())
+    coupon_code = db.Column(db.String(50), default='')  # applied coupon code
+    discount_cents = db.Column(db.Integer, default=0)  # discount amount applied
 
 
 class OrderItem(db.Model):
@@ -215,7 +217,29 @@ class DiscountCode(db.Model):
     max_uses = db.Column(db.Integer, default=0)
     used_count = db.Column(db.Integer, default=0)
     is_active = db.Column(db.Boolean, default=True)
-    expires_at = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, server_default=func.now())
+    max_discount_cents = db.Column(db.Integer, nullable=False, default=0)
+    expires_at = db.Column(db.DateTime, nullable=True)
+    strip_message = db.Column(db.String(300), nullable=False, default='')
+    post_to_strip = db.Column(db.Boolean, nullable=False, default=False)
+
+
+class Offer(db.Model):
+    __tablename__ = "offers"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    offer_type = db.Column(db.String(50), nullable=False)
+    buy_quantity = db.Column(db.Integer, default=0)
+    get_quantity = db.Column(db.Integer, default=0)
+    discount_percentage = db.Column(db.Integer, default=0)
+    min_spend_cents = db.Column(db.Integer, default=0)
+    discount_fixed_cents = db.Column(db.Integer, default=0)
+    applicable_product_type = db.Column(db.String(20), default='all')
+    stacks_with_coupons = db.Column(db.Boolean, default=True)
+    is_active = db.Column(db.Boolean, default=True)
+    strip_message = db.Column(db.String(300), default='')
+    post_to_strip = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, server_default=func.now())
 
 

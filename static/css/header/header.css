@@ -6,7 +6,7 @@
 /* ── Header Container ── */
 .site-header {
     position: sticky;
-    top: 0;
+    top: 0px;
     z-index: 1000;
     padding: 14px 40px;
     display: flex;

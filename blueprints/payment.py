@@ -10,6 +10,7 @@ from helpers.utils import get_current_user, login_required
 from helpers.services import create_order, add_order_item, mark_order_paid, clear_cart, track_download
 from flask import Blueprint, request, jsonify, render_template, session, current_app, redirect, url_for, flash, send_file
 from helpers.license_generator import BeatLicenseGenerator
+from helpers.models import DiscountCode
 
 
 logger = logging.getLogger(__name__)
@@ -108,6 +109,8 @@ def _generate_licenses_for_order(order):
 def create_razorpay_order():
     data = request.json or {}
     cart_items = data.get('items', [])
+    coupon_code = (data.get('coupon_code') or '').strip().upper()
+
     if not cart_items:
         return jsonify({"error": "Cart is empty"}), 400
 
@@ -147,6 +150,30 @@ def create_razorpay_order():
     if total_cents <= 0:
         return jsonify({"error": "Invalid items"}), 400
 
+    # ── Apply coupon discount server-side ──
+    discount_cents = 0
+    applied_coupon = None
+
+    if coupon_code:
+        coupon = DiscountCode.query.filter_by(code=coupon_code).first()
+        if coupon and coupon.is_active:
+            # Re-validate
+            expired = coupon.expires_at and coupon.expires_at < datetime.utcnow()
+            maxed = coupon.max_uses > 0 and coupon.used_count >= coupon.max_uses
+            min_not_met = coupon.min_order_cents > 0 and total_cents < coupon.min_order_cents
+
+            if not expired and not maxed and not min_not_met:
+                if coupon.discount_type == 'percentage':
+                    raw_discount = int(total_cents * coupon.discount_value / 100)
+                    cap = coupon.max_discount_cents if coupon.max_discount_cents > 0 else raw_discount
+                    discount_cents = min(raw_discount, cap)
+                elif coupon.discount_type == 'fixed':
+                    discount_cents = min(coupon.discount_value * 100, total_cents)
+
+                applied_coupon = coupon
+
+    final_cents = max(100, total_cents - discount_cents)  # Razorpay minimum ₹1
+
     user = get_current_user()
     email = user.email if user else (data.get('email') or '').strip()
     if not user and not email:
@@ -155,8 +182,17 @@ def create_razorpay_order():
     try:
         order = create_order(
             user_id=user.id if user else None,
-            total_cents=total_cents, payment_method='razorpay', email=email,
+            total_cents=final_cents,
+            payment_method='razorpay',
+            email=email,
         )
+
+        # Store coupon info on the order
+        if applied_coupon:
+            order.coupon_code = applied_coupon.code
+            order.discount_cents = discount_cents
+            applied_coupon.used_count += 1
+
         for li in line_items:
             lic_id = None
             if li['license_type']:
@@ -165,13 +201,16 @@ def create_razorpay_order():
                     lic_id = lic.id
             add_order_item(order.id, li['product_id'], li['price_cents'], lic_id)
 
+        db.session.commit()
+
         # ── BYPASS MODE ──
         if BYPASS_RAZORPAY:
-            logger.info("[TEST] Bypassing Razorpay for order %s (₹%.2f)", order.id, total_cents / 100)
+            logger.info("[TEST] Bypassing Razorpay for order %s (₹%.2f, discount ₹%.2f)",
+                        order.id, final_cents / 100, discount_cents / 100)
             return jsonify({
                 "order_id": "order_test_" + str(order.id),
                 "db_order_id": order.id,
-                "amount": total_cents,
+                "amount": final_cents,
                 "currency": "INR",
                 "key_id": "rzp_test_bypass",
                 "bypass": True,
@@ -179,7 +218,7 @@ def create_razorpay_order():
 
         # ── NORMAL MODE ──
         rzp = current_app.razorpay_client.order.create({
-            "amount": total_cents,
+            "amount": final_cents,
             "currency": "INR",
             "receipt": f"order_xlb_{order.id}",
             "notes": {"db_order_id": str(order.id)},

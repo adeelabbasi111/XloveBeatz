@@ -4,6 +4,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from helpers.utils import get_current_user, validate_email, validate_password
 from helpers.services import create_user, get_user_by_email, merge_guest_cart, get_user_purchases
 from helpers.models import User , db
+from helpers.models import DiscountCode
+from datetime import datetime
 logger = logging.getLogger(__name__)
 bp = Blueprint('api', __name__)
 
@@ -95,3 +97,49 @@ def user_purchases():
     if not user:
         return jsonify(error='Not logged in'), 401
     return jsonify(purchases=get_user_purchases(user.id))
+
+
+
+@bp.route('/api/validate-coupon', methods=['POST'])
+def validate_coupon():
+    data = request.json or {}
+    code = (data.get('code') or '').strip().upper()
+    subtotal_cents = int(float(data.get('subtotal', 0)) * 100)
+
+    if not code:
+        return jsonify(valid=False, error='Please enter a coupon code'), 400
+
+    coupon = DiscountCode.query.filter_by(code=code).first()
+
+    if not coupon:
+        return jsonify(valid=False, error='Invalid coupon code'), 404
+
+    if not coupon.is_active:
+        return jsonify(valid=False, error='This coupon is no longer active'), 400
+
+    if coupon.expires_at and coupon.expires_at < datetime.utcnow():
+        return jsonify(valid=False, error='This coupon has expired'), 400
+
+    if coupon.max_uses > 0 and coupon.used_count >= coupon.max_uses:
+        return jsonify(valid=False, error='This coupon has reached its usage limit'), 400
+
+    if coupon.min_order_cents > 0 and subtotal_cents < coupon.min_order_cents:
+        min_rupees = coupon.min_order_cents / 100
+        return jsonify(valid=False, error=f'Minimum order amount is ₹{min_rupees:.2f}'), 400
+
+    # Build description for frontend
+    if coupon.discount_type == 'percentage':
+        desc = f"{coupon.discount_value}% off"
+        if coupon.max_discount_cents > 0:
+            desc += f" (max ₹{coupon.max_discount_cents / 100:.0f})"
+    else:
+        desc = f"₹{coupon.discount_value} off"
+
+    return jsonify(
+        valid=True,
+        code=coupon.code,
+        discount_type=coupon.discount_type,
+        discount_value=coupon.discount_value,
+        max_discount=coupon.max_discount_cents / 100 if coupon.max_discount_cents > 0 else None,
+        description=desc,
+    )

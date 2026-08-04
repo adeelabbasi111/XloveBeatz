@@ -3,6 +3,7 @@ Data-access and business-logic layer.
 All database queries go through here -- routes never query the ORM directly.
 """
 import logging
+import random
 from datetime import datetime, timedelta
 
 from helpers.models import (
@@ -48,66 +49,93 @@ def get_homepage_products(limit=8):
 
 
 def get_player_beats(pack_id=None):
-    """Return (beats, pack_info_or_None, error_msg_or_None)."""
-    if pack_id:
-        pack_obj = BeatPack.query.get(pack_id)
-        if not pack_obj:
-            return None, None, "Pack not found"
-        beats = (
-            Product.query
-            .options(db.joinedload(Product.beat_detail))
-            .join(BeatDetail)
-            .filter(BeatDetail.pack_id == pack_id, Product.is_active == True)
-            .all()
-        )
-        return beats, pack_obj, None
-    else:
-        beats = (
-            Product.query
-            .options(db.joinedload(Product.beat_detail))
-            .filter_by(product_type='beat', is_active=True)
-            .all()
-        )
-        return beats, None, None
+    """
+    Return (beats, pack_info_or_None, error_msg_or_None).
+    beats are Product objects with beat_detail eagerly loaded.
+    """
+    try:
+        if pack_id:
+            pack_obj = BeatPack.query.get(pack_id)
+            if not pack_obj:
+                return None, None, "Pack not found"
+            beats = (
+                Product.query
+                .options(db.joinedload(Product.beat_detail))
+                .join(BeatDetail, BeatDetail.product_id == Product.id)
+                .filter(BeatDetail.pack_id == pack_id, Product.is_active == True)
+                .all()
+            )
+            return beats, pack_obj, None
+        else:
+            beats = (
+                Product.query
+                .options(db.joinedload(Product.beat_detail))
+                .filter_by(product_type='beat', is_active=True)
+                .order_by(Product.created_at.desc())
+                .all()
+            )
+            return beats, None, None
+    except Exception as e:
+        logger.error("get_player_beats error: %s", e)
+        return [], None, str(e)
 
 
 def build_beats_data(beats):
-    """Batch-build beat data dicts -- eliminates N+1 on license prices."""
+    """
+    Batch-build beat data dicts -- eliminates N+1 on license prices.
+    Returns a list of dicts ready for the template.
+    """
+    if not beats:
+        return []
+
     beat_ids = [b.id for b in beats]
 
-    all_prices = (
-        BeatLicensePrice.query
-        .options(db.joinedload(BeatLicensePrice.license))
-        .filter(BeatLicensePrice.beat_id.in_(beat_ids))
-        .all()
-    )
+    try:
+        all_prices = (
+            BeatLicensePrice.query
+            .options(db.joinedload(BeatLicensePrice.license))
+            .filter(BeatLicensePrice.beat_id.in_(beat_ids))
+            .all()
+        )
+    except Exception as e:
+        logger.error("build_beats_data price query error: %s", e)
+        all_prices = []
+
     prices_by_beat = {}
     for lp in all_prices:
         prices_by_beat.setdefault(lp.beat_id, []).append(lp)
 
     result = []
     for beat in beats:
-        detail = beat.beat_detail  # already eager-loaded
-        license_tiers = {}
-        for lp in prices_by_beat.get(beat.id, []):
-            tier_name = lp.license.name.lower()
-            license_tiers[tier_name] = {
-                'price': lp.price_cents / 100 if lp.price_cents else 0,
-                'files': lp.included_files,
-                'tags': lp.tags,
-            }
-        result.append({
-            'id': beat.id,
-            'name': beat.name,
-            'bpm': detail.bpm if detail else 0,
-            'key': detail.musical_key if detail else '',
-            'genre': detail.genre if detail else '',
-            'duration': detail.duration if detail else '',
-            'price': beat.price_cents / 100,
-            'pack_id': detail.pack_id if detail else None,
-            'license_tiers': license_tiers,
-            'preview_audio': detail.preview_audio if detail else None,
-        })
+        try:
+            detail = beat.beat_detail  # eagerly loaded
+
+            license_tiers = {}
+            for lp in prices_by_beat.get(beat.id, []):
+                tier_name = lp.license.name.lower()
+                license_tiers[tier_name] = {
+                    'price': lp.price_cents / 100 if lp.price_cents else 0,
+                    'files': lp.included_files or '',
+                    'tags': lp.tags or '',
+                }
+
+            result.append({
+                'id': beat.id,
+                'name': beat.name,
+                'bpm': detail.bpm if detail else 0,
+                'key': detail.musical_key if detail else '',
+                'genre': detail.genre if detail else '',
+                'duration': detail.duration if detail else '',
+                'price': beat.price_cents / 100,
+                'pack_id': detail.pack_id if detail else None,
+                'license_tiers': license_tiers,
+                'preview_audio': detail.preview_audio if detail else None,
+                'beat_image': detail.beat_image if detail else None,
+            })
+        except Exception as e:
+            logger.error("build_beats_data error for beat %s: %s", beat.id, e)
+            continue
+
     return result
 
 
@@ -162,7 +190,6 @@ def add_order_item(order_id, product_id, price_paid_cents, license_id=None):
 
 
 def get_user_orders(user_id):
-    """Eagerly load items + product + license to avoid N+1."""
     return (
         Order.query
         .options(
@@ -224,7 +251,6 @@ def remove_from_cart(cart_item_id):
 
 
 def get_cart_items(cart_id):
-    """Eagerly load product and license."""
     return (
         CartItem.query
         .options(db.joinedload(CartItem.product), db.joinedload(CartItem.license))
@@ -256,9 +282,49 @@ def track_download(user_id, product_id):
         dl = Download(user_id=user_id, product_id=product_id, download_count=0)
         db.session.add(dl)
     dl.download_count += 1
-    dl.last_downloaded = datetime.utcnow()   # FIX: was func.now()
+    dl.last_downloaded = datetime.utcnow()
     db.session.commit()
     return dl
+
+
+# =========================
+# SOCIAL PROOF
+# =========================
+
+def get_random_purchase_proof():
+    """Return a random recent paid order item for social proof display."""
+    try:
+        recent_items = (
+            db.session.query(OrderItem, Product, Order)
+            .join(Product, OrderItem.product_id == Product.id)
+            .join(Order, OrderItem.order_id == Order.id)
+            .filter(Order.payment_status == 'paid')
+            .order_by(Order.created_at.desc())
+            .limit(50)
+            .all()
+        )
+        if not recent_items:
+            return None
+
+        item, product, order = random.choice(recent_items)
+
+        templates = [
+            "Someone just purchased {product}",
+            "{product} was just bought",
+            "A producer just grabbed {product}",
+            "{product} just sold!",
+            "{product} just purchased",
+        ]
+        time_ago = random.choice(["2 min ago", "5 min ago", "12 min ago", "an hour ago"])
+
+        return {
+            'message': random.choice(templates).format(product=product.name),
+            'time': time_ago,
+            'product_type': product.product_type,
+        }
+    except Exception as e:
+        logger.error("get_random_purchase_proof error: %s", e)
+        return None
 
 
 # =========================
@@ -343,7 +409,6 @@ def get_genre_distribution():
 
 
 def get_user_purchases(user_id):
-    """Get all purchases with eager-loaded relationships."""
     orders = (
         Order.query
         .options(

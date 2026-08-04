@@ -1,23 +1,18 @@
 /* ============================================================
 TRACKLIST PANEL
 ============================================================ */
-.tracklist-panel{
-    /*margin-top : 68px;*/
-}
-
 .panel-header {
   padding: 16px 20px 0;
   flex-shrink: 0;
-  position: relative;
   position: sticky;
   top: 0;
   z-index: 20;
-  background: rgba(12, 14, 19, 0.95) !important;
+  background: rgba(12, 14, 19, 0.95);
   backdrop-filter: blur(10px);
 }
 
 .panel-header h2 {
-  font-size: 1.05rem;
+  font-size: 1.1rem;
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -114,16 +109,16 @@ TRACKLIST SCROLL + CUSTOM SCROLLBAR
 }
 
 /* ============================================================
-TRACK ITEM
+TRACK ITEM — larger thumbnail + bigger title
 ============================================================ */
 .track-item {
   display: grid;
-  grid-template-columns: 36px 1fr auto 42px;
+  grid-template-columns: 72px 1fr auto 40px;
   align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
-  border-radius: 16px;
-  margin-bottom: 8px;
+  gap: 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  margin-bottom: 6px;
   border: 1px solid transparent;
   cursor: pointer;
   transition: var(--transition-smooth);
@@ -147,24 +142,47 @@ TRACK ITEM
   color: var(--accent-soft);
 }
 
+/* Thumbnail container */
 .track-num {
+  width: 72px;
+  height: 72px;
+  border-radius: 10px;
+  overflow: hidden;
   color: var(--text-muted);
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-family: 'DM Mono', monospace;
   font-weight: 500;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  flex-shrink: 0;
+  transition: border-color 0.3s ease;
+}
+
+.track-item.active .track-num {
+  border-color: rgba(124, 141, 240, 0.3);
+}
+
+.track-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .track-info {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .track-name {
   font-weight: 600;
-  font-size: 0.92rem;
+  font-size: 1.1rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -176,7 +194,6 @@ TRACK ITEM
   flex-wrap: wrap;
   gap: 5px;
 }
-
 
 .detail-badge {
   display: inline-flex;
@@ -194,7 +211,7 @@ TRACK ITEM
 
 .detail-badge i {
   font-size: 0.6rem;
-  opacity : 0.5;
+  opacity: 0.5;
 }
 
 .bpm-badge {
@@ -221,7 +238,7 @@ TRACK ITEM
   background: rgba(201, 174, 116, 0.08);
   padding: 5px 12px;
   border-radius: 20px;
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   white-space: nowrap;
   border: 1px solid rgba(201, 174, 116, 0.15);
   flex-shrink: 0;
@@ -231,11 +248,11 @@ TRACK ITEM
   background: rgba(124, 141, 240, 0.08);
   border: 1px solid rgba(124, 141, 240, 0.2);
   color: var(--accent-soft);
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   cursor: pointer;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   transition: var(--transition-smooth);
   display: flex;
   align-items: center;
