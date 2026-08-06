@@ -1,0 +1,142 @@
+/* presets.css - Unique layout for Vocal Presets */
+
+.presets-page {
+    padding: 6rem 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* List view for presets */
+.presets-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.preset-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-light);
+    border-radius: 16px;
+    padding: 1.5rem 2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.preset-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(157, 124, 236, 0.4);
+    transform: translateX(10px);
+}
+
+/* Glowing audio waveform on hover */
+.preset-waveform {
+    position: absolute;
+    top: 50%;
+    left: 20%;
+    transform: translateY(-50%);
+    width: 60%;
+    height: 100px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 20'%3E%3Cpath d='M0,10 Q5,0 10,10 T20,10 T30,10 T40,10 T50,10 T60,10 T70,10 T80,10 T90,10 T100,10' fill='none' stroke='rgba(157, 124, 236, 0.4)' stroke-width='1'/%3E%3C/svg%3E");
+    background-size: contain;
+    background-repeat: repeat-x;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+    z-index: 0;
+    filter: blur(2px);
+}
+
+.preset-item:hover .preset-waveform {
+    opacity: 1;
+    animation: waveMove 3s linear infinite;
+}
+
+@keyframes waveMove {
+    from { background-position: 0 0; }
+    to { background-position: 100px 0; }
+}
+
+.preset-info {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+.preset-img {
+    width: 80px;
+    height: 80px;
+    border-radius: 12px;
+    object-fit: cover;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+}
+
+.preset-name {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.2rem;
+    font-family: 'Outfit', sans-serif;
+}
+
+.preset-daw {
+    font-size: 0.9rem;
+    color: var(--accent-purple);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: bold;
+}
+
+.preset-price-btn {
+    position: relative;
+    z-index: 1;
+    background: rgba(157, 124, 236, 0.1);
+    color: var(--accent-purple);
+    border: 1px solid rgba(157, 124, 236, 0.3);
+    padding: 0.8rem 2rem;
+    border-radius: 50px;
+    font-weight: bold;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+}
+
+.preset-item:hover .preset-price-btn {
+    background: var(--accent-purple);
+    color: var(--bg-deep);
+    box-shadow: 0 0 20px rgba(157, 124, 236, 0.4);
+}
+
+/* Modal Overrides for Presets */
+.wide-modal.preset-theme {
+    /* Uses base modal structure from beats.css */
+}
+
+.wide-modal.preset-theme .panel-title {
+    color: var(--text-primary);
+}
+
+.wide-modal.preset-theme .panel-price {
+    color: var(--accent-purple);
+}
+
+.wide-modal.preset-theme .btn-buy {
+    background: var(--accent-purple);
+    color: var(--bg-deep);
+}
+
+.wide-modal.preset-theme .btn-buy:hover {
+    box-shadow: 0 0 20px rgba(157, 124, 236, 0.4);
+}
+
+.wide-modal.preset-theme .close-panel-btn:hover {
+    color: var(--accent-purple);
+    border-color: var(--accent-purple);
+}
+
+/* Preset Page specific title gradient override removed to use global animated gradient */

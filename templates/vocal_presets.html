@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Vocal Presets • {{ site_title }}{% endblock %}
+
+{% set show_public_nav = true %}
+{% set active_page = 'vocal-presets' %}
+
+{% block head_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/products/beats.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/products/presets.css') }}">
+{% endblock %}
+
+{% block content %}
+<main class="presets-page">
+    <header class="page-header-visual preset-theme">
+        <img src="{{ url_for('static', filename='images/presets_bg.jpg') }}" class="page-header-bg" onerror="this.src='https://images.unsplash.com/photo-1520113412646-fa108a0cb59d?q=80&w=1600&auto=format&fit=crop'" alt="Vocal Presets Header">
+        <div class="page-header-gradient"></div>
+        <div class="page-header-content">
+            <h1 class="page-title">Studio Vocal Presets</h1>
+            <p class="page-subtitle">Industry-standard vocal chains for instant professional mixes.</p>
+        </div>
+    </header>
+
+    <div class="presets-list">
+        {% for preset in vocal_presets %}
+        <div class="preset-item" onclick="openPanel({{ preset.id }})">
+            <div class="preset-waveform"></div>
+            <div class="preset-info">
+                {% if preset.cover_image %}
+                <img src="{{ url_for('static', filename=preset.cover_image) }}" class="preset-img" alt="{{ preset.name }}" loading="lazy">
+                {% else %}
+                <img src="{{ url_for('static', filename='data/images/' + preset.slug + '_cover.jpg') }}" class="preset-img" onerror="this.src='https://images.unsplash.com/photo-1520113412646-fa108a0cb59d?q=80&w=800&auto=format&fit=crop'" loading="lazy">
+                {% endif %}
+                <div>
+                    <h3 class="preset-name">{{ preset.name }}</h3>
+                    <div class="preset-daw">{{ preset.vocal_preset.supported_daw if preset.vocal_preset else 'All DAWs' }}</div>
+                </div>
+            </div>
+            <div class="preset-price-btn">
+                {{ preset.price_cents | rupees }}
+            </div>
+        </div>
+
+        <!-- Hidden data for the slide panel -->
+        <div id="preset-data-{{ preset.id }}" style="display: none;"
+             data-id="{{ preset.id }}"
+             data-name="{{ preset.name }}"
+             data-price="{{ preset.price_cents / 100 }}"
+             data-desc="{{ preset.description }}">
+            {% if preset.cover_image %}
+                {{ url_for('static', filename=preset.cover_image) }}
+            {% else %}
+                {{ url_for('static', filename='data/images/' + preset.slug + '_cover.jpg') }}
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</main>
+
+<!-- Wide Modal -->
+<div class="slide-panel-overlay" id="panelOverlay" onclick="closePanel(event)">
+    <div class="wide-modal preset-theme" id="slidePanel" onclick="event.stopPropagation()">
+        <button class="close-panel-btn" onclick="closePanel()"><i class="fas fa-times"></i></button>
+        
+        <div class="modal-left">
+            <h2 class="panel-title" id="panelTitle">Preset Name</h2>
+            <div class="panel-price" id="panelPrice">₹0.00</div>
+            <p class="panel-desc" id="panelDesc">Description goes here.</p>
+        </div>
+        
+        <div class="modal-right">
+            <img src="" id="panelImg" class="panel-header-img" onerror="this.src='https://images.unsplash.com/photo-1520113412646-fa108a0cb59d?q=80&w=800&auto=format&fit=crop'" alt="Preset Cover">
+            
+            <div class="panel-actions">
+                <button class="panel-btn btn-buy js-buy-now" id="panelBuyBtn">
+                    <i class="fas fa-bolt"></i> Buy Now
+                </button>
+                <button class="panel-btn btn-explore js-add-to-cart" id="panelAddBtn">
+                    <i class="fas fa-shopping-cart"></i> Add to Cart
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block page_scripts %}
+<script>
+    let currentProduct = null;
+
+    function openPanel(id) {
+        const dataEl = document.getElementById('preset-data-' + id);
+        if (!dataEl) return;
+        
+        const imgUrl = dataEl.textContent.trim();
+        const name = dataEl.dataset.name;
+        const price = parseFloat(dataEl.dataset.price);
+        const desc = dataEl.dataset.desc;
+        
+        currentProduct = { id: id, name: name, price: price, type: 'preset' };
+        
+        document.getElementById('panelImg').src = imgUrl;
+        document.getElementById('panelTitle').textContent = name;
+        document.getElementById('panelPrice').textContent = '₹' + price.toFixed(2);
+        document.getElementById('panelDesc').textContent = desc || "No description provided.";
+        
+        document.getElementById('panelOverlay').classList.add('active');
+        document.getElementById('slidePanel').classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+    
+    function closePanel(e) {
+        if (e && e.target.id !== 'panelOverlay') return;
+        document.getElementById('panelOverlay').classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    // Connect Add to cart / Buy Now for panel
+    document.addEventListener('click', function(e) {
+        if (!currentProduct) return;
+        
+        if (e.target.closest('#panelAddBtn')) {
+            if (typeof addToGlobalCart === 'function') {
+                addToGlobalCart(currentProduct);
+                closePanel();
+            }
+        } else if (e.target.closest('#panelBuyBtn')) {
+            if (typeof addToGlobalCart === 'function') {
+                addToGlobalCart(currentProduct, true);
+            }
+        }
+    });
+</script>
+{% endblock %}

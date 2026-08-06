@@ -1,0 +1,64 @@
+/* animations.css - Scroll driven animations for the homepage */
+
+/* We'll use CSS scroll-timeline for modern browsers, fallback to simple CSS animations */
+
+@supports (animation-timeline: scroll()) {
+    .scroll-float {
+        animation: float-on-scroll linear;
+        animation-timeline: scroll();
+    }
+
+    @keyframes float-on-scroll {
+        from { transform: translateY(100px) rotate(-10deg); }
+        to { transform: translateY(-300px) rotate(20deg); }
+    }
+}
+
+/* Fallback for non-supporting browsers */
+@supports not (animation-timeline: scroll()) {
+    .scroll-float {
+        animation: simple-float 10s ease-in-out infinite alternate;
+    }
+
+    @keyframes simple-float {
+        from { transform: translateY(0) rotate(0deg); }
+        to { transform: translateY(-50px) rotate(10deg); }
+    }
+}
+
+.floating-objects {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -1;
+    overflow: hidden;
+}
+
+.music-obj {
+    position: absolute;
+    color: rgba(255, 255, 255, 0.03);
+    text-shadow: 0 0 10px rgba(201, 174, 116, 0.1);
+}
+
+.obj-1 { top: 20%; left: 10%; font-size: 4rem; animation-duration: 15s; }
+.obj-2 { top: 60%; right: 15%; font-size: 3rem; animation-duration: 12s; animation-delay: -5s; }
+.obj-3 { top: 120%; left: 20%; font-size: 5rem; animation-duration: 18s; animation-delay: -2s; }
+.obj-4 { top: 180%; right: 10%; font-size: 3.5rem; animation-duration: 14s; }
+
+/* Enhanced Hero Glow */
+.hero-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60vw;
+    height: 60vw;
+    background: radial-gradient(circle, rgba(201, 174, 116, 0.15) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+    filter: blur(50px);
+}
