@@ -9,17 +9,43 @@
 
     <!-- Desktop Navigation -->
     <nav class="desktop-nav">
-        <a href="{{ url_for('public.player_page') }}" class="nav-link {% if active_page == 'beats' %}active{% endif %}">
-            <i class="fas fa-music"></i>
-            <span>Beats</span>
+        <div class="nav-dropdown">
+            <button class="nav-link {% if active_page in ['player', 'beat-packs', 'vocal-presets'] %}active{% endif %}">
+                <i class="fas fa-layer-group"></i>
+                <span>Products</span>
+                <i class="fas fa-chevron-down dropdown-icon" style="font-size: 0.75rem; margin-left: 2px;"></i>
+            </button>
+            <div class="dropdown-menu">
+                <a href="{{ url_for('public.player_page') }}" class="dropdown-item {% if active_page == 'player' %}active{% endif %}">
+                    <i class="fas fa-music"></i>
+                    <div class="dropdown-text">
+                        <span class="title">Beats</span>
+                        <span class="desc">Individual licenses</span>
+                    </div>
+                </a>
+                <a href="{{ url_for('public.beat_packs_page') }}" class="dropdown-item {% if active_page == 'beat-packs' %}active{% endif %}">
+                    <i class="fas fa-box"></i>
+                    <div class="dropdown-text">
+                        <span class="title">Packs</span>
+                        <span class="desc">Curated collections</span>
+                    </div>
+                </a>
+                <a href="{{ url_for('public.vocal_presets_page') }}" class="dropdown-item {% if active_page == 'vocal-presets' %}active{% endif %}">
+                    <i class="fas fa-microphone"></i>
+                    <div class="dropdown-text">
+                        <span class="title">Presets</span>
+                        <span class="desc">Studio vocal chains</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+        <a href="{{ url_for('public.about_page') }}" class="nav-link {% if active_page == 'about' %}active{% endif %}">
+            <i class="fas fa-info-circle"></i>
+            <span>About</span>
         </a>
-        <a href="{{ url_for('public.home') }}#beat-packs" class="nav-link {% if active_page == 'packs' %}active{% endif %}">
-            <i class="fas fa-box"></i>
-            <span>Packs</span>
-        </a>
-        <a href="{{ url_for('public.home') }}#vocal-presets" class="nav-link {% if active_page == 'presets' %}active{% endif %}">
-            <i class="fas fa-sliders-h"></i>
-            <span>Presets</span>
+        <a href="/dashboard" class="nav-link {% if active_page == 'dashboard' %}active{% endif %}">
+            <i class="fas fa-chart-line"></i>
+            <span>Dashboard</span>
         </a>
 
         <div class="nav-divider"></div>

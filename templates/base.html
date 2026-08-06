@@ -53,6 +53,8 @@
     {# Page Content #}
     {% block content %}{% endblock %}
 
+    {% include 'partials/footer.html' %}
+
     {# Global Overlays #}
     {% include 'partials/auth_modals.html' %}
     {% include 'partials/user_sidebar.html' %}

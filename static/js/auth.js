@@ -231,6 +231,8 @@
                 updateAuthUI(result.user);
                 if (window.resumeCheckoutAfterLogin) {
                     window.resumeCheckoutAfterLogin();
+                } else if (window.redirectAfterLogin) {
+                    window.location.href = window.redirectAfterLogin;
                 }
             } else {
                 if (loginError) {
@@ -388,6 +390,18 @@
             closeModal(loginModal);
             closeModal(signupModal);
             closeAccountModal();
+        }
+    });
+
+    // Handle protected routes like dashboard
+    document.addEventListener('click', function(e) {
+        var dashLink = e.target.closest('a[href="/dashboard"]');
+        if (dashLink) {
+            if (!currentUser) {
+                e.preventDefault();
+                window.redirectAfterLogin = '/dashboard';
+                openModal(loginModal);
+            }
         }
     });
 

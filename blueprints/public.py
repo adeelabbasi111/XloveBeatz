@@ -7,6 +7,7 @@ bp = Blueprint('public', __name__)
 
 @bp.route('/')
 def home():
+    # We still fetch these so we can show counts or featured items if needed
     limit = current_app.config['HOMEPAGE_BEAT_LIMIT']
     beat_packs, beats, vocal_presets = get_homepage_products(limit)
     return render_template(
@@ -15,6 +16,20 @@ def home():
         site_title="XLOVEBEATZ",
         slogan="Crafted for artists who move the world",
     )
+
+@bp.route('/beat-packs')
+def beat_packs_page():
+    beat_packs = Product.query.filter_by(product_type='pack', is_active=True).all()
+    return render_template('beat_packs.html', beat_packs=beat_packs, site_title="XLOVEBEATZ")
+
+@bp.route('/vocal-presets')
+def vocal_presets_page():
+    vocal_presets = Product.query.filter_by(product_type='preset', is_active=True).all()
+    return render_template('vocal_presets.html', vocal_presets=vocal_presets, site_title="XLOVEBEATZ")
+
+@bp.route('/about')
+def about_page():
+    return render_template('about.html', site_title="XLOVEBEATZ")
 
 
 @bp.route('/player')

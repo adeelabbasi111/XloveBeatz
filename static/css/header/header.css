@@ -151,6 +151,92 @@
 }
 
 /* ============================================================
+   DROPDOWN MENU
+   ============================================================ */
+.nav-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: calc(100% + 15px);
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    background: rgba(18, 18, 24, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 8px;
+    min-width: 200px;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(124, 58, 237, 0.15);
+    z-index: 1000;
+}
+
+/* Invisible bridge so hover doesn't break when moving mouse from button to menu */
+.nav-dropdown::after {
+    content: '';
+    position: absolute;
+    bottom: -20px;
+    left: 0;
+    width: 100%;
+    height: 20px;
+}
+
+.nav-dropdown:hover .dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+}
+
+.dropdown-item i {
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.4);
+    transition: color 0.2s ease;
+    width: 20px;
+    text-align: center;
+}
+
+.dropdown-item:hover, .dropdown-item.active {
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+}
+
+.dropdown-item:hover i, .dropdown-item.active i {
+    color: #a78bfa;
+}
+
+.dropdown-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.dropdown-text .title {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.dropdown-text .desc {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+/* ============================================================
    DIVIDER — Visible, elegant separator
    ============================================================ */
 .nav-divider {
