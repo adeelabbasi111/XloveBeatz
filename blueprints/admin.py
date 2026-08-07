@@ -665,11 +665,8 @@ def admin_product_edit(product_id):
                 if preset:
                     preset.supported_daw = request.form.get('supported_daw')
 
-                    new_zip = move_temp_file(
-                        request.form, 'preset_zip', FOLDER_PRESETS, current_app
-                    )
-                    if new_zip:
-                        delete_old_file(preset.preset_zip)
+                    new_zip = request.form.get('preset_zip', '').strip()
+                    if new_zip and new_zip != preset.preset_zip:
                         preset.preset_zip = new_zip
 
             db.session.commit()
@@ -832,11 +829,8 @@ def _create_beat_details(product):
         readable_name=f"{slug}_cover"
     )
 
-    # ── 4. Project file → data/flps/ ──
-    project_db_path = move_temp_file(
-        request.form, 'project_file', FOLDER_FLP, current_app,
-        readable_name=f"{slug}_project"
-    )
+    # ── 4. Project file → Google Drive Link ──
+    project_db_path = request.form.get('project_file', '').strip()
 
     # ── 5. Duration ──
     duration = request.form.get('duration_hidden', '').strip()
@@ -927,16 +921,12 @@ def _update_beat_files(slug, beat_detail):
         delete_old_file(beat_detail.beat_image)
         beat_detail.beat_image = new_beat_image
 
-    # ── PROJECT FILE (temp or direct) ──
-    new_project = move_temp_file(
-        request.form, 'project_file', FOLDER_FLP, current_app,
-        readable_name=f"{slug}_project"
-    )
-    if new_project:
-        delete_old_file(beat_detail.project_file)
+    # ── PROJECT FILE (Google Drive Link) ──
+    new_project = request.form.get('project_file', '').strip()
+    if new_project and new_project != beat_detail.project_file:
         beat_detail.project_file = new_project
         files_changed = True
-        logger.info("Project file saved: %s", beat_detail.project_file)
+        logger.info("Project file URL saved: %s", beat_detail.project_file)
 
     # ── Regenerate pack ZIP if files changed ──
     if files_changed and beat_detail.pack_id:
@@ -949,10 +939,7 @@ def _create_preset_details(product, slug):
     """Create preset with file from temp or direct upload."""
     supported_daw = request.form.get('supported_daw')
 
-    preset_zip_path = move_temp_file(
-        request.form, 'preset_zip', FOLDER_PRESETS, current_app,
-        readable_name=f"{slug}_preset"
-    ) or ''
+    preset_zip_path = request.form.get('preset_zip', '').strip()
 
     db.session.add(VocalPreset(
         product_id=product.id,

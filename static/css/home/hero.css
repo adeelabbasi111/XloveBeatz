@@ -7,10 +7,16 @@
     min-height: 90vh; /*[cite: 2] */
     display: flex;
     align-items: center;
-    padding: 120px 40px 80px; /*[cite: 2] */
+    padding: 120px 40px 140px; /* Increased bottom padding for trusted strip */
     position: relative; /*[cite: 2] */
     z-index: 2; /*[cite: 2] */
     overflow: hidden; /* Keeps the full-height background image contained */
+}
+
+@media (max-height: 650px) {
+    .hero {
+        min-height: 650px; /* Prevent crushing on landscape mobile */
+    }
 }
 
 /* ── HERO CONTENT (LEFT SIDE) ── */
@@ -147,5 +153,91 @@
         object-position: center top;
         -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 25%, black 75%, transparent 100%);
         mask-image: linear-gradient(to bottom, transparent 0%, black 25%, black 75%, transparent 100%);
+    }
+}
+
+/* ============================================================
+   TRUSTED BY STRIP
+   ============================================================ */
+.trusted-by-strip {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 5;
+    padding: 20px 0;
+    background: rgba(10, 10, 12, 0.4);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: hidden;
+}
+
+.trusted-by-text {
+    font-size: 0.65rem;
+    letter-spacing: 4px;
+    color: rgba(255, 255, 255, 0.4);
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 15px;
+}
+
+.trusted-logos-container {
+    width: 100%;
+    max-width: 1200px;
+    overflow: hidden;
+    position: relative;
+    /* Soft fade on edges */
+    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+}
+
+.trusted-logos-track {
+    display: flex;
+    align-items: center;
+    width: max-content;
+    animation: scrollLogos 30s linear infinite;
+}
+
+.trusted-logos-track:hover {
+    animation-play-state: paused;
+}
+
+.trusted-logo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.5rem;
+    color: rgba(255, 255, 255, 0.4);
+    margin: 0 40px;
+    transition: color 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: -1px;
+}
+
+.trusted-logo:hover {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+@keyframes scrollLogos {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); } /* Scrolls half the width (which is exactly one set) */
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .trusted-by-strip {
+        padding: 15px 0;
+    }
+    
+    .trusted-logo {
+        font-size: 1.2rem;
+        margin: 0 25px;
     }
 }

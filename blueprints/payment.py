@@ -102,11 +102,11 @@ def _generate_licenses_for_order(order):
 
 
 # ═══════════════════════════════════════════════════════════════
-#  RAZORPAY ORDER CREATION
+#  CASHFREE ORDER CREATION
 # ═══════════════════════════════════════════════════════════════
 
-@bp.route('/api/create-razorpay-order', methods=['POST'])
-def create_razorpay_order():
+@bp.route('/api/create-cashfree-order', methods=['POST'])
+def create_cashfree_order():
     data = request.json or {}
     cart_items = data.get('items', [])
     coupon_code = (data.get('coupon_code') or '').strip().upper()
@@ -172,7 +172,8 @@ def create_razorpay_order():
 
                 applied_coupon = coupon
 
-    final_cents = max(100, total_cents - discount_cents)  # Razorpay minimum ₹1
+    final_cents = max(100, total_cents - discount_cents)  # Cashfree min is ₹1
+    final_inr = final_cents / 100.0
 
     user = get_current_user()
     email = user.email if user else (data.get('email') or '').strip()
@@ -183,7 +184,7 @@ def create_razorpay_order():
         order = create_order(
             user_id=user.id if user else None,
             total_cents=final_cents,
-            payment_method='razorpay',
+            payment_method='cashfree',
             email=email,
         )
 
@@ -203,32 +204,56 @@ def create_razorpay_order():
 
         db.session.commit()
 
-        # ── BYPASS MODE ──
-        if BYPASS_RAZORPAY:
-            logger.info("[TEST] Bypassing Razorpay for order %s (₹%.2f, discount ₹%.2f)",
-                        order.id, final_cents / 100, discount_cents / 100)
-            return jsonify({
-                "order_id": "order_test_" + str(order.id),
-                "db_order_id": order.id,
-                "amount": final_cents,
-                "currency": "INR",
-                "key_id": "rzp_test_bypass",
-                "bypass": True,
-            })
+        # Create Cashfree Order
+        headers = {
+            "x-client-id": current_app.cashfree_app_id,
+            "x-client-secret": current_app.cashfree_secret_key,
+            "x-api-version": "2023-08-01",
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+        }
+        
+        customer_id = f"cust_{user.id}" if user else f"guest_{int(time.time())}"
+        
+        payload = {
+            "order_amount": final_inr,
+            "order_currency": "INR",
+            "order_id": f"order_xlb_{order.id}",
+            "customer_details": {
+                "customer_id": customer_id,
+                "customer_email": email,
+                "customer_phone": "9999999999"  # Dummy if not captured
+            },
+            "order_meta": {
+                "return_url": request.host_url.rstrip('/') + "/payment-success?order_id={order_id}"
+            }
+        }
+        
+        import urllib.request
+        import json
+        
+        req = urllib.request.Request("https://api.cashfree.com/pg/orders", data=json.dumps(payload).encode('utf-8'), headers=headers, method='POST')
+        
+        try:
+            with urllib.request.urlopen(req) as response:
+                resp_data = json.loads(response.read().decode('utf-8'))
+                
+            if 'payment_session_id' in resp_data:
+                return jsonify({
+                    "payment_session_id": resp_data['payment_session_id'],
+                    "db_order_id": order.id,
+                    "cashfree_order_id": payload["order_id"]
+                })
+            else:
+                logger.error("Cashfree API error (No session ID): %s", resp_data)
+                return jsonify({"error": "Failed to create payment session"}), 500
+                
+        except urllib.error.URLError as e:
+            error_msg = e.read().decode('utf-8') if hasattr(e, 'read') else str(e)
+            logger.error("Cashfree API HTTP error: %s", error_msg)
+            return jsonify({"error": f"Cashfree API Error: {error_msg}"}), 500
 
-        # ── NORMAL MODE ──
-        rzp = current_app.razorpay_client.order.create({
-            "amount": final_cents,
-            "currency": "INR",
-            "receipt": f"order_xlb_{order.id}",
-            "notes": {"db_order_id": str(order.id)},
-        })
-
-        return jsonify({
-            "order_id": rzp['id'], "db_order_id": order.id,
-            "amount": rzp['amount'], "currency": rzp['currency'],
-            "key_id": current_app.razorpay_key_id,
-        })
     except Exception as e:
         logger.error("Order creation failed: %s", e)
         db.session.rollback()
@@ -239,60 +264,35 @@ def create_razorpay_order():
 #  PAYMENT VERIFICATION
 # ═══════════════════════════════════════════════════════════════
 
-@bp.route('/api/verify-razorpay-payment', methods=['POST'])
+@bp.route('/api/verify-cashfree-payment', methods=['POST'])
 def verify_payment():
     data = request.json or {}
     db_order_id = data.get('db_order_id')
+    cf_order_id = data.get('order_id')
 
-    if not db_order_id:
+    if not db_order_id or not cf_order_id:
         return jsonify({"status": "failed", "message": "Missing order ID"}), 400
 
-    # ── BYPASS MODE ──
-    if BYPASS_RAZORPAY:
-        try:
-            mark_order_paid(db_order_id, "test_payment_" + str(db_order_id))
-            _clear_user_cart()
-
-            # Generate licenses
-            order = Order.query.get(db_order_id)
-            if order:
-                # License PDFs are now generated on-demand when downloaded
-                # _generate_licenses_for_order(order)
-                pass
-
-            logger.info("[TEST] Order %s marked as paid (bypass)", db_order_id)
-            return jsonify({
-                "status": "success",
-                "message": "Payment verified (test mode)!",
-                "order_id": db_order_id,
-            })
-        except Exception as e:
-            logger.error("Test payment error: %s", e)
-            db.session.rollback()
-            return jsonify({"status": "failed", "message": "Verification error"}), 500
-
-    # ── NORMAL MODE ──
-    rzp_pay_id = data.get('razorpay_payment_id')
-    rzp_order_id = data.get('razorpay_order_id')
-    rzp_sig = data.get('razorpay_signature')
-
-    if not all([rzp_pay_id, rzp_order_id, rzp_sig]):
-        return jsonify({"status": "failed", "message": "Missing payment data"}), 400
-
-    expected = hmac.new(
-        current_app.razorpay_key_secret.encode(),
-        f"{rzp_order_id}|{rzp_pay_id}".encode(),
-        hashlib.sha256,
-    ).hexdigest()
-
-    if expected != rzp_sig:
-        logger.warning("Invalid Razorpay signature for order %s", db_order_id)
-        return jsonify({"status": "failed", "message": "Invalid signature"}), 400
+    import urllib.request
+    import json
+    import urllib.error
+    
+    headers = {
+        "x-client-id": current_app.cashfree_app_id,
+        "x-client-secret": current_app.cashfree_secret_key,
+        "x-api-version": "2023-08-01",
+        "Accept": "application/json",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+    }
 
     try:
-        mark_order_paid(db_order_id, rzp_pay_id)
-        _clear_user_cart()
+        req = urllib.request.Request(f"https://api.cashfree.com/pg/orders/{cf_order_id}", headers=headers, method='GET')
+        with urllib.request.urlopen(req) as response:
+            resp_data = json.loads(response.read().decode('utf-8'))
 
+        if resp_data.get("order_status") == "PAID":
+            mark_order_paid(db_order_id, cf_order_id)
+            _clear_user_cart()
         # Generate licenses
         order = Order.query.get(db_order_id)
         if order:

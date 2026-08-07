@@ -51,13 +51,8 @@ def create_app(config_class=Config):
 
 
 
-    # ---- Razorpay client ----
-    import razorpay
-    app.razorpay_key_id = app.config['RAZORPAY_KEY_ID']
-    app.razorpay_key_secret = app.config['RAZORPAY_KEY_SECRET']
-    app.razorpay_client = razorpay.Client(
-        auth=(app.razorpay_key_id, app.razorpay_key_secret)
-    )
+    app.cashfree_app_id = app.config['CASHFREE_APP_ID']
+    app.cashfree_secret_key = app.config['CASHFREE_SECRET_KEY']
 
     # ---- Jinja filters ----
     register_template_filters(app)

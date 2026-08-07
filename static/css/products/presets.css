@@ -140,3 +140,34 @@
 }
 
 /* Preset Page specific title gradient override removed to use global animated gradient */
+
+/* Mobile responsiveness */
+@media (max-width: 900px) {
+    .presets-page {
+        padding: 2rem 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .preset-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 1rem;
+    }
+
+    .preset-info {
+        gap: 1rem;
+        width: 100%;
+    }
+
+    .preset-name {
+        font-size: 1.2rem;
+    }
+
+    .preset-price-btn {
+        width: 100%;
+        text-align: center;
+        margin-top: 0.5rem;
+    }
+}

@@ -120,17 +120,17 @@
     }
 
     // Connect Add to cart / Buy Now for panel
-    document.addEventListener('click', function(e) {
+    document.getElementById('slidePanel').addEventListener('click', function(e) {
         if (!currentProduct) return;
         
         if (e.target.closest('#panelAddBtn')) {
-            if (typeof addToGlobalCart === 'function') {
-                addToGlobalCart(currentProduct);
+            if (typeof window.addToGlobalCart === 'function') {
+                window.addToGlobalCart(currentProduct);
                 closePanel();
             }
         } else if (e.target.closest('#panelBuyBtn')) {
-            if (typeof addToGlobalCart === 'function') {
-                addToGlobalCart(currentProduct, true);
+            if (typeof window.addToGlobalCart === 'function') {
+                window.addToGlobalCart(currentProduct, true);
             }
         }
     });

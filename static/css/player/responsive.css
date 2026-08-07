@@ -416,8 +416,8 @@ RESPONSIVE — Small mobile
   }
 
   .meta-pill {
-    font-size: 0.55rem;
-    padding: 2px 5px;
+    font-size: 0.7rem;
+    padding: 3px 6px;
   }
 
   .ctrl-btn-sm,
@@ -457,7 +457,16 @@ RESPONSIVE — Small mobile
   }
 
   .volume-popover {
-    display: none;
+    /* Instead of display: none, make it smaller and positioned to fit */
+    bottom: 110%;
+    right: -20px;
+    height: 90px;
+    padding: 8px;
+    border-radius: 12px;
+  }
+  
+  .volume-track {
+    height: 70px;
   }
 }
 

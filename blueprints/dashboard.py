@@ -4,7 +4,7 @@ from flask import (
 )
 from helpers.models import (
     db, Order, OrderItem, Download, Product,
-    BeatDetail, VocalPreset, User, GeneratedLicense, BeatPack
+    BeatDetail, VocalPreset, User, GeneratedLicense, BeatPack, DiscountCode
 )
 from helpers.utils import login_required, get_current_user
 from helpers.services import get_user_orders, track_download
@@ -330,6 +330,9 @@ def download_product(product_id):
         preset = VocalPreset.query.filter_by(product_id=product_id).first()
         if preset:
             file_path = preset.preset_zip
+            if file_path and file_path.startswith('http'):
+                track_download(user.id, product_id)
+                return redirect(file_path)
 
     elif product.product_type == 'pack':
         pack = BeatPack.query.filter_by(product_id=product_id).first()
@@ -559,6 +562,11 @@ def download_flp(product_id):
         flash('Project file not available for this beat', 'error')
         return redirect(url_for('dashboard.dashboard'))
 
+    # If project_file is a Google Drive URL or any other URL, redirect immediately
+    if detail.project_file.startswith('http'):
+        track_download(user.id, product_id)
+        return redirect(detail.project_file)
+
     abs_path = os.path.join(current_app.root_path, 'static', detail.project_file)
     if not os.path.exists(abs_path):
         data_dir = current_app.config.get('DATA_DIR')
@@ -576,3 +584,65 @@ def download_flp(product_id):
     track_download(user.id, product_id)
 
     return send_file(abs_path, as_attachment=True)
+
+
+# ═══════════════════════════════════════════════════════════════
+#  FOMO / RECENT ACTIVITY API
+# ═══════════════════════════════════════════════════════════════
+
+@bp.route('/api/fomo-events', methods=['GET'])
+def fomo_events():
+    import random
+    
+    events = []
+    
+    # 1. Fetch active coupons
+    now = datetime.utcnow()
+    active_coupons = DiscountCode.query.filter(
+        DiscountCode.is_active == True,
+        DiscountCode.expires_at > now,
+        (DiscountCode.max_uses == 0) | (DiscountCode.used_count < DiscountCode.max_uses)
+    ).all()
+    
+    for coupon in active_coupons:
+        if coupon.discount_type == 'percentage':
+            offer = f"{coupon.discount_value}% OFF"
+        else:
+            offer = f"₹{coupon.discount_value} OFF"
+            
+        events.append({
+            "type": "offer",
+            "message": f"Flash Sale! Use code <b>{coupon.code}</b> for {offer}.",
+            "icon": "fas fa-tag"
+        })
+        
+    # 2. Fetch random products for fake/recent purchases
+    products = Product.query.filter_by(is_active=True).limit(20).all()
+    if products:
+        # Get some real usernames if possible, otherwise fallback to generic names
+        users = User.query.filter_by(is_admin=False).limit(10).all()
+        user_names = [u.username for u in users] if users else []
+        
+        fallback_names = ["Alex", "David", "Sarah", "Michael", "Chris", "Jessica", "Daniel", "Ryan", "Emma", "John"]
+        
+        names_to_use = user_names if len(user_names) > 3 else fallback_names
+        
+        # Generate 3-5 random purchase events
+        num_events = random.randint(3, 5)
+        for _ in range(num_events):
+            product = random.choice(products)
+            name = random.choice(names_to_use)
+            time_ago = random.choice(["2 mins ago", "15 mins ago", "1 hour ago", "Just now", "45 mins ago", "3 hours ago"])
+            
+            # Format the message
+            events.append({
+                "type": "purchase",
+                "message": f"<b>{name}</b> just bought <b>{product.name}</b>.",
+                "time": time_ago,
+                "icon": "fas fa-shopping-bag"
+            })
+            
+    # Shuffle events
+    random.shuffle(events)
+    
+    return jsonify(events)

@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base/main.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/cart/main.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/fomo.css') }}">
 
     {# Page-specific CSS #}
     {% block head_css %}{% endblock %}
@@ -170,9 +171,10 @@
     </script>
 
     {# ─── External scripts ─── #}
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
     <script src="{{ url_for('static', filename='js/cart.js') }}"></script>
     <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/fomo.js') }}"></script>
 
     {# Page-specific Scripts #}
     {% block page_scripts %}{% endblock %}

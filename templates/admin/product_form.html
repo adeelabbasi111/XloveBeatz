@@ -147,13 +147,13 @@
 
             {# Project File Upload #}
             <div class="form-group">
-                <label for="project_file"><i class="fas fa-file-archive"></i> Project File (FLP, ALS, etc.)</label>
+                <label for="project_file"><i class="fas fa-link"></i> Project File (Google Drive URL) {% if product %}(leave empty to keep current){% endif %}</label>
                 {% if beat_detail and beat_detail.project_file %}
-                <div class="current-file-badge">
-                    <i class="fas fa-check-circle"></i> {{ beat_detail.project_file }}
+                <div class="current-file">
+                    <i class="fas fa-check-circle"></i> <a href="{{ beat_detail.project_file }}" target="_blank">View Current Link</a>
                 </div>
                 {% endif %}
-                <input type="file" name="project_file" id="project_file">
+                <input type="url" name="project_file" id="project_file" class="form-input" placeholder="https://drive.google.com/file/d/..." value="{{ beat_detail.project_file if beat_detail and beat_detail.project_file else '' }}">
             </div>
 
             {# ───────────────────────────────────────── #}
@@ -215,13 +215,13 @@
                        value="{{ vocal_preset.supported_daw if vocal_preset else '' }}" placeholder="e.g. FL Studio • Logic Pro">
             </div>
             <div class="form-group">
-                <label for="preset_zip">Preset ZIP File {% if product %}(leave empty to keep current){% endif %}</label>
+                <label for="preset_zip"><i class="fas fa-link"></i> Preset ZIP File (Google Drive URL) {% if product %}(leave empty to keep current){% endif %}</label>
                 {% if vocal_preset and vocal_preset.preset_zip %}
-                <div class="current-file-badge">
-                    <i class="fas fa-check-circle"></i> {{ vocal_preset.preset_zip }}
+                <div class="current-file">
+                    <i class="fas fa-check-circle"></i> <a href="{{ vocal_preset.preset_zip }}" target="_blank">View Current Link</a>
                 </div>
                 {% endif %}
-                <input type="file" name="preset_zip" id="preset_zip" accept=".zip,.rar">
+                <input type="url" name="preset_zip" id="preset_zip" class="form-input" placeholder="https://drive.google.com/file/d/..." value="{{ vocal_preset.preset_zip if vocal_preset and vocal_preset.preset_zip else '' }}">
             </div>
         </div>
 

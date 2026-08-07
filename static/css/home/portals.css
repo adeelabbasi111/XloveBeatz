@@ -165,6 +165,15 @@
     transform: translateY(0);
 }
 
+/* Touch device / Mobile fallbacks for portals */
+@media (max-width: 900px) {
+    .portal-subtitle, .portal-btn {
+        opacity: 1;
+        transform: translateY(0);
+        transition: none;
+    }
+}
+
 /* Review Marquee */
 .marquee-section {
     padding: 3rem 0;
@@ -196,7 +205,8 @@
     border: 1px solid var(--border-light);
     border-radius: 12px;
     padding: 1.5rem;
-    width: 300px;
+    width: 280px;
+    max-width: 80vw;
     margin: 0 0.75rem;
     backdrop-filter: blur(10px);
 }

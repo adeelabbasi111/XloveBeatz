@@ -35,9 +35,9 @@ class Config:
     ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
     ALLOWED_ARCHIVE_EXTENSIONS = {'zip', 'rar'}
 
-    # --- Razorpay (REQUIRED in production) ---
-    RAZORPAY_KEY_ID = os.environ.get('RAZORPAY_KEY_ID', '')
-    RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET', '')
+    # --- Cashfree (REQUIRED in production) ---
+    CASHFREE_APP_ID = os.environ.get('CASHFREE_APP_ID', '')
+    CASHFREE_SECRET_KEY = os.environ.get('CASHFREE_SECRET_KEY', '')
 
     # --- Rate limiting ---
     RATELIMIT_DEFAULT = "200 per day, 50 per hour"

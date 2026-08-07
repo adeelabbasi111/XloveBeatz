@@ -601,44 +601,13 @@
                 return;
             }
 
-            // Show region selector modal
-            pendingCheckoutItems = itemsToCheckout;
-            showRegionSelector();
+            // Proceed directly to Cashfree checkout
+            await proceedWithPayment(itemsToCheckout);
             isProcessing = false;
         }
 
-        // ── Region Selector ──
-        function showRegionSelector() {
-            var overlay = document.getElementById('regionSelectorOverlay');
-            if (overlay) {
-                overlay.classList.add('active');
-                document.body.style.overflow = 'hidden';
-            }
-        }
-
-        function closeRegionSelector() {
-            var overlay = document.getElementById('regionSelectorOverlay');
-            if (overlay) {
-                overlay.classList.remove('active');
-                document.body.style.overflow = '';
-            }
-        }
-
-        async function handleRegionSelect(region) {
-            closeRegionSelector();
-
-            if (region === 'india') {
-                var items = pendingCheckoutItems || cart;
-                pendingCheckoutItems = null;
-                await proceedWithPayment(items);
-            } else if (region === 'international') {
-                showToast('🌍 International payments coming soon! Stay tuned.', 'info');
-                pendingCheckoutItems = null;
-            }
-        }
-
         async function proceedWithPayment(itemsToCheckout) {
-            if (typeof Razorpay === 'undefined') {
+            if (typeof Cashfree === 'undefined') {
                 showToast('Payment system unavailable. Please refresh.', 'error');
                 return;
             }
@@ -650,7 +619,7 @@
             }
 
             try {
-                var res = await fetch('/api/create-razorpay-order', {
+                var res = await fetch('/api/create-cashfree-order', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -665,61 +634,39 @@
                 var orderData = await res.json();
                 if (orderData.error) throw new Error(orderData.error);
 
-                // BYPASS MODE
-                if (orderData.bypass) {
-                    var verifyRes = await fetch('/api/verify-razorpay-payment', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': window.CSRF_TOKEN || ''
-                        },
-                        body: JSON.stringify({ db_order_id: orderData.db_order_id })
-                    });
+                const cashfree = Cashfree({
+                    mode: "production"
+                });
 
-                    var verifyData = await verifyRes.json();
-                    if (verifyData.status === 'success') {
-                        showToast('✅ Payment Successful! (Test Mode)', 'success');
-                        itemsToCheckout.forEach(function(item) {
-                            var idx = cart.findIndex(function(i) { return i.id === item.id && i.license === item.license; });
-                            if (idx > -1) cart.splice(idx, 1);
-                        });
-                        appliedCoupon = null;
-                        saveCoupon();
-                        updateCartUI();
-                        closeCart();
-                        window.location.href = '/payment/success/' + orderData.db_order_id;
-                    } else {
-                        showToast('❌ Verification failed', 'error');
+                cashfree.checkout({
+                    paymentSessionId: orderData.payment_session_id,
+                    redirectTarget: "_modal"
+                }).then(async (result) => {
+                    if (result.error) {
+                        showToast('❌ Payment failed: ' + result.error.message, 'error');
+                        if (els.checkoutBtn) {
+                            els.checkoutBtn.innerHTML = origHTML;
+                            els.checkoutBtn.disabled = false;
+                        }
                     }
-                    return;
-                }
-
-                var options = {
-                    key: orderData.key_id,
-                    amount: orderData.amount,
-                    currency: orderData.currency,
-                    name: 'XLOVEBEATS',
-                    description: appliedCoupon
-                        ? 'Purchase (Coupon: ' + appliedCoupon.code + ')'
-                        : 'Purchase Beats & Presets',
-                    order_id: orderData.order_id,
-                    handler: async function(response) {
-                        var vRes = await fetch('/api/verify-razorpay-payment', {
+                    if (result.paymentDetails) {
+                        // Payment completed, verify on backend
+                        if (els.checkoutBtn) els.checkoutBtn.innerHTML = '<span class="checkout-btn-content"><i class="fas fa-spinner fa-spin"></i><span>Verifying...</span></span>';
+                        
+                        var verifyRes = await fetch('/api/verify-cashfree-payment', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
                                 'X-CSRFToken': window.CSRF_TOKEN || ''
                             },
-                            body: JSON.stringify({
-                                razorpay_payment_id: response.razorpay_payment_id,
-                                razorpay_order_id: response.razorpay_order_id,
-                                razorpay_signature: response.razorpay_signature,
-                                db_order_id: orderData.db_order_id
+                            body: JSON.stringify({ 
+                                db_order_id: orderData.db_order_id,
+                                order_id: orderData.cashfree_order_id
                             })
                         });
 
-                        var vData = await vRes.json();
-                        if (vData.status === 'success') {
+                        var verifyData = await verifyRes.json();
+                        if (verifyData.status === 'success') {
                             showToast('✅ Payment Successful!', 'success');
                             itemsToCheckout.forEach(function(item) {
                                 var idx = cart.findIndex(function(i) { return i.id === item.id && i.license === item.license; });
@@ -732,24 +679,20 @@
                             window.location.href = '/payment/success/' + orderData.db_order_id;
                         } else {
                             showToast('❌ Verification failed', 'error');
+                            if (els.checkoutBtn) {
+                                els.checkoutBtn.innerHTML = origHTML;
+                                els.checkoutBtn.disabled = false;
+                            }
                         }
-                    },
-                    theme: { color: '#7C8DF0' }
-                };
-
-                var rzp = new Razorpay(options);
-                rzp.on('payment.failed', function(response) {
-                    showToast('❌ Payment failed: ' + response.error.description, 'error');
+                    }
                 });
-                rzp.open();
 
-            } catch (error) {
-                console.error(error);
-                showToast('❌ Checkout failed: ' + error.message, 'error');
-            } finally {
+            } catch (err) {
+                console.error(err);
+                showToast('❌ ' + err.message, 'error');
                 if (els.checkoutBtn) {
                     els.checkoutBtn.innerHTML = origHTML;
-                    els.checkoutBtn.disabled = cart.length === 0;
+                    els.checkoutBtn.disabled = false;
                 }
             }
         }
@@ -840,39 +783,11 @@
 
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
-                var regionOverlay = document.getElementById('regionSelectorOverlay');
-                if (regionOverlay && regionOverlay.classList.contains('active')) {
-                    closeRegionSelector();
-                    return;
-                }
                 if (els.drawer.classList.contains('open')) {
                     closeCart();
                 }
             }
         });
-
-        // Region selector events
-        var regionCloseBtn = document.getElementById('regionCloseBtn');
-        if (regionCloseBtn) {
-            regionCloseBtn.addEventListener('click', closeRegionSelector);
-        }
-
-        var regionOverlayEl = document.getElementById('regionSelectorOverlay');
-        if (regionOverlayEl) {
-            regionOverlayEl.addEventListener('click', function(e) {
-                if (e.target === regionOverlayEl) closeRegionSelector();
-            });
-        }
-
-        var regionIndiaBtn = document.getElementById('regionIndia');
-        if (regionIndiaBtn) {
-            regionIndiaBtn.addEventListener('click', function() { handleRegionSelect('india'); });
-        }
-
-        var regionIntlBtn = document.getElementById('regionInternational');
-        if (regionIntlBtn) {
-            regionIntlBtn.addEventListener('click', function() { handleRegionSelect('international'); });
-        }
 
         // Initial state
         updateCouponUI();
