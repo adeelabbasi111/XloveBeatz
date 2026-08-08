@@ -223,6 +223,26 @@
                 {% endif %}
                 <input type="url" name="preset_zip" id="preset_zip" class="form-input" placeholder="https://drive.google.com/file/d/..." value="{{ vocal_preset.preset_zip if vocal_preset and vocal_preset.preset_zip else '' }}">
             </div>
+            
+            <div class="form-group">
+                <label for="demo_before">Demo Before Audio (Raw)</label>
+                {% if vocal_preset and vocal_preset.demo_before %}
+                <div class="current-file">
+                    <i class="fas fa-check-circle"></i> Current: {{ vocal_preset.demo_before.split('/')[-1] }}
+                </div>
+                {% endif %}
+                <input type="file" name="demo_before" id="demo_before" accept="audio/*">
+            </div>
+
+            <div class="form-group">
+                <label for="demo_after">Demo After Audio (Mixed)</label>
+                {% if vocal_preset and vocal_preset.demo_after %}
+                <div class="current-file">
+                    <i class="fas fa-check-circle"></i> Current: {{ vocal_preset.demo_after.split('/')[-1] }}
+                </div>
+                {% endif %}
+                <input type="file" name="demo_after" id="demo_after" accept="audio/*">
+            </div>
         </div>
 
         {# ═══════════════════════════════════════════ #}

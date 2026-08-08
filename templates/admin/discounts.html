@@ -146,6 +146,19 @@
                     </form>
                 </td>
                 <td>
+                    <button type="button" class="btn-icon" title="Edit" onclick='editDiscount({{ code.id }}, {
+                        code: "{{ code.code }}",
+                        discount_type: "{{ code.discount_type }}",
+                        discount_value: {{ code.discount_value }},
+                        max_discount_cents: {{ code.max_discount_cents }},
+                        min_order_cents: {{ code.min_order_cents }},
+                        max_uses: {{ code.max_uses }},
+                        expires_at: {% if code.expires_at %}"{{ code.expires_at.isoformat() }}"{% else %}null{% endif %},
+                        strip_message: "{{ code.strip_message or '' }}",
+                        post_to_strip: {{ 'true' if code.post_to_strip else 'false' }}
+                    })' style="color:var(--primary-color);">
+                        <i class="fas fa-edit"></i>
+                    </button>
                     <form method="POST" action="{{ url_for('admin.admin_discount_toggle', discount_id=code.id) }}" style="display:inline;">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="btn-icon" title="Toggle"><i class="fas fa-power-off"></i></button>
@@ -163,6 +176,54 @@
         </tbody>
     </table>
 </div>
+
+<script>
+function editDiscount(id, data) {
+    const form = document.querySelector('.admin-form');
+    form.action = `/admin/discount/${id}/edit`;
+    
+    document.getElementById('code').value = data.code;
+    document.getElementById('discount_type').value = data.discount_type;
+    document.getElementById('discount_value').value = data.discount_value;
+    document.getElementById('max_discount').value = (data.max_discount_cents || 0) / 100;
+    document.getElementById('min_order').value = (data.min_order_cents || 0) / 100;
+    document.getElementById('max_uses').value = data.max_uses || 0;
+    
+    if (data.expires_at) {
+        // Format to YYYY-MM-DDThh:mm
+        const d = new Date(data.expires_at);
+        const tzoffset = (new Date()).getTimezoneOffset() * 60000; // offset in milliseconds
+        const localISOTime = (new Date(d - tzoffset)).toISOString().slice(0, 16);
+        document.getElementById('expires_at').value = localISOTime;
+    } else {
+        document.getElementById('expires_at').value = '';
+    }
+    
+    document.getElementById('strip_message').value = data.strip_message || '';
+    document.getElementById('post_to_strip').checked = data.post_to_strip;
+    
+    const submitBtn = form.querySelector('button[type="submit"]');
+    submitBtn.innerHTML = '<i class="fas fa-save"></i> Update Coupon';
+    
+    // Add cancel button if it doesn't exist
+    if (!document.getElementById('cancelEditBtn')) {
+        const cancelBtn = document.createElement('button');
+        cancelBtn.type = 'button';
+        cancelBtn.id = 'cancelEditBtn';
+        cancelBtn.className = 'btn btn-secondary';
+        cancelBtn.innerHTML = '<i class="fas fa-times"></i> Cancel Edit';
+        cancelBtn.onclick = function() {
+            form.action = "{{ url_for('admin.admin_discount_add') }}";
+            form.reset();
+            submitBtn.innerHTML = '<i class="fas fa-plus"></i> Create Coupon';
+            cancelBtn.remove();
+        };
+        submitBtn.parentNode.appendChild(cancelBtn);
+    }
+    
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
 
 <style>
     .toggle-wrap {

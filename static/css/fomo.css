@@ -92,7 +92,7 @@
 /* Mobile responsive */
 @media (max-width: 768px) {
     #fomo-toast-container {
-        bottom: 20px;
+        bottom: 95px; /* Stay above the mobile bottom nav */
         left: 50%;
         transform: translateX(-50%);
         width: 90%;

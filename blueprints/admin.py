@@ -44,11 +44,13 @@ FOLDER_BEAT_IMAGES = 'beat_images'
 FOLDER_PRESETS     = 'presets'
 FOLDER_PACKS       = 'packs'
 FOLDER_LICENSES    = 'licenses'
+FOLDER_BEFORE_AFTER= 'before_after'
 
 ALL_DATA_FOLDERS = [
     FOLDER_PREVIEWS, FOLDER_WAV,
     FOLDER_FLP, FOLDER_IMAGES, FOLDER_BEAT_IMAGES,
-    FOLDER_PRESETS, FOLDER_PACKS, FOLDER_LICENSES
+    FOLDER_PRESETS, FOLDER_PACKS, FOLDER_LICENSES,
+    FOLDER_BEFORE_AFTER
 ]
 
 TEMP_UPLOAD_DIR = os.path.join('static', 'data', 'temp_uploads')
@@ -669,6 +671,16 @@ def admin_product_edit(product_id):
                     if new_zip and new_zip != preset.preset_zip:
                         preset.preset_zip = new_zip
 
+                    new_before = move_temp_file(request.form, 'demo_before', FOLDER_BEFORE_AFTER, current_app)
+                    if new_before:
+                        delete_old_file(preset.demo_before)
+                        preset.demo_before = new_before
+
+                    new_after = move_temp_file(request.form, 'demo_after', FOLDER_BEFORE_AFTER, current_app)
+                    if new_after:
+                        delete_old_file(preset.demo_after)
+                        preset.demo_after = new_after
+
             db.session.commit()
             log_activity(get_current_user().id, 'update', 'product',
                          product.id, f"Updated: {product.name}", request.remote_addr)
@@ -941,10 +953,15 @@ def _create_preset_details(product, slug):
 
     preset_zip_path = request.form.get('preset_zip', '').strip()
 
+    demo_before = move_temp_file(request.form, 'demo_before', FOLDER_BEFORE_AFTER, current_app)
+    demo_after = move_temp_file(request.form, 'demo_after', FOLDER_BEFORE_AFTER, current_app)
+
     db.session.add(VocalPreset(
         product_id=product.id,
         supported_daw=supported_daw,
         preset_zip=preset_zip_path,
+        demo_before=demo_before,
+        demo_after=demo_after
     ))
 
 
@@ -1271,6 +1288,51 @@ def admin_offer_add():
         _sync_strip_messages()
 
     flash(f'Offer "{name}" created!', 'success')
+    return redirect(url_for('admin.admin_offers'))
+
+@bp.route('/admin/offers/<int:offer_id>/edit', methods=['POST'])
+@admin_required
+def admin_offer_edit(offer_id):
+    offer = Offer.query.get_or_404(offer_id)
+    name = request.form.get('name', '').strip()
+    offer_type = request.form.get('offer_type', '').strip()
+    
+    if not name or not offer_type:
+        flash('Name and offer type are required.', 'error')
+        return redirect(url_for('admin.admin_offers'))
+
+    offer.name = name
+    offer.offer_type = offer_type
+    offer.applicable_product_type = request.form.get('applicable_product_type', 'all')
+    offer.stacks_with_coupons = request.form.get('stacks_with_coupons') == 'on'
+    offer.strip_message = request.form.get('strip_message', '').strip()
+    offer.post_to_strip = request.form.get('post_to_strip') == 'on'
+
+    if offer_type == 'bogo':
+        offer.buy_quantity = request.form.get('buy_quantity', 1, type=int)
+        offer.get_quantity = request.form.get('get_quantity', 1, type=int)
+        offer.discount_percentage = 0
+        offer.min_spend_cents = 0
+        offer.discount_fixed_cents = 0
+    elif offer_type == 'bulk_percent':
+        offer.buy_quantity = request.form.get('bulk_min_qty', 2, type=int)
+        offer.discount_percentage = request.form.get('discount_percentage', 20, type=int)
+        offer.get_quantity = 0
+        offer.min_spend_cents = 0
+        offer.discount_fixed_cents = 0
+    elif offer_type == 'spend_amount_off':
+        offer.min_spend_cents = int(request.form.get('min_spend', 0, type=float) * 100)
+        offer.discount_fixed_cents = int(request.form.get('discount_fixed', 0, type=float) * 100)
+        offer.buy_quantity = 0
+        offer.get_quantity = 0
+        offer.discount_percentage = 0
+
+    db.session.commit()
+    
+    if offer.post_to_strip and offer.strip_message:
+        _sync_strip_messages()
+        
+    flash('Offer updated successfully!', 'success')
     return redirect(url_for('admin.admin_offers'))
 
 

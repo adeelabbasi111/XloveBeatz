@@ -3,6 +3,9 @@ XLOVEBEATS -- Application factory and entry point.
 """
 import os
 import logging
+import mimetypes
+mimetypes.add_type('audio/mpeg', '.mp3')
+mimetypes.add_type('audio/wav', '.wav')
 
 from flask import Flask
 from flask_wtf import CSRFProtect

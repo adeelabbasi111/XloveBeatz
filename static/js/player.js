@@ -199,140 +199,32 @@ function updateBeatImage(imagePath) {
 }
 
 // ════════════════════════════════════════════════════════════
-// WAVEFORM — Decode audio and extract peaks
+// WAVEFORM — Using WaveformUI
 // ════════════════════════════════════════════════════════════
-function extractWaveformData(audioBuffer, numBars) {
-  var rawData = audioBuffer.getChannelData(0);
-  var samplesPerBar = Math.floor(rawData.length / numBars);
-  var peaks = [];
-  for (var i = 0; i < numBars; i++) {
-    var start = i * samplesPerBar;
-    var end = Math.min(start + samplesPerBar, rawData.length);
-    var peak = 0;
-    for (var j = start; j < end; j++) {
-      var abs = Math.abs(rawData[j]);
-      if (abs > peak) peak = abs;
+var waveformUI = null;
+if (waveformProgress) {
+  waveformUI = new WaveformUI({
+    container: waveformProgress,
+    reflectionContainer: document.querySelector('.waveform-reflection'),
+    numBars: WAVEFORM_BARS,
+    onSeek: function(ratio) {
+      if (!audio || !audio.duration || isNaN(audio.duration)) return;
+      audio.currentTime = ratio * audio.duration;
+      waveformUI.updateProgress(ratio * 100);
     }
-    peaks.push(peak);
-  }
-  var maxPeak = 0.01;
-  for (var i = 0; i < peaks.length; i++) {
-    if (peaks[i] > maxPeak) maxPeak = peaks[i];
-  }
-  for (var i = 0; i < peaks.length; i++) {
-    peaks[i] = peaks[i] / maxPeak;
-    peaks[i] = Math.max(0.12, peaks[i]);
-  }
-  return peaks;
+  });
 }
 
 function loadRealWaveform(audioUrl) {
-  realWaveformData = null;
-  if (!audioUrl) {
-    buildWaveformUI(null);
-    return;
-  }
-  var xhr = new XMLHttpRequest();
-  xhr.open('GET', audioUrl, true);
-  xhr.responseType = 'arraybuffer';
-  xhr.onload = function () {
-    if (xhr.status !== 200) {
-      buildWaveformUI(null);
-      return;
-    }
-    var tempCtx = new (window.AudioContext || window.webkitAudioContext)();
-    tempCtx.decodeAudioData(xhr.response, function (buffer) {
-      realWaveformData = extractWaveformData(buffer, WAVEFORM_BARS);
-      buildWaveformUI(realWaveformData);
-      updateWaveformProgress(0);
-      tempCtx.close();
-    }, function () {
-      buildWaveformUI(null);
-      tempCtx.close();
-    });
-  };
-  xhr.onerror = function () {
-    buildWaveformUI(null);
-  };
-  xhr.send();
-}
-
-function buildWaveformUI(peaks) {
-  if (!waveformProgress) return;
-  waveformProgress.innerHTML = '';
-  var reflection = document.querySelector('.waveform-reflection');
-  if (reflection) reflection.innerHTML = '';
-  if (!peaks || peaks.length === 0) {
-    peaks = [];
-    for (var i = 0; i < WAVEFORM_BARS; i++) {
-      peaks.push(0.15 + Math.random() * 0.6);
-    }
-  }
-  for (var i = 0; i < peaks.length; i++) {
-    var height = Math.max(0.1, peaks[i]);
-    var bar = document.createElement('div');
-    bar.className = 'wave-bar';
-    bar.style.height = (height * 100) + '%';
-    waveformProgress.appendChild(bar);
-    if (reflection) {
-      var refBar = document.createElement('div');
-      refBar.className = 'wave-bar-ref';
-      refBar.style.height = (height * 100) + '%';
-      reflection.appendChild(refBar);
-    }
+  if (waveformUI) {
+    waveformUI.loadRealWaveform(audioUrl);
   }
 }
 
 function updateWaveformProgress(percent) {
-  if (!waveformProgress) return;
-  var bars = waveformProgress.children;
-  var total = bars.length;
-  var activeCount = Math.floor((percent / 100) * total);
-  var reflection = document.querySelector('.waveform-reflection');
-  var refBars = reflection ? reflection.children : [];
-  for (var i = 0; i < total; i++) {
-    if (i < activeCount) {
-      bars[i].classList.add('played');
-      if (refBars[i]) refBars[i].classList.add('played');
-    } else {
-      bars[i].classList.remove('played');
-      if (refBars[i]) refBars[i].classList.remove('played');
-    }
+  if (waveformUI) {
+    waveformUI.updateProgress(percent);
   }
-}
-
-// ── Waveform seeking ──
-function seekFromWaveform(clientX) {
-  if (!audio || !audio.duration || isNaN(audio.duration)) return;
-  var rect = waveformProgress.getBoundingClientRect();
-  var ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-  audio.currentTime = ratio * audio.duration;
-  updateWaveformProgress(ratio * 100);
-}
-
-if (waveformProgress) {
-  waveformProgress.addEventListener('mousedown', function (e) {
-    isDraggingWaveform = true;
-    seekFromWaveform(e.clientX);
-  });
-  document.addEventListener('mousemove', function (e) {
-    if (isDraggingWaveform) seekFromWaveform(e.clientX);
-  });
-  document.addEventListener('mouseup', function () {
-    isDraggingWaveform = false;
-  });
-  waveformProgress.addEventListener('touchstart', function (e) {
-    e.preventDefault();
-    isDraggingWaveform = true;
-    seekFromWaveform(e.touches[0].clientX);
-  }, { passive: false });
-  waveformProgress.addEventListener('touchmove', function (e) {
-    e.preventDefault();
-    if (isDraggingWaveform) seekFromWaveform(e.touches[0].clientX);
-  }, { passive: false });
-  waveformProgress.addEventListener('touchend', function () {
-    isDraggingWaveform = false;
-  });
 }
 
 // ════════════════════════════════════════════════════════════

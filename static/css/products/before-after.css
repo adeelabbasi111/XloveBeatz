@@ -1,0 +1,271 @@
+/* ============================================================
+   BEFORE / AFTER — Premium Preset Comparison Player
+   Uses site tokens: --accent-soft, --accent-purple, --bg-elevated, etc.
+   ============================================================ */
+
+/* ─── Section Container ─── */
+.pd-before-after-section {
+    margin-top: 4rem;
+    padding: 2.5rem 2.5rem 2rem;
+    background: var(--bg-elevated, #1B1E27);
+    border-radius: var(--card-radius, 28px);
+    border: 1px solid var(--border-light, rgba(255,255,255,0.06));
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Subtle gradient accent line at the top */
+.pd-before-after-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent-soft, #7C8DF0), var(--accent-purple, #9D7CEC));
+    opacity: 0.6;
+}
+
+/* ─── Header ─── */
+.ba-section-header {
+    margin-bottom: 1.75rem;
+}
+
+.ba-section-header h2 {
+    font-size: 1.5rem;
+    color: var(--text-primary, #F1F3F8);
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    margin-bottom: 0.35rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.ba-section-header h2 i {
+    color: var(--accent-soft, #7C8DF0);
+    font-size: 1.2rem;
+}
+
+.ba-subtitle {
+    font-size: 0.9rem;
+    color: var(--text-muted, #6C7285);
+    font-weight: 400;
+}
+
+/* ─── Player Layout ─── */
+.ba-player-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.ba-controls {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+/* ─── Play Button ─── */
+.ba-play-btn {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent-soft, #7C8DF0), var(--accent-purple, #9D7CEC));
+    border: none;
+    color: #fff;
+    font-size: 1.15rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition-smooth, all 0.3s ease);
+    box-shadow: 0 4px 18px rgba(124, 141, 240, 0.35);
+    flex-shrink: 0;
+}
+
+.ba-play-btn:hover {
+    transform: scale(1.08);
+    box-shadow: 0 6px 24px rgba(124, 141, 240, 0.5);
+}
+
+.ba-play-btn:active {
+    transform: scale(0.95);
+}
+
+/* ─── Wave Wrapper (contains waveform + label row) ─── */
+.ba-wave-wrapper {
+    flex: 1;
+    min-width: 0;
+}
+
+/* ─── Waveform Container ─── */
+.ba-waveform-container {
+    height: 72px;
+    position: relative;
+    border-radius: var(--element-radius, 18px);
+    overflow: hidden;
+    background: var(--bg-surface, #13151C);
+    border: 1px solid var(--border-light, rgba(255,255,255,0.06));
+    cursor: pointer;
+    transition: border-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+.ba-waveform-container:hover {
+    border-color: var(--border-mid, rgba(255,255,255,0.1));
+}
+
+.ba-waveform-visual {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* ─── Before State — Dark muted bars ─── */
+.ba-waveform-visual .wave-path-base {
+    color: rgba(255, 255, 255, 0.08);
+    transition: color 0.5s ease;
+}
+
+.ba-waveform-visual .wave-path-progress {
+    color: var(--text-muted, #6C7285);
+    transition: color 0.5s ease, filter 0.5s ease;
+    filter: none;
+}
+
+/* ─── After State — Same accent as player page ─── */
+.ba-waveform-container.is-after {
+    border-color: rgba(124, 141, 240, 0.2);
+    box-shadow: 0 0 20px rgba(124, 141, 240, 0.08);
+}
+
+.ba-waveform-container.is-after .wave-path-base {
+    color: rgba(124, 141, 240, 0.15);
+}
+
+.ba-waveform-container.is-after .wave-path-progress {
+    color: var(--accent-soft, #7C8DF0);
+    filter: drop-shadow(0 0 6px rgba(124, 141, 240, 0.4));
+}
+
+/* ─── Label Row (below waveform) ─── */
+.ba-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.25rem 0;
+}
+
+.ba-time-current,
+.ba-time-total {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-muted, #6C7285);
+    font-variant-numeric: tabular-nums;
+    min-width: 36px;
+}
+
+.ba-time-total {
+    text-align: right;
+}
+
+.ba-state-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-muted, #6C7285);
+    transition: color 0.4s ease;
+    user-select: none;
+}
+
+/* After label gets the accent color */
+.ba-waveform-container.is-after ~ .ba-label-row .ba-state-label {
+    color: var(--accent-soft, #7C8DF0);
+}
+
+/* ─── Toggle Button ─── */
+.ba-toggle-btn {
+    height: 54px;
+    padding: 0 1.75rem;
+    border-radius: 27px;
+    background: var(--bg-surface, #13151C);
+    border: 1px solid var(--border-mid, rgba(255,255,255,0.1));
+    color: var(--text-secondary, #A0A5B5);
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition-smooth, all 0.3s ease);
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 1.5px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+}
+
+.ba-toggle-btn i {
+    font-size: 0.85rem;
+    transition: transform 0.3s ease;
+}
+
+.ba-toggle-btn:hover {
+    background: rgba(124, 141, 240, 0.08);
+    border-color: rgba(124, 141, 240, 0.3);
+    color: var(--accent-soft, #7C8DF0);
+}
+
+.ba-toggle-btn:hover i {
+    transform: rotate(180deg);
+}
+
+/* Active (After mode) */
+.ba-toggle-btn.is-active {
+    background: linear-gradient(135deg, var(--accent-soft, #7C8DF0), var(--accent-purple, #9D7CEC));
+    border-color: transparent;
+    color: #fff;
+    box-shadow: 0 4px 18px rgba(124, 141, 240, 0.35);
+}
+
+.ba-toggle-btn.is-active:hover {
+    box-shadow: 0 6px 24px rgba(124, 141, 240, 0.5);
+    background: linear-gradient(135deg, var(--accent-soft, #7C8DF0), var(--accent-purple, #9D7CEC));
+    color: #fff;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 768px) {
+    .pd-before-after-section {
+        padding: 1.75rem 1.5rem 1.25rem;
+    }
+
+    .ba-controls {
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .ba-play-btn {
+        width: 48px;
+        height: 48px;
+        font-size: 1rem;
+    }
+
+    .ba-wave-wrapper {
+        order: 3;
+        flex-basis: 100%;
+    }
+
+    .ba-toggle-btn {
+        height: 48px;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .ba-waveform-container {
+        height: 60px;
+    }
+}

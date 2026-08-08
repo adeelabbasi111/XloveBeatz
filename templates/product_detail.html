@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/products/detail.css') }}">
+{% if product.product_type == 'preset' %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/products/before-after.css') }}">
+{% endif %}
+
+<main class="product-detail-page">
+    <div class="pd-hero-bg">
+        <img src="{% if product.cover_image %}{{ url_for('static', filename=product.cover_image) }}{% else %}{{ url_for('static', filename='data/images/' + product.slug + '_cover.png') }}{% endif %}" class="pd-bg-img">
+        <div class="pd-hero-overlay"></div>
+    </div>
+    
+    <div class="pd-container">
+        <a href="javascript:history.back()" class="pd-back-btn"><i class="fas fa-arrow-left"></i> Back</a>
+
+        <div class="pd-grid">
+            <div class="pd-left">
+                <img src="{% if product.cover_image %}{{ url_for('static', filename=product.cover_image) }}{% else %}{{ url_for('static', filename='data/images/' + product.slug + '_cover.png') }}{% endif %}" class="pd-cover">
+            </div>
+            <div class="pd-right">
+                <div class="pd-meta">
+                    <span class="pd-type">{{ product.product_type | capitalize }}</span>
+                    {% if product.product_type == 'pack' and product.beat_pack %}
+                    <span class="pd-genre">{{ product.beat_pack.genre }}</span>
+                    {% elif product.product_type == 'preset' and product.vocal_preset %}
+                    <span class="pd-genre">{{ product.vocal_preset.supported_daw }}</span>
+                    {% endif %}
+                </div>
+                
+                <h1 class="pd-title">{{ product.name }}</h1>
+                <div class="pd-buy-box">
+                    <div class="pd-price">{{ product.price_cents | rupees }}</div>
+                    <div class="pd-actions">
+                        <button class="pd-btn pd-btn-buy js-buy-now" 
+                                data-product-id="{{ product.id }}"
+                                data-product-name="{{ product.name }}"
+                                data-price="{{ product.price_cents / 100 }}"
+                                data-license="Standard">
+                            <i class="fas fa-bolt"></i> Buy Now
+                        </button>
+                        <button class="pd-btn pd-btn-cart js-add-to-cart"
+                                data-product-id="{{ product.id }}"
+                                data-product-name="{{ product.name }}"
+                                data-price="{{ product.price_cents / 100 }}"
+                                data-license="Standard">
+                            <i class="fas fa-shopping-cart"></i> Add to Cart
+                        </button>
+                    </div>
+
+                    {% if product.product_type == 'pack' and product.beat_pack %}
+                    <a href="{{ url_for('public.player_page', pack_id=product.beat_pack.id) }}" class="pd-explore-btn">
+                        <i class="fas fa-play"></i> Explore Pack & Listen to Beats
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {% if product.product_type == 'preset' and product.vocal_preset and product.vocal_preset.demo_before and product.vocal_preset.demo_after %}
+        <div class="pd-before-after-section">
+            <div class="ba-section-header">
+                <h2><i class="fas fa-wand-magic-sparkles"></i> Experience the Difference</h2>
+                <p class="ba-subtitle">Hear exactly what this preset does to your vocals</p>
+            </div>
+            <div class="ba-player-container">
+                
+                <!-- Audio Elements -->
+                <audio id="baAudioBefore" preload="auto">
+                    <source src="{{ url_for('static', filename=product.vocal_preset.demo_before) }}" type="audio/mpeg">
+                </audio>
+                <audio id="baAudioAfter" preload="auto">
+                    <source src="{{ url_for('static', filename=product.vocal_preset.demo_after) }}" type="audio/mpeg">
+                </audio>
+
+                <!-- Main Player Row -->
+                <div class="ba-controls">
+                    <button class="ba-play-btn" id="baPlayBtn">
+                        <i class="fas fa-play"></i>
+                    </button>
+                    <div class="ba-wave-wrapper">
+                        <div class="ba-waveform-container" id="baWaveformContainer">
+                            <div class="ba-waveform-visual" id="baWaveformVisual"></div>
+                        </div>
+                        <div class="ba-label-row">
+                            <span class="ba-time-current" id="baTimeCurrent">0:00</span>
+                            <span class="ba-state-label" id="baWaveformText">BEFORE</span>
+                            <span class="ba-time-total" id="baTimeTotal">0:00</span>
+                        </div>
+                    </div>
+                    <button class="ba-toggle-btn" id="baToggleBtn">
+                        <i class="fas fa-arrow-right-arrow-left"></i>
+                        <span>After</span>
+                    </button>
+                </div>
+                
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="pd-description-section">
+            <h2>About this {{ product.product_type | capitalize }}</h2>
+            <div class="pd-desc">
+                {% if product.description %}
+                    {{ product.description | replace('\n', '<br>') | safe }}
+                {% else %}
+                    Premium {{ product.product_type }} crafted for modern producers.
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}
+
+{% block page_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const productData = {
+            id: {{ product.id }},
+            name: "{{ product.name }}",
+            price: {{ product.price_cents / 100 }},
+            type: "{{ product.product_type }}"
+        };
+
+        const buyBtn = document.querySelector('.js-buy-now');
+        const cartBtn = document.querySelector('.js-add-to-cart');
+
+        if (cartBtn) {
+            cartBtn.addEventListener('click', function() {
+                if (typeof window.addToGlobalCart === 'function') {
+                    window.addToGlobalCart(productData);
+                }
+            });
+        }
+
+        if (buyBtn) {
+            buyBtn.addEventListener('click', function() {
+                if (typeof window.addToGlobalCart === 'function') {
+                    window.addToGlobalCart(productData, true);
+                }
+            });
+        }
+    });
+</script>
+{% if product.product_type == 'preset' %}
+<script src="{{ url_for('static', filename='js/waveform-generator.js') }}"></script>
+<script src="{{ url_for('static', filename='js/before-after.js') }}"></script>
+{% endif %}
+{% endblock %}

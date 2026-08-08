@@ -22,7 +22,7 @@
 
     <div class="bento-grid">
         {% for pack in beat_packs %}
-        <div class="bento-item" onclick="openPanel({{ pack.id }})">
+        <a href="{{ url_for('public.product_detail', product_id=pack.id) }}" class="bento-item" style="text-decoration: none; color: inherit;">
             {% if pack.cover_image %}
             <img src="{{ url_for('static', filename=pack.cover_image) }}" class="bento-bg" alt="{{ pack.name }}" loading="lazy">
             {% else %}
@@ -36,103 +36,14 @@
                     <span class="bento-price">{{ pack.price_cents | rupees }}</span>
                 </div>
             </div>
-        </div>
-
-        <!-- Hidden data for the slide panel -->
-        <div id="pack-data-{{ pack.id }}" style="display: none;"
-             data-id="{{ pack.id }}"
-             data-name="{{ pack.name }}"
-             data-price="{{ pack.price_cents / 100 }}"
-             data-desc="{{ pack.description }}"
-             data-explore-url="{{ url_for('public.player_page', pack_id=pack.beat_pack.id if pack.beat_pack else '') }}">
-            {% if pack.cover_image %}
-                {{ url_for('static', filename=pack.cover_image) }}
-            {% else %}
-                {{ url_for('static', filename='data/images/' + pack.slug + '_cover.png') }}
-            {% endif %}
-        </div>
+        </a>
         {% endfor %}
     </div>
 </main>
-
-<!-- Wide Modal -->
-<div class="slide-panel-overlay" id="panelOverlay" onclick="closePanel(event)">
-    <div class="wide-modal" id="slidePanel" onclick="event.stopPropagation()">
-        <button class="close-panel-btn" onclick="closePanel()"><i class="fas fa-times"></i></button>
-        
-        <div class="modal-left">
-            <h2 class="panel-title" id="panelTitle">Pack Name</h2>
-            <div class="panel-price" id="panelPrice">₹0.00</div>
-            <p class="panel-desc" id="panelDesc">Description goes here.</p>
-        </div>
-        
-        <div class="modal-right">
-            <img src="" id="panelImg" class="panel-header-img" onerror="this.src='https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?q=80&w=800&auto=format&fit=crop'" alt="Pack Cover">
-            
-            <div class="panel-actions">
-                <button class="panel-btn btn-buy js-buy-now" id="panelBuyBtn">
-                    <i class="fas fa-bolt"></i> Buy Now
-                </button>
-                <button class="panel-btn btn-explore js-add-to-cart" id="panelAddBtn">
-                    <i class="fas fa-shopping-cart"></i> Add to Cart
-                </button>
-                <a href="#" class="panel-btn btn-explore" id="panelExploreBtn">
-                    <i class="fas fa-play"></i> Explore Pack & Listen
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
-
 {% endblock %}
 
 {% block page_scripts %}
 <script>
-    let currentProduct = null;
-
-    function openPanel(id) {
-        const dataEl = document.getElementById('pack-data-' + id);
-        if (!dataEl) return;
-        
-        const imgUrl = dataEl.textContent.trim();
-        const name = dataEl.dataset.name;
-        const price = parseFloat(dataEl.dataset.price);
-        const desc = dataEl.dataset.desc;
-        const exploreUrl = dataEl.dataset.exploreUrl;
-        
-        currentProduct = { id: id, name: name, price: price, type: 'pack' };
-        
-        document.getElementById('panelImg').src = imgUrl;
-        document.getElementById('panelTitle').textContent = name;
-        document.getElementById('panelPrice').textContent = '₹' + price.toFixed(2);
-        document.getElementById('panelDesc').textContent = desc || "No description provided.";
-        document.getElementById('panelExploreBtn').href = exploreUrl;
-        
-        document.getElementById('panelOverlay').classList.add('active');
-        document.getElementById('slidePanel').classList.add('active');
-        document.body.style.overflow = 'hidden';
-    }
-    
-    function closePanel(e) {
-        if (e && e.target.id !== 'panelOverlay') return;
-        document.getElementById('panelOverlay').classList.remove('active');
-        document.body.style.overflow = '';
-    }
-
-    // Connect Add to cart / Buy Now for panel
-    document.getElementById('slidePanel').addEventListener('click', function(e) {
-        if (!currentProduct) return;
-        
-        if (e.target.closest('#panelAddBtn')) {
-            if (typeof window.addToGlobalCart === 'function') {
-                window.addToGlobalCart(currentProduct);
-                closePanel();
-            }
-        } else if (e.target.closest('#panelBuyBtn')) {
-            if (typeof window.addToGlobalCart === 'function') {
-                window.addToGlobalCart(currentProduct, true);
-            }
-        }
-    });
+    // Modal removed, now links to dedicated product detail page
 </script>
 {% endblock %}

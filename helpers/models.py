@@ -84,6 +84,8 @@ class VocalPreset(db.Model):
     product_id = db.Column(db.Integer, db.ForeignKey("products.id"), unique=True)
     supported_daw = db.Column(db.String(255))
     preset_zip = db.Column(db.String(500))
+    demo_before = db.Column(db.String(500))
+    demo_after = db.Column(db.String(500))
 
     product = db.relationship("Product", backref=db.backref("vocal_preset", uselist=False))
 

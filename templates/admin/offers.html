@@ -183,6 +183,21 @@
           </form>
         </td>
         <td>
+          <button type="button" class="btn-icon" title="Edit" onclick='editOffer({{ offer.id }}, {
+              name: "{{ offer.name }}",
+              offer_type: "{{ offer.offer_type }}",
+              applicable_product_type: "{{ offer.applicable_product_type }}",
+              stacks_with_coupons: {{ 'true' if offer.stacks_with_coupons else 'false' }},
+              buy_quantity: {{ offer.buy_quantity or 1 }},
+              get_quantity: {{ offer.get_quantity or 1 }},
+              discount_percentage: {{ offer.discount_percentage or 20 }},
+              min_spend_cents: {{ offer.min_spend_cents or 0 }},
+              discount_fixed_cents: {{ offer.discount_fixed_cents or 0 }},
+              strip_message: "{{ offer.strip_message or '' }}",
+              post_to_strip: {{ 'true' if offer.post_to_strip else 'false' }}
+          })' style="color:var(--primary-color);">
+            <i class="fas fa-edit"></i>
+          </button>
           <form method="POST" action="{{ url_for('admin.admin_offer_delete', offer_id=offer.id) }}" style="display:inline;"
                 onsubmit="return confirm('Delete offer \'{{ offer.name }}\'?')">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -200,6 +215,55 @@
   </div>
   {% endif %}
 </div>
+
+<script>
+function editOffer(id, data) {
+    const form = document.getElementById('offerForm');
+    form.action = `/admin/offers/${id}/edit`;
+    
+    document.getElementById('offer_name').value = data.name;
+    document.getElementById('offer_type').value = data.offer_type;
+    document.getElementById('applicable_product_type').value = data.applicable_product_type;
+    document.getElementById('stacks_with_coupons').checked = data.stacks_with_coupons;
+    
+    showOfferFields(data.offer_type);
+    
+    if (data.offer_type === 'bogo') {
+        form.querySelector('input[name="buy_quantity"]').value = data.buy_quantity;
+        form.querySelector('input[name="get_quantity"]').value = data.get_quantity;
+    } else if (data.offer_type === 'bulk_percent') {
+        form.querySelector('input[name="bulk_min_qty"]').value = data.buy_quantity;
+        form.querySelector('input[name="discount_percentage"]').value = data.discount_percentage;
+    } else if (data.offer_type === 'spend_amount_off') {
+        form.querySelector('input[name="min_spend"]').value = (data.min_spend_cents || 0) / 100;
+        form.querySelector('input[name="discount_fixed"]').value = (data.discount_fixed_cents || 0) / 100;
+    }
+    
+    document.getElementById('offer_strip_message').value = data.strip_message || '';
+    document.getElementById('offer_post_to_strip').checked = data.post_to_strip;
+    
+    const submitBtn = form.querySelector('button[type="submit"]');
+    submitBtn.innerHTML = '<i class="fas fa-save"></i> Update Offer';
+    
+    if (!document.getElementById('cancelOfferEditBtn')) {
+        const cancelBtn = document.createElement('button');
+        cancelBtn.type = 'button';
+        cancelBtn.id = 'cancelOfferEditBtn';
+        cancelBtn.className = 'btn btn-secondary';
+        cancelBtn.innerHTML = '<i class="fas fa-times"></i> Cancel Edit';
+        cancelBtn.onclick = function() {
+            form.action = "{{ url_for('admin.admin_offer_add') }}";
+            form.reset();
+            showOfferFields('bogo');
+            submitBtn.innerHTML = '<i class="fas fa-plus"></i> Create Offer';
+            cancelBtn.remove();
+        };
+        submitBtn.parentNode.appendChild(cancelBtn);
+    }
+    
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
 
 <style>
 .toggle-wrap {

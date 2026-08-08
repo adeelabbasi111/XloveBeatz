@@ -3,17 +3,17 @@
         <div class="mobile-nav-icon-wrap"><i class="fas fa-music"></i></div>
         <span>Beats</span>
     </a>
-    <a href="{{ url_for('public.home') }}#beat-packs" class="mobile-nav-item" data-page="packs">
+    <a href="{{ url_for('public.beat_packs_page') }}" class="mobile-nav-item" data-page="packs">
         <div class="mobile-nav-icon-wrap"><i class="fas fa-compact-disc"></i></div>
         <span>Packs</span>
     </a>
-    <button class="mobile-nav-item mobile-account-btn" id="mobileAccountBtn">
+    <a href="{{ url_for('dashboard.dashboard') }}" class="mobile-nav-item mobile-account-btn" id="mobileDashboardBtn">
         <div class="mobile-nav-icon-wrap account-circle">
-            <i class="fas fa-user-circle"></i>
+            <i class="fas fa-chart-line"></i>
         </div>
-        <span>Account</span>
-    </button>
-    <a href="{{ url_for('public.home') }}#vocal-presets" class="mobile-nav-item" data-page="presets">
+        <span>Dashboard</span>
+    </a>
+    <a href="{{ url_for('public.vocal_presets_page') }}" class="mobile-nav-item" data-page="presets">
         <div class="mobile-nav-icon-wrap"><i class="fas fa-sliders-h"></i></div>
         <span>Presets</span>
     </a>

@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
 
-        // Remove after 4 seconds
+        // Remove after 6 seconds
         setTimeout(() => {
             toast.classList.remove('show');
             toast.classList.add('hide');
@@ -72,10 +72,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     toast.parentNode.removeChild(toast);
                 }
             }, 500);
-        }, 4000);
+        }, 6000);
 
-        // Schedule the next one at a random interval (between 5s and 12s)
-        const nextInterval = Math.floor(Math.random() * (12000 - 5000 + 1)) + 5000;
+        // Schedule the next one at a random interval (between 10s and 20s)
+        const nextInterval = Math.floor(Math.random() * (20000 - 10000 + 1)) + 10000;
         setTimeout(showNextEvent, nextInterval);
     }
 

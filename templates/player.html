@@ -93,7 +93,7 @@
             <h2>
                 <i class="fas fa-list"></i>
                 <span id="tracklistTitle">
-                    {% if pack_info %}{{ pack_info.product.name }} Pack{% else %}All Beats{% endif %}
+                    {% if pack_info %}{{ pack_info.product.name }}{% else %}All Beats{% endif %}
                 </span>
                 <span class="track-count" id="trackCount">{{ beats | length }} tracks</span>
             </h2>
@@ -220,5 +220,6 @@
 {% endblock %}
 
 {% block page_scripts %}
+<script src="{{ url_for('static', filename='js/waveform-generator.js') }}"></script>
 <script src="{{ url_for('static', filename='js/player.js') }}"></script>
 {% endblock %}

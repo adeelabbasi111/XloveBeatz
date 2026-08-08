@@ -11,31 +11,24 @@ WAVEFORM (with reflection)
 }
 
 .waveform-bars {
-  display: flex;
-  align-items: flex-end;
-  gap: 2px;
+  position: relative;
   height: 40px;
   width: 100%;
 }
 
-.wave-bar {
-  flex: 1;
-  background: rgba(124, 141, 240, 0.22);
-  border-radius: 2px 2px 0 0;
-  transition: background 0.15s ease;
-  min-height: 3px;
-  min-width: 2px;
+.wave-path-base {
+  color: rgba(124, 141, 240, 0.22);
+  transition: color 0.15s ease;
 }
 
-.wave-bar.played {
-  background: linear-gradient(to top, var(--accent-soft), #B8C3FF);
-  box-shadow: 0 0 6px rgba(124, 141, 240, 0.35);
+.wave-path-progress {
+  /* Using SVG fill 'currentColor' inherited from parent or applied directly via CSS */
+  color: var(--accent-soft);
+  filter: drop-shadow(0 0 6px rgba(124, 141, 240, 0.35));
 }
 
 .waveform-reflection {
-  display: flex;
-  align-items: flex-start;
-  gap: 2px;
+  position: relative;
   height: 18px;
   width: 100%;
   opacity: 0.25;
@@ -45,13 +38,10 @@ WAVEFORM (with reflection)
   pointer-events: none;
 }
 
-.wave-bar-ref {
-  flex: 1;
-  background: rgba(124, 141, 240, 0.15);
-  border-radius: 0 0 2px 2px;
-  min-height: 2px;
+.waveform-reflection .wave-path-base {
+  color: rgba(124, 141, 240, 0.15);
 }
 
-.wave-bar-ref.played {
-  background: var(--accent-soft);
-}
+.waveform-reflection .wave-path-progress {
+  color: var(--accent-soft);
+}

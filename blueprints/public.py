@@ -31,6 +31,12 @@ def vocal_presets_page():
 def about_page():
     return render_template('about.html', site_title="XLOVEBEATZ")
 
+@bp.route('/product/<int:product_id>')
+def product_detail(product_id):
+    product = Product.query.get_or_404(product_id)
+    if product.product_type == 'beat':
+        return redirect(url_for('public.player_page'))
+    return render_template('product_detail.html', product=product, site_title="XLOVEBEATZ")
 
 @bp.route('/player')
 @bp.route('/player/pack/<int:pack_id>')
