@@ -53,11 +53,11 @@ def reset_password_page(token):
 
     if not user or not user.password_reset_expires:
         flash('Invalid or expired reset link', 'error')
-        return redirect(url_for('home'))
+        return redirect(url_for('public.home'))
 
     if user.password_reset_expires < datetime.utcnow():
         flash('Reset link has expired. Please request a new one.', 'error')
-        return redirect(url_for('home'))
+        return redirect(url_for('public.home'))
 
     return render_template('partials/reset_password.html', token=token)
 
@@ -102,20 +102,20 @@ def signup():
 
         if not username or not email or not password:
             flash('All fields are required', 'error')
-            return render_template('signup.html')
+            return redirect(url_for('public.home'))
         if len(username) < 3:
             flash('Username must be at least 3 characters', 'error')
-            return render_template('signup.html')
+            return redirect(url_for('public.home'))
         if not validate_email(email):
             flash('Please enter a valid email address', 'error')
-            return render_template('signup.html')
+            return redirect(url_for('public.home'))
         ok, msg = validate_password(password)
         if not ok:
             flash(msg, 'error')
-            return render_template('signup.html')
+            return redirect(url_for('public.home'))
         if get_user_by_email(email):
             flash('Email already registered', 'error')
-            return render_template('signup.html')
+            return redirect(url_for('public.home'))
 
         user = create_user(username, email, generate_password_hash(password))
 
@@ -126,7 +126,7 @@ def signup():
         flash(f'Welcome to XLOVEBEATS, {username}!', 'success')
         return redirect(url_for('public.home'))
 
-    return render_template('signup.html')
+    return redirect(url_for('public.home'))
 
 
 @bp.route('/login', methods=['GET', 'POST'])
@@ -137,7 +137,7 @@ def login():
 
         if not email or not password:
             flash('Email and password are required', 'error')
-            return render_template('login.html')
+            return redirect(url_for('public.home'))
 
         user = get_user_by_email(email)
         if user and check_password_hash(user.password_hash, password):
@@ -147,7 +147,7 @@ def login():
             return redirect(url_for('public.home'))
         flash('Invalid email or password', 'error')
 
-    return render_template('login.html')
+    return redirect(url_for('public.home'))
 
 
 @bp.route('/logout')

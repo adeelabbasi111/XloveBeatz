@@ -6,9 +6,7 @@
 {% set active_page = 'home' %}
 
 {% block head_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/home/main.css') }}?v=4">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/home/portals.css') }}?v=4">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/home/animations.css') }}?v=4">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/home-bundle.css') }}?v=4">
 {% endblock %}
 
 {% block content %}
@@ -39,7 +37,7 @@
             <img src="{{ url_for('static', filename='images/hero2.jpg') }}"
                  alt="Hero Art" class="hero-image-full"
                  onerror="this.style.display='none'"
-                 loading="lazy">
+                 fetchpriority="high">
         </div>
 
         <!-- Trusted By Strip -->
@@ -48,27 +46,29 @@
             <div class="trusted-logos-container">
                 <div class="trusted-logos-track">
                     <!-- First Set -->
-                    <span class="trusted-logo">UNIVERSAL</span>
-                    <span class="trusted-logo">SONY MUSIC</span>
-                    <span class="trusted-logo">DEF JAM</span>
-                    <span class="trusted-logo">WARNER</span>
-                    <span class="trusted-logo">MTV</span>
-                    <span class="trusted-logo">NETFLIX</span>
-                    <span class="trusted-logo">HBO</span>
+                    <span class="trusted-logo">SUNO AI</span>
+                    <span class="trusted-logo">BUTTRFX</span>
+                    <span class="trusted-logo">UNISON AUDIO</span>
+                    <span class="trusted-logo">CONTROLLA VOICE</span>
+                    <span class="trusted-logo">SUNO AI</span>
+                    <span class="trusted-logo">BUTTRFX</span>
+                    <span class="trusted-logo">UNISON AUDIO</span>
+                    <span class="trusted-logo">CONTROLLA VOICE</span>
                     <!-- Duplicate for infinite scroll -->
-                    <span class="trusted-logo">UNIVERSAL</span>
-                    <span class="trusted-logo">SONY MUSIC</span>
-                    <span class="trusted-logo">DEF JAM</span>
-                    <span class="trusted-logo">WARNER</span>
-                    <span class="trusted-logo">MTV</span>
-                    <span class="trusted-logo">NETFLIX</span>
-                    <span class="trusted-logo">HBO</span>
+                    <span class="trusted-logo">SUNO AI</span>
+                    <span class="trusted-logo">BUTTRFX</span>
+                    <span class="trusted-logo">UNISON AUDIO</span>
+                    <span class="trusted-logo">CONTROLLA VOICE</span>
+                    <span class="trusted-logo">SUNO AI</span>
+                    <span class="trusted-logo">BUTTRFX</span>
+                    <span class="trusted-logo">UNISON AUDIO</span>
+                    <span class="trusted-logo">CONTROLLA VOICE</span>
                 </div>
             </div>
         </div>
     </section>
     {# ============ CREATIVE FEATURES STRIP ============ #}
-    <section class="features-strip">
+    <section class="features-strip" style="content-visibility: auto; contain-intrinsic-size: auto none auto 150px;">
         <div class="features-container">
             <div class="feature-item">
                 <div class="feature-icon"><i class="fas fa-bolt"></i></div>
@@ -99,7 +99,7 @@
     <div class="section-divider" id="explore"></div>
 
     {# ============ CATEGORY PORTALS (BENTO GRID) ============ #}
-    <section class="portals-container">
+    <section class="portals-container" style="content-visibility: auto; contain-intrinsic-size: auto none auto 500px;">
         <!-- Beat Packs Portal (Featured) -->
         <a href="{{ url_for('public.beat_packs_page') }}" class="portal-card portal-featured">
             <div class="portal-bg-wrapper">
@@ -141,7 +141,7 @@
     </section>
 
     {# ============ INFINITE REVIEWS CAROUSEL ============ #}
-    <section class="marquee-section">
+    <section class="marquee-section" style="content-visibility: auto; contain-intrinsic-size: auto none auto 300px;">
         <div class="marquee-container">
             <!-- First Track -->
             <div class="marquee-track">
@@ -241,7 +241,7 @@
     </section>
 
     {# ============ ABOUT ME TEASER ============ #}
-    <section class="about-teaser">
+    <section class="about-teaser" style="content-visibility: auto; contain-intrinsic-size: auto none auto 400px;">
         <h2>The Architect of Sound</h2>
         <p>A relentless pursuit of sonic perfection. Step into the world of XLOVEBEATZ and discover the vision, the passion, and the craft behind the music that moves the industry.</p>
         <a href="{{ url_for('public.about_page') }}" class="about-teaser-btn magnetic-btn">Discover My Journey</a>

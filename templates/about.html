@@ -14,70 +14,45 @@
     
     {# ============ HERO ============ #}
     <section class="about-hero">
-        <img src="{{ url_for('static', filename='images/about_hero.jpg') }}" class="about-hero-bg" onerror="this.src='https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1600&auto=format&fit=crop'" alt="Studio Background">
+        <img src="{{ url_for('static', filename='images/hero2.jpg') }}" class="about-hero-bg" onerror="this.src='https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?q=80&w=1600&auto=format&fit=crop'" alt="Studio Background">
         <div class="about-hero-gradient"></div>
         <div class="about-hero-content">
-            <h1 class="about-title">MANRAJ JOSHI</h1>
-            <p class="about-subtitle">The Architect of Sound</p>
+            <h1 class="about-title">PRODUCER XLOVEBEATZ</h1>
+            <p class="about-subtitle">The Architect of Indian Hip-Hop</p>
         </div>
     </section>
 
-    {# ============ THE JOURNEY ============ #}
-    <section class="journey-section">
-        <p class="journey-text reveal">
-            Music isn't just frequencies and waveforms; it's the invisible thread that connects human emotion. 
-            My journey began in a bedroom studio, chasing that <span class="highlight">perfect kick drum</span> and 
-            obsessing over the warmth of vintage synthesizers. Today, XLOVEBEATZ represents the culmination of a 
-            decade spent refining the art of production.
-        </p>
+    {# ============ THE STORY (SCROLL DRIVEN) ============ #}
+    <section class="story-section">
         
-        <div class="about-gallery">
-            <img src="{{ url_for('static', filename='images/studio1.jpg') }}" class="gallery-img reveal" onerror="this.src='https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?q=80&w=800&auto=format&fit=crop'" alt="Studio Gear">
-            <img src="{{ url_for('static', filename='images/studio2.jpg') }}" class="gallery-img reveal" onerror="this.src='https://images.unsplash.com/photo-1520113412646-fa108a0cb59d?q=80&w=800&auto=format&fit=crop'" alt="Mixing Desk">
+        <div class="story-card glass-panel scroll-reveal">
+            <div class="story-icon"><i class="fas fa-fire"></i></div>
+            <p class="story-text">
+                Hey! I’m Producer XlovebeatzBeats, and I’ve been making beats for over 7 years. Music has always been my passion, and now I’m bringing that passion straight to you.
+            </p>
         </div>
-        
-        <p class="journey-text reveal" style="margin-top: 6rem;">
-            I don't just make beats. I build <span class="highlight">sonic foundations</span> for artists to construct 
-            their masterpieces upon. Every pack, every single, and every vocal preset is engineered with microscopic 
-            attention to detail. Whether you're an independent artist looking for your breakthrough sound, or a 
-            seasoned professional needing industry-standard tools, you are in the right place.
-        </p>
+
+        <div class="story-card glass-panel scroll-reveal delay-1">
+            <div class="story-icon"><i class="fas fa-globe-asia"></i></div>
+            <p class="story-text">
+                I truly believe <span class="highlight">Indian hip-hop</span> is growing fast, and in the next 5 years it will be one of the biggest movements in the world. 
+                My vision is clear — I want to become India’s <span class="highlight">best and most affordable</span> beat maker, giving rappers across the country high-quality beats they can rely on.
+            </p>
+        </div>
+
+        <div class="story-card glass-panel scroll-reveal delay-2">
+            <div class="story-icon"><i class="fas fa-users"></i></div>
+            <p class="story-text">
+                This is not just about me — <span class="highlight">it’s about us.</span> I’m here to support upcoming rappers from India, so we can grow together, push the culture forward, and make history with our sound.
+            </p>
+        </div>
+
     </section>
 
     {# ============ QUOTE ============ #}
-    <section class="quote-section">
-        <p class="quote-text reveal">"The right beat doesn't just support the vocal, it pulls the emotion out of the artist."</p>
-        <div class="quote-author reveal">— Manraj Joshi</div>
+    <section class="quote-section scroll-scale">
+        <p class="quote-text">"Pushing the culture forward, making history with our sound."</p>
     </section>
 
 </main>
-{% endblock %}
-
-{% block page_scripts %}
-<script>
-    // Simple intersection observer for reveal animations
-    document.addEventListener("DOMContentLoaded", function() {
-        const reveals = document.querySelectorAll(".reveal");
-        
-        const revealOptions = {
-            threshold: 0.1,
-            rootMargin: "0px 0px -50px 0px"
-        };
-        
-        const revealOnScroll = new IntersectionObserver(function(entries, observer) {
-            entries.forEach(entry => {
-                if (!entry.isIntersecting) {
-                    return;
-                } else {
-                    entry.target.classList.add("active");
-                    observer.unobserve(entry.target);
-                }
-            });
-        }, revealOptions);
-        
-        reveals.forEach(reveal => {
-            revealOnScroll.observe(reveal);
-        });
-    });
-</script>
 {% endblock %}

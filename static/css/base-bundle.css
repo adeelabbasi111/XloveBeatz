@@ -1,0 +1,687 @@
+/* --- main.css --- */
+/* ============================================================
+   BASE-MAIN.CSS — Imports all base CSS files
+   Include this one file in base.html
+   ============================================================ */
+
+/* --- resets.css --- */
+/* ============================================================
+   RESET.CSS — Variables, reset, body, scrollbar, typography
+   ============================================================ */
+
+/* ---------- RESET ---------- */
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* ---------- DESIGN TOKENS ---------- */
+:root {
+    /* Backgrounds */
+    --bg-deep:      #0C0E13;
+    --bg-surface:   #13151C;
+    --bg-elevated:  #1B1E27;
+
+    /* Borders */
+    --border-light: rgba(255, 255, 255, 0.06);
+    --border-mid:   rgba(255, 255, 255, 0.1);
+
+    /* Text */
+    --text-primary:   #F1F3F8;
+    --text-secondary: #A0A5B5;
+    --text-muted:     #6C7285;
+
+    /* Accent */
+    --accent-soft:     #7C8DF0;
+    --accent-glow:     rgba(124, 141, 240, 0.25);
+    --accent-gold-mute:#C9AE74;
+    --accent-purple:   #9D7CEC;
+
+    /* Radii */
+    --card-radius:    28px;
+    --element-radius: 18px;
+
+    /* Motion */
+    --ease-spring: cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    --transition-smooth: all 0.3s var(--ease-spring);
+}
+
+/* ---------- BODY ---------- */
+body {
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    font-family: 'Outfit', 'Syne', sans-serif;
+    font-weight: 400;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    position: relative;
+}
+
+/* Ambient background gradient */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+        radial-gradient(circle at 30% 20%, rgba(124, 141, 240, 0.08), transparent 60%),
+        radial-gradient(circle at 80% 70%, rgba(201, 174, 78, 0.04), transparent 70%);
+    pointer-events: none;
+    z-index: -2;
+}
+
+/* Floating music notes */
+#floatingNotes {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.note {
+    position: absolute;
+    bottom: -50px;
+    color: var(--accent-soft);
+    opacity: 0.12;
+    font-size: 1.8rem;
+    font-family: 'Outfit', 'Segoe UI Symbol', sans-serif;
+    filter: blur(0.3px);
+    text-shadow: 0 0 8px rgba(124, 141, 240, 0.3);
+    user-select: none;
+    animation: floatUp linear infinite;
+}
+
+@keyframes floatUp {
+    0%   { transform: translateY(0) rotate(0deg); opacity: 0; }
+    15%  { opacity: 0.15; }
+    85%  { opacity: 0.12; }
+    100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; }
+}
+
+/* ---------- SCROLLBAR ---------- */
+::-webkit-scrollbar       { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-surface); }
+::-webkit-scrollbar-thumb { background: var(--accent-soft); border-radius: 10px; }
+
+/* ---------- TYPOGRAPHY ---------- */
+h1, h2, h3, .logo-text {
+    font-weight: 600;
+    letter-spacing: -0.02em;
+}
+
+a {
+    color: inherit;
+}
+
+/* ---------- COMMON ANIMATIONS ---------- */
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px) scale(0.96); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25%      { transform: translateX(-8px); }
+    75%      { transform: translateX(8px); }
+}
+
+@keyframes shimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+/* Back button (player page) */
+
+/* --- auth.css --- */
+/* ============================================================
+   AUTH.CSS — Auth buttons, auth modals
+   ============================================================ */
+
+/* ---------- AUTH BUTTONS IN HEADER ---------- */
+
+/* User menu button */
+
+/* ---------- AUTH MODALS ---------- */
+.auth-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(12, 14, 19, 0.85);
+    backdrop-filter: blur(8px);
+    z-index: 2000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.auth-modal-overlay.active {
+    display: flex;
+    animation: fadeIn 0.25s ease;
+}
+
+.auth-modal {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-mid);
+    border-radius: var(--card-radius);
+    padding: 40px 32px;
+    width: 100%;
+    max-width: 420px;
+    position: relative;
+    animation: slideUp 0.35s var(--ease-spring);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.auth-modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-light);
+    color: var(--text-secondary);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.auth-modal-close:hover {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    transform: rotate(90deg);
+}
+
+.auth-modal-header {
+    text-align: center;
+    margin-bottom: 28px;
+}
+
+.auth-modal-icon {
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, var(--accent-soft), var(--accent-purple));
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    color: white;
+    margin: 0 auto 16px;
+    box-shadow: 0 10px 30px var(--accent-glow);
+}
+
+.auth-modal-header h2 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+    background: linear-gradient(120deg, #FFFFFF, var(--accent-soft));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.auth-modal-header p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.auth-form .form-group {
+    margin-bottom: 16px;
+}
+
+.auth-form label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.auth-form input {
+    width: 100%;
+    padding: 12px 16px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-light);
+    border-radius: var(--element-radius);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-family: inherit;
+    transition: var(--transition-smooth);
+}
+
+.auth-form input:focus {
+    outline: none;
+    border-color: var(--accent-soft);
+    background: rgba(124, 141, 240, 0.05);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.auth-error {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    margin-bottom: 16px;
+    display: none;
+}
+
+.auth-error.show {
+    display: block;
+    animation: shake 0.4s ease;
+}
+
+.auth-submit-btn {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--accent-soft), var(--accent-purple));
+    color: white;
+    border: none;
+    border-radius: var(--element-radius);
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    position: relative;
+}
+
+.auth-submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px var(--accent-glow);
+}
+
+.auth-submit-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.auth-switch {
+    text-align: center;
+    margin-top: 20px;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.auth-switch a {
+    color: var(--accent-soft);
+    text-decoration: none;
+    font-weight: 600;
+    margin-left: 4px;
+}
+
+.auth-switch a:hover {
+    text-decoration: underline;
+}
+
+/* ── Reset Password Page ── */
+.reset-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.reset-container {
+    width: 100%;
+    max-width: 440px;
+}
+
+.reset-card {
+    background: var(--bg-surface, #161616);
+    border: 1px solid var(--border-light, #2a2a2a);
+    border-radius: 22px;
+    padding: 40px 32px;
+    position: relative;
+    overflow: hidden;
+}
+
+.reset-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent-soft, #7c8df0), var(--accent-purple, #9d7cec));
+}
+
+.reset-header {
+    text-align: center;
+    margin-bottom: 28px;
+}
+
+.reset-icon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, rgba(124, 141, 240, 0.15), rgba(157, 124, 236, 0.1));
+    border: 1px solid rgba(124, 141, 240, 0.25);
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    color: var(--accent-soft, #7c8df0);
+    margin: 0 auto 16px;
+}
+
+.reset-header h2 {
+    font-size: 1.35rem;
+    font-weight: 800;
+    margin: 0 0 8px;
+    background: linear-gradient(120deg, #fff, var(--accent-soft, #7c8df0));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.reset-header p {
+    color: var(--text-muted, #888);
+    font-size: 0.85rem;
+}
+
+.auth-success {
+    background: rgba(16, 185, 129, 0.08);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    color: #10b981;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    margin-bottom: 16px;
+    display: none;
+}
+
+.auth-forgot {
+    text-align: right;
+    margin-top: -8px;
+    margin-bottom: 4px;
+}
+
+.auth-forgot a {
+    color: var(--accent-soft, #7c8df0);
+    font-size: 0.8rem;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s;
+}
+
+.auth-forgot a:hover {
+    color: var(--accent-purple, #9d7cec);
+    text-decoration: underline;
+}
+
+/* --- user-sidebar.css --- */
+/* ============================================================
+   USER-SIDEBAR.CSS — User sidebar panel + tabs
+   ============================================================ */
+
+/* ---------- USER SIDEBAR ---------- */
+
+/* ---------- TABS ---------- */
+
+/* ---------- TAB CONTENT ---------- */
+
+/* ---------- PURCHASE ITEMS ---------- */
+
+/* ---------- PROFILE SECTION ---------- */
+
+/* ── Logged-in Actions inside Auth Modals ── */
+
+/* --- preloader.css --- */
+/* ============================================================
+   PRELOADER.CSS — Loading screen
+   ============================================================ */
+/* ============================================================
+   LOOPING ANNOUNCEMENT STRIP
+   ============================================================ */
+
+.looping-strip-wrapper {
+    position: relative; /* Changed from fixed so it doesn't overlap the header */
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 9999;
+    background: linear-gradient(90deg, #13151C, rgba(124, 141, 240, 0.15), #13151C);
+    border-bottom: 1px solid rgba(124, 141, 240, 0.2);
+    padding: 12px 0; /* Changed from 120px to fix the massive height bug */
+    overflow: hidden;
+    display: flex;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.looping-strip-track {
+    display: flex;
+    width: fit-content;
+    animation: scroll-seamless 30s linear infinite;
+}
+
+/* Pause the animation when a user hovers over the strip */
+.looping-strip-track:hover {
+    animation-play-state: paused;
+    cursor: default;
+}
+
+.looping-content {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    padding-right: 20px; /* Space between the original and duplicate */
+}
+
+.looping-content span {
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-primary, #ffffff);
+    margin: 0 20px;
+    display: inline-flex;
+    align-items: center;
+}
+
+/* Emphasize specific elements with the gold accent used in your prices */
+.looping-content span:nth-child(odd) {
+    color: var(--accent-gold-mute, #C9AE74);
+}
+
+/* Animated rotating separators */
+.strip-separator {
+    color: rgba(124, 141, 240, 0.8) !important;
+    font-size: 1.1rem !important;
+    animation: spin-pulse 3s linear infinite;
+}
+
+/* ── Animations ── */
+@keyframes scroll-seamless {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        /* Shifts exactly 50% of the total width to create the perfect loop */
+        transform: translateX(-50%);
+    }
+}
+
+@keyframes spin-pulse {
+    0% {
+        transform: rotate(0deg) scale(1);
+        opacity: 0.7;
+    }
+    50% {
+        transform: rotate(180deg) scale(1.3);
+        opacity: 1;
+        color: white; /* Flashes white mid-spin */
+    }
+    100% {
+        transform: rotate(360deg) scale(1);
+        opacity: 0.7;
+    }
+}
+
+.preloader {
+    position: fixed;
+    inset: 0;
+    background: var(--bg-deep);
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.preloader.done {
+    opacity: 0;
+    transform: scale(1.08);
+    pointer-events: none;
+}
+
+.preloader-vinyl {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: repeating-radial-gradient(
+        var(--bg-elevated) 0, var(--bg-elevated) 6px,
+        #1f2230 6px, #1f2230 8px
+    );
+    position: relative;
+    animation: preloaderSpin 1.4s linear infinite;
+    box-shadow: 0 0 50px rgba(124, 141, 240, 0.2);
+}
+
+.preloader-vinyl-inner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 34px;
+    height: 34px;
+    background: linear-gradient(135deg, var(--accent-soft), var(--accent-purple));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.65rem;
+    color: white;
+    letter-spacing: 0.05em;
+}
+
+@keyframes preloaderSpin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+.preloader-eq {
+    display: flex;
+    gap: 4px;
+    height: 28px;
+    align-items: flex-end;
+}
+
+.preloader-eq span {
+    width: 4px;
+    background: linear-gradient(to top, var(--accent-soft), var(--accent-gold-mute));
+    border-radius: 2px;
+    animation: preloaderEq 0.7s ease-in-out infinite;
+    transform-origin: bottom;
+}
+
+.preloader-eq span:nth-child(1) { height: 40%; animation-delay: 0s;    }
+.preloader-eq span:nth-child(2) { height: 80%; animation-delay: 0.1s;  }
+.preloader-eq span:nth-child(3) { height: 60%; animation-delay: 0.2s;  }
+.preloader-eq span:nth-child(4) { height: 100%;animation-delay: 0.15s; }
+.preloader-eq span:nth-child(5) { height: 50%; animation-delay: 0.05s; }
+
+@keyframes preloaderEq {
+    0%, 100% { transform: scaleY(1); }
+    50%      { transform: scaleY(1.7); }
+}
+
+.preloader-text {
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.35em;
+    color: var(--text-primary);
+    animation: preloaderPulse 2s ease-in-out infinite;
+}
+
+@keyframes preloaderPulse {
+    0%, 100% { opacity: 0.5; letter-spacing: 0.35em; }
+    50%      { opacity: 1;   letter-spacing: 0.42em; }
+}
+
+.preloader-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--bg-elevated);
+}
+
+.preloader-progress {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent-soft), var(--accent-gold-mute));
+    transition: width 0.25s ease;
+    box-shadow: 0 0 12px var(--accent-glow);
+}
+
+/* --- mobile.css --- */
+/* ============================================================
+   MOBILE.CSS — All mobile responsive overrides (max-width: 700px)
+   Load last among base files.
+   ============================================================ */
+
+@media (max-width: 700px) {
+
+    /* ── Logo ── */
+    .logo {
+        order: 1;
+    }
+
+    /* ── Auth Buttons ── */
+
+    /* ── Auth Modals ── */
+    .auth-modal {
+        padding: 28px 20px;
+    }
+
+    /* ── User Sidebar becomes bottom sheet ── */
+}
+
+/* ── Reduced Motion ── */
+@media (prefers-reduced-motion: reduce) {
+    .note {
+        display: none;
+    }
+
+    .reveal-on-scroll {
+        opacity: 1;
+        transform: none;
+    }
+
+    .preloader {
+        display: none !important;
+    }
+}
+

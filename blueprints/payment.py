@@ -1,14 +1,12 @@
 import logging
-import hmac
-import hashlib
 import os
+import time
 from datetime import datetime
 
-from flask import Blueprint, request, jsonify, render_template, session, current_app, redirect, url_for, flash
+from flask import Blueprint, request, jsonify, render_template, session, current_app, redirect, url_for, flash, send_file
 from helpers.models import Product, License, BeatLicensePrice, Cart, db, Order, OrderItem, User, GeneratedLicense, BeatDetail
 from helpers.utils import get_current_user, login_required
-from helpers.services import create_order, add_order_item, mark_order_paid, clear_cart, track_download
-from flask import Blueprint, request, jsonify, render_template, session, current_app, redirect, url_for, flash, send_file
+from helpers.services import create_order, add_order_item, mark_order_paid, clear_cart
 from helpers.license_generator import BeatLicenseGenerator
 from helpers.models import DiscountCode
 
@@ -82,7 +80,7 @@ def _generate_licenses_for_order(order):
             safe_beat = beat_name.replace(' ', '_').replace('/', '_')
             filename = f"{safe_name}_{item.license.name}_{safe_beat}"
 
-            file_path = generator.save_license(story, filename, output_dir)
+            generator.save_license(story, filename, output_dir)
             db_path = f"data/licenses/{filename}.pdf"
 
             gen_lic = GeneratedLicense(

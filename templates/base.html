@@ -11,10 +11,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    {# Common CSS — preloaded for speed #}
+    <link rel="preload" href="{{ url_for('static', filename='css/base-bundle.css') }}" as="style">
+    <link rel="preload" href="{{ url_for('static', filename='css/cart-bundle.css') }}" as="style">
+    <link rel="preload" href="{{ url_for('static', filename='css/header-bundle.css') }}" as="style">
+    
     {# Common CSS — loaded on every page #}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/base/main.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/cart/main.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/header/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base-bundle.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/cart-bundle.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/header-bundle.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/fomo.css') }}">
 
     {# Page-specific CSS #}

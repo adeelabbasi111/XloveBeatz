@@ -9,11 +9,11 @@ from reportlab.platypus import (
 )
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
-from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+from reportlab.lib.enums import TA_CENTER
 from reportlab.platypus import Image
 from reportlab.lib import colors
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Dict, List
 import os
 import uuid
 

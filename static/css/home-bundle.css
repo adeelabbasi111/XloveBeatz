@@ -1,0 +1,987 @@
+/* --- main.css --- */
+/* ============================================================
+   -MAIN.CSS — Imports all page CSS files
+   Load this only on index.html
+   ============================================================ */
+
+/* --- hero.css --- */
+/* ============================================================
+   HOME/HERO.CSS — Cleaned & Redesigned Hero Section
+   ============================================================ */
+
+/* ── HERO CONTAINER ── */
+.hero {
+    min-height: 90vh; /*[cite: 2] */
+    display: flex;
+    align-items: center;
+    padding: 120px 40px 140px; /* Increased bottom padding for trusted strip */
+    position: relative; /*[cite: 2] */
+    z-index: 2; /*[cite: 2] */
+    overflow: hidden; /* Keeps the full-height background image contained */
+}
+
+@media (max-height: 650px) {
+    .hero {
+        min-height: 650px; /* Prevent crushing on landscape mobile */
+    }
+}
+
+/* ── HERO CONTENT (LEFT SIDE) ── */
+.hero-content {
+    position: relative; /*[cite: 2] */
+    z-index: 3; /* Placed above the background image */
+    max-width: 580px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .hero-content {
+        animation: heroFadeIn 0.8s ease-out; /*[cite: 2] */
+    }
+}
+
+@keyframes heroFadeIn {
+    from { opacity: 0; transform: translateY(20px); } /*[cite: 2] */
+    to   { opacity: 1; transform: translateY(0); } /*[cite: 2] */
+}
+
+.hero-title-spicy {
+    font-size: clamp(3rem, 8vw, 5rem); /*[cite: 2] */
+    font-weight: 800; /*[cite: 2] */
+    line-height: 1.05; /*[cite: 2] */
+    margin-bottom: 24px; /*[cite: 2] */
+    background: linear-gradient(
+        90deg, #FFFFFF, #B8C3FF, var(--accent-soft),
+        var(--accent-gold-mute), #FFFFFF
+    ); /*[cite: 2] */
+    background-size: 300% 100%; /*[cite: 2] */
+    background-clip: text; /*[cite: 2] */
+    -webkit-background-clip: text; /*[cite: 2] */
+    color: transparent; /*[cite: 2] */
+    animation: gradientShift 5s ease infinite; /*[cite: 2] */
+    text-shadow:
+        0 0 40px rgba(124, 141, 240, 0.3),
+        0 0 80px rgba(124, 141, 240, 0.1); /*[cite: 2] */
+}
+
+@keyframes gradientShift {
+    0%   { background-position: 0% 50%; } /*[cite: 2] */
+    50%  { background-position: 100% 50%; } /*[cite: 2] */
+    100% { background-position: 0% 50%; } /*[cite: 2] */
+}
+
+.hero-slogan {
+    font-size: 1.25rem; /*[cite: 2] */
+    color: var(--text-secondary); /*[cite: 2] */
+    max-width: 500px; /*[cite: 2] */
+    margin-bottom: 36px; /*[cite: 2] */
+}
+
+/* ── CALL TO ACTION ── */
+.hero-cta {
+    display: flex; /*[cite: 2] */
+    align-items: center;
+    gap: 20px; /*[cite: 2] */
+}
+
+.cta-btn {
+    display: inline-flex; /*[cite: 2] */
+    align-items: center; /*[cite: 2] */
+    gap: 12px; /*[cite: 2] */
+    background: rgba(124, 141, 240, 0.12); /*[cite: 2] */
+    backdrop-filter: blur(4px); /*[cite: 2] */
+    border: 1px solid rgba(124, 141, 240, 0.4); /*[cite: 2] */
+    padding: 14px 32px; /*[cite: 2] */
+    border-radius: 60px; /*[cite: 2] */
+    font-weight: 600; /*[cite: 2] */
+    color: white; /*[cite: 2] */
+    text-decoration: none; /*[cite: 2] */
+    transition: var(--transition-smooth); /*[cite: 2] */
+    font-size: 1rem; /*[cite: 2] */
+    box-shadow: 0 0 20px rgba(124, 141, 240, 0.15); /*[cite: 2] */
+}
+
+.cta-btn:hover {
+    background: var(--accent-soft); /*[cite: 2] */
+    transform: translateY(-2px); /*[cite: 2] */
+    box-shadow:
+        0 10px 20px -8px rgba(124, 141, 240, 0.4),
+        0 0 30px rgba(124, 141, 240, 0.2); /*[cite: 2] */
+}
+
+/* ── FULL-HEIGHT RIGHT VISUAL ── */
+.hero-visual-full {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 55%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.hero-image-full {
+    width: 100%;
+    height: 100%;
+    margin-top:45px;
+    object-fit: cover;
+    object-position: center left;
+
+    /* Blends seamlessly into the dark background on the left side of the photo */
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 30%);
+    mask-image: linear-gradient(to right, transparent 0%, black 30%);
+}
+
+/* ── SECTION DIVIDER ── */
+.section-divider {
+    height: 1px; /*[cite: 2] */
+    background: linear-gradient(90deg, transparent, var(--border-mid), transparent); /*[cite: 2] */
+    margin: 0 auto; /*[cite: 2] */
+    max-width: 800px; /*[cite: 2] */
+    opacity: 0.6; /*[cite: 2] */
+}
+
+
+/* ── MOBILE / TABLET RESPONSIVENESS ── */
+@media (max-width: 992px) {
+    .hero {
+        padding: 100px 24px 60px;
+    }
+
+    .hero-content {
+        max-width: 100%;
+    }
+
+    .hero-visual-full {
+        width: 100%;
+        opacity: 0.3; /* Lowers image contrast on small screens so text remains legible */
+    }
+
+    .hero-image-full {
+        object-position: center top;
+        -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 25%, black 75%, transparent 100%);
+        mask-image: linear-gradient(to bottom, transparent 0%, black 25%, black 75%, transparent 100%);
+    }
+}
+
+/* ============================================================
+   TRUSTED BY STRIP
+   ============================================================ */
+.trusted-by-strip {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 5;
+    padding: 20px 0;
+    background: rgba(10, 10, 12, 0.4);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: hidden;
+}
+
+.trusted-by-text {
+    font-size: 0.65rem;
+    letter-spacing: 4px;
+    color: rgba(255, 255, 255, 0.4);
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 15px;
+}
+
+.trusted-logos-container {
+    width: 100%;
+    max-width: 1200px;
+    overflow: hidden;
+    position: relative;
+    /* Soft fade on edges */
+    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+}
+
+.trusted-logos-track {
+    display: flex;
+    align-items: center;
+    width: max-content;
+    animation: scrollLogos 30s linear infinite;
+}
+
+.trusted-logos-track:hover {
+    animation-play-state: paused;
+}
+
+.trusted-logo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.5rem;
+    color: rgba(255, 255, 255, 0.4);
+    margin: 0 40px;
+    transition: color 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: -1px;
+}
+
+.trusted-logo:hover {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+@keyframes scrollLogos {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); } /* Scrolls half the width (which is exactly one set) */
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .trusted-by-strip {
+        padding: 15px 0;
+    }
+    
+    .trusted-logo {
+        font-size: 1.2rem;
+        margin: 0 25px;
+    }
+}
+
+/* --- tabs.css --- */
+/* ============================================================
+   HOME/TABS.CSS — Main container, tab navigation, trust strip
+   ============================================================ */
+
+/* ── Main Container ── */
+
+/* ── Tabs Nav ── */
+
+.tab-btn {
+    background: transparent;
+    border: 1px solid var(--border-mid);
+    padding: 10px 28px;
+    border-radius: 80px;
+    font-weight: 500;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    backdrop-filter: blur(4px);
+}
+
+.tab-btn.active,
+.tab-btn:hover {
+    background: var(--accent-soft);
+    border-color: var(--accent-soft);
+    color: white;
+    box-shadow: 0 6px 14px var(--accent-glow);
+}
+
+.tab-content {
+    display: none;
+    animation: fadeUp 0.45s ease-out;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* ── Trust Strip ── */
+
+/* --- cards.css --- */
+/* ============================================================
+   HOME/CARDS.CSS — Grid, product cards, beats preview, scroll reveal
+   ============================================================ */
+
+/* ── Grid ── */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 28px;
+}
+
+/* ── Card ── */
+.card {
+    background: var(--bg-surface);
+    border-radius: var(--card-radius);
+    padding: 20px;
+    border: 1px solid var(--border-light);
+    transition: var(--transition-smooth);
+    display: flex;
+    flex-direction: column;
+}
+
+.card:hover {
+    transform: translateY(-6px);
+    border-color: rgba(124, 141, 240, 0.5);
+    box-shadow: 0 20px 30px -12px rgba(0, 0, 0, 0.4);
+}
+
+/* Skeleton shimmer */
+
+/* Card badges (HOT / NEW) */
+
+.price {
+    font-weight: 800;
+    font-size: 1.2rem;
+    color: var(--accent-gold-mute);
+}
+
+/* ── Card Actions ── */
+
+/* ── Scroll Reveal ── */
+.reveal-on-scroll {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.6s var(--ease-spring);
+}
+
+.reveal-on-scroll.revealed {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ── Beats Preview ── */
+
+/* --- sections.css --- */
+/* ============================================================
+   HOME/SECTIONS.CSS — Testimonials, contact, social, credits, WhatsApp
+   ============================================================ */
+
+/* ── Testimonials ── */
+
+/* ── Producer Credits ── */
+
+/* ── Contact Section ── */
+.contact-section {
+    text-align: center;
+    margin-top: 0;
+    padding: 60px 40px 80px;
+    border-top: 1px solid var(--border-light);
+}
+
+.contact-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+.contact-subtitle {
+    color: var(--text-secondary);
+    margin-bottom: 48px;
+    font-size: 1rem;
+}
+
+/* ── Social Grid ── */
+.social-grid {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.social-card {
+    background: var(--bg-surface);
+    width: 160px;
+    padding: 20px 12px;
+    border-radius: 32px;
+    text-decoration: none;
+    color: var(--text-primary);
+    border: 1px solid var(--border-light);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    transition: var(--transition-smooth);
+}
+
+.social-icon {
+    width: 54px;
+    height: 54px;
+    background: rgba(124, 141, 240, 0.1);
+    border-radius: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.7rem;
+    color: var(--accent-soft);
+}
+
+.social-card:hover {
+    transform: translateY(-6px);
+    border-color: var(--accent-soft);
+    background: #171A24;
+}
+
+/* ── WhatsApp Float ── */
+.whatsapp-float {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    background: #25D366;
+    width: 54px;
+    height: 54px;
+    border-radius: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.8rem;
+    text-decoration: none;
+    box-shadow: 0 8px 20px rgba(37, 211, 102, 0.25);
+    z-index: 1100;
+    transition: transform 0.4s var(--ease-spring), opacity 0.4s ease;
+}
+
+.whatsapp-float.hidden {
+    transform: translateY(100px);
+    opacity: 0;
+}
+
+/* --- mobile.css --- */
+/* ============================================================
+   HOME/RESPONSIVE.CSS — All homepage responsive overrides
+   ============================================================ */
+
+/* ── TABLET / SMALL DESKTOP ── */
+@media (max-width: 1024px) { /*[cite: 4]*/
+    .hero {
+        display: flex; /*[cite: 4]*/
+        flex-direction: column; /*[cite: 4]*/
+        justify-content: flex-end; /* Moves all content to the bottom of the section */
+        text-align: center; /*[cite: 4]*/
+        padding: 0; /* Removed padding so the image reaches the absolute top edge */
+        min-height: 85vh; /* Ensures the hero section is tall enough to show the face */
+    }
+
+    .hero-content {
+        display: flex; /*[cite: 4]*/
+        flex-direction: column; /*[cite: 4]*/
+        align-items: center; /*[cite: 4]*/
+        max-width: 100%; /*[cite: 4]*/
+        width: 100%;
+        padding: 200px 32px 60px; /* Big top padding creates space for the gradient transition */
+
+        /* The black gradient behind the text that fades up into the image */
+        background: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.85) 40%, #000000 100%);
+        z-index: 3;
+    }
+
+    .hero-slogan {
+        margin-left: auto; /*[cite: 4]*/
+        margin-right: auto; /*[cite: 4]*/
+    }
+
+    .hero-cta {
+        align-items: center; /*[cite: 4]*/
+        justify-content: center; /*[cite: 4]*/
+    }
+
+    /* Redesigned Mobile/Tablet Visual: Full opacity background */
+    .hero-visual-full {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%; /*[cite: 4]*/
+        height: 100%;
+        opacity: 0.95; /* Raised from 0.25 so the subject is completely visible */
+        z-index: 1;
+        pointer-events: none;
+    }
+
+    .hero-image-full {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center 15%; /* Focuses the crop near the top so the face isn't cut off */
+
+        /* Smoothly fades the bottom of the image into the black background */
+        -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 100%); /*[cite: 4]*/
+        mask-image: linear-gradient(to bottom, black 50%, transparent 100%); /*[cite: 4]*/
+    }
+}
+
+/* ── LARGE MOBILE ── */
+@media (max-width: 700px) { /*[cite: 4]*/
+    .hero {
+        gap: 0; /* Removed gap since spacing is handled by content padding now */
+    }
+
+    .hero-content {
+        padding: 150px 20px 50px; /* Adjusts the gradient spread and padding for mobile */
+    }
+
+    .hero-title-spicy {
+        font-size: 2.5rem; /*[cite: 4]*/
+    }
+
+    .tab-btn {
+        padding: 6px 16px; /*[cite: 4]*/
+        font-size: 0.8rem; /*[cite: 4]*/
+    }
+
+    .contact-title {
+        font-size: 1.6rem; /*[cite: 4]*/
+    }
+
+    .social-card {
+        width: 120px; /*[cite: 4]*/
+        padding: 14px 8px; /*[cite: 4]*/
+    }
+
+    .whatsapp-float {
+        bottom: 80px; /*[cite: 4]*/
+    }
+}
+
+/* ── SMALL MOBILE ── */
+@media (max-width: 480px) { /*[cite: 4]*/
+    .hero-title-spicy {
+        font-size: 2.2rem; /*[cite: 4]*/
+    }
+
+    .hero-content {
+        padding: 120px 16px 40px; /* Tighter padding for very small screens */
+    }
+
+    .cta-btn {
+        padding: 10px 20px; /*[cite: 4]*/
+        font-size: 0.85rem; /*[cite: 4]*/
+    }
+}
+
+/* --- portals.css --- */
+
+@media (min-width: 900px) {
+    .portals-container {
+        grid-auto-rows: 180px; /* Desktop overlap row height */
+        gap: 1.5rem;
+        padding: 4rem 3rem; /* desktop padding */
+    }
+}
+
+.portal-card {
+    position: relative;
+    z-index: 1;
+    border-radius: 32px;
+    overflow: hidden;
+    background: rgba(20, 20, 20, 0.4);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.4s ease;
+    cursor: pointer;
+    display: flex;
+    align-items: flex-end;
+    text-decoration: none;
+    min-height: 180px;
+}
+
+.portal-featured {
+    grid-column: span 2;
+    min-height: 190px;
+    z-index: 2;
+}
+
+@media (min-width: 900px) {
+    .portal-featured {
+        min-height: 250px;
+    }
+}
+
+.portal-card:hover {
+    z-index: 10;
+    transform: translateY(-8px) scale(1.01);
+    border-color: rgba(157, 124, 236, 0.4);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.8), 0 0 40px rgba(157, 124, 236, 0.15);
+}
+
+.portal-bg-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    z-index: 0;
+    border-radius: 32px;
+    transition: transform 1s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.portal-bg {
+    position: absolute;
+    top: -15%;
+    left: -15%;
+    width: 130%;
+    height: 130%;
+    object-fit: cover;
+    opacity: 0.4;
+    transition: opacity 0.5s ease;
+}
+
+@supports (animation-timeline: view()) {
+    .portal-card {
+        view-timeline: --portal-card;
+    }
+    .portal-bg {
+        animation: portal-parallax linear both;
+        animation-timeline: --portal-card;
+        animation-range: entry 0% exit 100%;
+    }
+}
+
+@keyframes portal-parallax {
+    from { transform: translateY(-10%); }
+    to { transform: translateY(10%); }
+}
+
+.portal-card:hover .portal-bg-wrapper {
+    transform: scale(1.05);
+}
+
+.portal-card:hover .portal-bg {
+    opacity: 0.7;
+}
+
+.portal-gradient {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to top, var(--bg-deep) 0%, rgba(12, 14, 19, 0.2) 60%, transparent 100%);
+    z-index: 1;
+}
+
+.portal-content {
+    position: relative;
+    z-index: 2;
+    padding: 1.5rem;
+    padding-bottom: 2rem;
+    width: 100%;
+    transform: translateY(10px);
+    transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.portal-card:hover .portal-content {
+    transform: translateY(0);
+}
+
+.portal-title {
+    font-size: 1.5rem;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+    letter-spacing: 0.5px;
+}
+
+.portal-subtitle {
+    font-size: 0.9rem;
+    font-family: 'Outfit', sans-serif;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.4s ease 0.1s, transform 0.4s ease 0.1s;
+}
+
+.portal-card:hover .portal-subtitle {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.portal-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--accent-purple);
+    color: var(--bg-deep);
+    padding: 0.6rem 1.2rem;
+    border-radius: 50px;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.4s ease 0.2s, transform 0.4s ease 0.2s;
+}
+
+.portal-card:hover .portal-btn {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Touch device / Mobile fallbacks for portals */
+@media (max-width: 900px) {
+    .portal-subtitle, .portal-btn {
+        opacity: 1;
+        transform: translateY(0);
+        transition: none;
+    }
+}
+
+/* Review Marquee */
+.marquee-section {
+    padding: 3rem 0;
+    background: rgba(19, 21, 28, 0.8); /* bg-surface */
+    border-top: 1px solid var(--border-light);
+    border-bottom: 1px solid var(--border-light);
+    overflow: hidden;
+    position: relative;
+}
+
+.marquee-container {
+    display: flex;
+    width: 200%;
+    animation: scroll-marquee 40s linear infinite;
+}
+
+.marquee-container:hover {
+    animation-play-state: paused;
+}
+
+.marquee-track {
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+}
+
+.marquee-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
+    padding: 1.5rem;
+    width: 280px;
+    max-width: 80vw;
+    margin: 0 0.75rem;
+    backdrop-filter: blur(10px);
+}
+
+.marquee-quote {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    font-style: italic;
+    margin-bottom: 1rem;
+    line-height: 1.5;
+}
+
+.marquee-author {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.marquee-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--accent-purple);
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.marquee-name {
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.marquee-role {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+@keyframes scroll-marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+/* About Teaser */
+.about-teaser {
+    padding: 5rem 2rem;
+    text-align: center;
+    max-width: 700px;
+    margin: 0 auto;
+    position: relative;
+}
+
+.about-teaser h2 {
+    font-size: 2rem;
+    font-family: 'Syne', sans-serif;
+    margin-bottom: 0.75rem;
+    background: linear-gradient(90deg, var(--text-primary), var(--accent-purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.about-teaser p {
+    font-size: 1rem;
+    font-family: 'Outfit', sans-serif;
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+    line-height: 1.6;
+}
+
+.about-teaser-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 0.8rem 2.5rem;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    background: transparent;
+    border: 2px solid var(--accent-purple);
+    border-radius: 50px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: 700;
+    font-family: 'Outfit', sans-serif;
+}
+
+.about-teaser-btn:hover {
+    background: var(--accent-purple);
+    color: var(--bg-deep);
+    box-shadow: 0 0 30px rgba(157, 124, 236, 0.3);
+}
+
+/* Features Strip */
+.features-strip {
+    padding: 2rem 1.5rem;
+    background: rgba(20, 20, 20, 0.6);
+    border-top: 1px solid var(--border-light);
+    border-bottom: 1px solid var(--border-light);
+    backdrop-filter: blur(10px);
+}
+
+.features-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+    min-width: 220px;
+}
+
+.feature-icon {
+    font-size: 1.25rem;
+    color: var(--accent-purple);
+    background: rgba(157, 124, 236, 0.1);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.feature-text h4 {
+    font-size: 0.95rem;
+    font-family: 'Syne', sans-serif;
+    color: var(--text-primary);
+    margin-bottom: 0.2rem;
+}
+
+.feature-text p {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.feature-divider {
+    width: 1px;
+    height: 40px;
+    background: var(--border-light);
+}
+
+@media (max-width: 900px) {
+    .feature-divider {
+        display: none;
+    }
+}
+
+
+/* --- animations.css --- */
+/* animations.css - Scroll driven animations for the homepage */
+
+/* We'll use CSS scroll-timeline for modern browsers, fallback to simple CSS animations */
+
+@supports (animation-timeline: scroll()) {
+    .scroll-float {
+        animation: float-on-scroll linear;
+        animation-timeline: scroll();
+    }
+
+    @keyframes float-on-scroll {
+        from { transform: translateY(100px) rotate(-10deg); }
+        to { transform: translateY(-300px) rotate(20deg); }
+    }
+}
+
+/* Fallback for non-supporting browsers */
+@supports not (animation-timeline: scroll()) {
+    .scroll-float {
+        animation: simple-float 10s ease-in-out infinite alternate;
+    }
+
+    @keyframes simple-float {
+        from { transform: translateY(0) rotate(0deg); }
+        to { transform: translateY(-50px) rotate(10deg); }
+    }
+}
+
+.floating-objects {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -1;
+    overflow: hidden;
+}
+
+.music-obj {
+    position: absolute;
+    color: rgba(255, 255, 255, 0.03);
+    text-shadow: 0 0 10px rgba(201, 174, 116, 0.1);
+}
+
+.obj-1 { top: 20%; left: 10%; font-size: 4rem; animation-duration: 15s; }
+.obj-2 { top: 60%; right: 15%; font-size: 3rem; animation-duration: 12s; animation-delay: -5s; }
+.obj-3 { top: 120%; left: 20%; font-size: 5rem; animation-duration: 18s; animation-delay: -2s; }
+.obj-4 { top: 180%; right: 10%; font-size: 3.5rem; animation-duration: 14s; }
+
+/* Enhanced Hero Glow */
+.hero-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60vw;
+    height: 60vw;
+    background: radial-gradient(circle, rgba(201, 174, 116, 0.15) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+    filter: blur(50px);
+}
+

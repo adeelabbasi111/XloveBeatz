@@ -24,7 +24,7 @@ from helpers.models import (
 )
 from helpers.utils import (
     admin_required, get_current_user,
-    generate_unique_slug, allowed_file, save_upload, login_required
+    generate_unique_slug
 )
 from helpers.services import (
     log_activity, get_site_setting, set_site_setting,

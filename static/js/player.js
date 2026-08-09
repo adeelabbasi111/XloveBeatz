@@ -52,7 +52,6 @@ var analyser          = null;
 var sourceNode        = null;
 var animFrameId       = null;
 var freqData          = null;
-var activeCategory    = 'all';
 var toastTimer        = null;
 var cachedDpr         = Math.min(window.devicePixelRatio || 1, 2);
 var isDraggingWaveform = false;
@@ -478,9 +477,26 @@ function decayRingDistortions() {
   return allQuiet;
 }
 
+// Visiblity Observer for Visualizer Optimization
+var isVizVisible = true;
+if (window.IntersectionObserver && vizCanvas) {
+  var vizObserver = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      isVizVisible = entry.isIntersecting;
+    });
+  });
+  vizObserver.observe(vizCanvas);
+}
+
 function startVisualizerLoop() {
   if (animFrameId) return;
   function loop() {
+    if (!isVizVisible && isPlaying) {
+      // Skip expensive canvas updates when offscreen
+      animFrameId = requestAnimationFrame(loop);
+      return;
+    }
+
     if (isPlaying && analyser) {
       analyser.getByteFrequencyData(freqData);
       updateRingDistortionsFromAudio();

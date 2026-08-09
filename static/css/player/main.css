@@ -1,8 +1,0 @@
-/* player/main.css — Import bundle */
-@import 'layout.css';
-@import 'player-card.css';
-@import 'waveform.css';
-@import 'volume.css';
-@import 'tracklist.css';
-@import 'license-modal.css';
-@import 'responsive.css';

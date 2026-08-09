@@ -1,6 +1,6 @@
 from flask import (
     Blueprint, render_template, flash, redirect,
-    url_for, send_from_directory,send_file, current_app, request, jsonify, session,flash
+    url_for, send_file, current_app, request, jsonify, session
 )
 from helpers.models import (
     db, Order, OrderItem, Download, Product,
@@ -14,7 +14,6 @@ import logging
 from io import BytesIO
 from datetime import datetime
 from helpers.license_generator import BeatLicenseGenerator
-from helpers.models import BeatLicensePrice
 
 import zipfile
 import io
@@ -46,8 +45,12 @@ def dashboard():
                 purchased_items.append(item)
 
     # Unique purchased products (for stats card)
-    purchased_ids = set(item.product_id for item in purchased_items)
-    purchased = Product.query.filter(Product.id.in_(purchased_ids)).all() if purchased_ids else []
+    seen_product_ids = set()
+    purchased = []
+    for item in purchased_items:
+        if item.product and item.product.id not in seen_product_ids:
+            seen_product_ids.add(item.product.id)
+            purchased.append(item.product)
 
     # Generated licenses for this user's paid order items
     order_item_ids = [item.id for item in purchased_items]

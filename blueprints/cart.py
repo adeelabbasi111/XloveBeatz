@@ -1,7 +1,7 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+from flask import Blueprint, request, redirect, url_for, flash, jsonify
 from helpers.models import Product, BeatLicensePrice, Offer
 from helpers.utils import get_current_cart
-from helpers.services import add_to_cart, remove_from_cart, get_cart_items, clear_cart
+from helpers.services import add_to_cart, remove_from_cart, clear_cart
 
 bp = Blueprint('cart', __name__)
 
@@ -103,31 +103,8 @@ def compute_offer_discounts(enriched_items):
 
 @bp.route('/cart')
 def view_cart():
-    cart_obj = get_current_cart()
-    items = get_cart_items(cart_obj.id)
-
-    enriched, subtotal_cents = [], 0
-    for item in items:
-        row_subtotal = item.price_cents_at_time * item.quantity
-        enriched.append({
-            'item': item, 'product': item.product,
-            'license': item.license, 'subtotal': row_subtotal,
-        })
-        subtotal_cents += row_subtotal
-
-    # Apply offers
-    discount_cents, offer_summary, blocks_coupons = compute_offer_discounts(enriched)
-    total_cents = max(0, subtotal_cents - discount_cents)
-
-    return render_template(
-        'cart.html',
-        items=enriched,
-        subtotal_cents=subtotal_cents,
-        discount_cents=discount_cents,
-        offer_summary=offer_summary,
-        blocks_coupons=blocks_coupons,
-        total_cents=total_cents,
-    )
+    # Deprecated: Cart is now handled via UI drawer
+    return redirect(url_for('public.home'))
 
 
 @bp.route('/cart/add', methods=['POST'])

@@ -58,14 +58,6 @@
     font-size: 16px;
 }
 
-.fomo-type-purchase .fomo-icon-wrapper i {
-    color: #4CAF50; /* Green check / bag */
-}
-
-.fomo-type-offer .fomo-icon-wrapper i {
-    color: #FFC107; /* Gold tag */
-}
-
 .fomo-content {
     display: flex;
     flex-direction: column;

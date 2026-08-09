@@ -4,7 +4,6 @@ Database models only. No business logic, no service functions.
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func, UniqueConstraint
 import os
-from datetime import datetime
 db = SQLAlchemy()
 
 

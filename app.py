@@ -1,7 +1,6 @@
 """
 XLOVEBEATS -- Application factory and entry point.
 """
-import os
 import logging
 import mimetypes
 mimetypes.add_type('audio/mpeg', '.mp3')
@@ -33,6 +32,7 @@ from helpers.services import get_site_setting
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
+    app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 31536000  # 1 year static caching
 
     from blueprints.admin import ALL_DATA_FOLDERS, get_data_path
     with app.app_context():
@@ -159,5 +159,8 @@ def create_app(config_class=Config):
 
 
 if __name__ == '__main__':
+    import os
     app = create_app()
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # Safely load debug mode from environment variable (defaults to False in production)
+    is_debug = os.environ.get('FLASK_DEBUG', 'False').lower() in ('true', '1', 't')
+    app.run(debug=is_debug, host='0.0.0.0', port=5000)

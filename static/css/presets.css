@@ -113,31 +113,6 @@
 }
 
 /* Modal Overrides for Presets */
-.wide-modal.preset-theme {
-    /* Uses base modal structure from beats.css */
-}
-
-.wide-modal.preset-theme .panel-title {
-    color: var(--text-primary);
-}
-
-.wide-modal.preset-theme .panel-price {
-    color: var(--accent-purple);
-}
-
-.wide-modal.preset-theme .btn-buy {
-    background: var(--accent-purple);
-    color: var(--bg-deep);
-}
-
-.wide-modal.preset-theme .btn-buy:hover {
-    box-shadow: 0 0 20px rgba(157, 124, 236, 0.4);
-}
-
-.wide-modal.preset-theme .close-panel-btn:hover {
-    color: var(--accent-purple);
-    border-color: var(--accent-purple);
-}
 
 /* Preset Page specific title gradient override removed to use global animated gradient */
 

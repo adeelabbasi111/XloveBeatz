@@ -1,14 +1,16 @@
-/* about.css - A true work of art for the About Me page */
+/* ============================================================
+   ABOUT.CSS — A masterclass in modern web design
+   ============================================================ */
 
 .about-page {
     position: relative;
-    overflow-x: hidden;
-    background: var(--bg-deep);
+    background: #0f1016; /* Deep dark background */
     color: var(--text-primary);
     font-family: 'Outfit', sans-serif;
+    overflow-x: hidden;
 }
 
-/* Hero Section with Parallax Image */
+/* ── Hero Section with Parallax Image ── */
 .about-hero {
     position: relative;
     height: 100vh;
@@ -25,8 +27,9 @@
     width: 100%;
     height: 120%; /* Extra height for parallax */
     object-fit: cover;
-    opacity: 0.3;
+    opacity: 0.4;
     z-index: 0;
+    filter: saturate(1.2) contrast(1.1);
 }
 
 /* Scroll-driven parallax for the background */
@@ -48,7 +51,10 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(to bottom, transparent 0%, var(--bg-deep) 100%);
+    background: linear-gradient(to bottom, 
+                rgba(15, 16, 22, 0.1) 0%, 
+                rgba(15, 16, 22, 0.6) 50%,
+                #0f1016 100%);
     z-index: 1;
 }
 
@@ -61,122 +67,185 @@
 }
 
 .about-title {
-    font-size: 5rem;
+    font-size: clamp(3rem, 8vw, 6rem);
     font-family: 'Syne', sans-serif;
     font-weight: 800;
     margin-bottom: 1rem;
-    background: linear-gradient(90deg, var(--text-primary), var(--accent-purple));
+    background: linear-gradient(135deg, #ffffff 0%, var(--accent-soft) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     opacity: 0;
-    animation: fadeUp 1s cubic-bezier(0.25, 1, 0.5, 1) forwards 0.2s;
-    transform: translateY(30px);
+    animation: fadeUpHero 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards 0.2s;
+    transform: translateY(40px);
+    text-shadow: 0 10px 30px rgba(124, 141, 240, 0.2);
 }
 
 .about-subtitle {
-    font-size: 1.5rem;
+    font-size: clamp(1rem, 3vw, 1.5rem);
     color: var(--text-secondary);
-    letter-spacing: 5px;
+    letter-spacing: 6px;
     text-transform: uppercase;
+    font-weight: 600;
     opacity: 0;
-    animation: fadeUp 1s cubic-bezier(0.25, 1, 0.5, 1) forwards 0.5s;
-    transform: translateY(30px);
+    animation: fadeUpHero 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards 0.5s;
+    transform: translateY(40px);
 }
 
-@keyframes fadeUp {
+@keyframes fadeUpHero {
     to {
         opacity: 1;
         transform: translateY(0);
     }
 }
 
-/* The Journey Section */
-.journey-section {
-    padding: 8rem 2rem;
+
+/* ── The Story Section ── */
+.story-section {
+    padding: 6rem 2rem 10rem;
     max-width: 1000px;
     margin: 0 auto;
     position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 4rem;
+    z-index: 10;
 }
 
-.journey-text {
-    font-size: 1.5rem;
+/* Glassmorphism Cards */
+.story-card {
+    background: rgba(25, 27, 38, 0.4);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 24px;
+    padding: 4rem;
+    position: relative;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+    overflow: hidden;
+}
+
+/* Subtle glowing orb inside the card */
+.story-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at center, rgba(124, 141, 240, 0.03) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.story-icon {
+    font-size: 3rem;
+    color: var(--accent-soft);
+    margin-bottom: 1.5rem;
+    position: relative;
+    z-index: 1;
+    filter: drop-shadow(0 0 15px rgba(124, 141, 240, 0.4));
+}
+
+.story-text {
+    font-size: 1.6rem;
     line-height: 1.8;
-    color: var(--text-secondary);
-    margin-bottom: 3rem;
-    text-align: justify;
+    color: #e2e8f0;
+    position: relative;
+    z-index: 1;
+    font-weight: 300;
 }
 
-.highlight {
-    color: var(--accent-purple);
-    font-weight: 700;
+.story-text .highlight {
+    color: #ffffff;
+    font-weight: 600;
+    background: linear-gradient(120deg, var(--accent-soft), var(--accent-purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
-/* Image Grid */
-.about-gallery {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
-    margin: 6rem 0;
-}
 
-.gallery-img {
-    width: 100%;
-    height: 400px;
-    object-fit: cover;
-    border-radius: 16px;
-    filter: grayscale(100%);
-    transition: all 0.5s ease;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-}
-
-.gallery-img:hover {
-    filter: grayscale(0%);
-    transform: scale(1.02);
-    box-shadow: 0 10px 40px rgba(157, 124, 236, 0.2);
-}
-
-.gallery-img:nth-child(2) {
-    transform: translateY(50px);
-}
-
-.gallery-img:nth-child(2):hover {
-    transform: scale(1.02) translateY(50px);
-}
-
-/* Footer Quote */
+/* ── Quote Section ── */
 .quote-section {
-    padding: 10rem 2rem;
+    padding: 8rem 2rem;
     text-align: center;
-    background: var(--bg-surface);
-    border-top: 1px solid var(--border-light);
+    background: linear-gradient(to bottom, #0f1016, rgba(124, 141, 240, 0.05), #0f1016);
+    position: relative;
 }
 
 .quote-text {
-    font-size: 3rem;
+    font-size: clamp(2rem, 5vw, 4rem);
     font-family: 'Syne', sans-serif;
-    max-width: 800px;
+    font-weight: 800;
+    line-height: 1.2;
+    max-width: 1200px;
     margin: 0 auto;
-    line-height: 1.4;
-    color: var(--text-primary);
+    background: linear-gradient(to right, #ffffff, var(--text-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
     font-style: italic;
 }
 
-.quote-author {
-    margin-top: 2rem;
-    font-size: 1.2rem;
-    color: var(--accent-purple);
-    letter-spacing: 2px;
-    text-transform: uppercase;
+
+/* ── MODERN SCROLL-DRIVEN ANIMATIONS ── */
+/* Using @supports to ensure graceful degradation on older browsers */
+@supports ((animation-timeline: view()) and (animation-range: entry)) {
+    
+    @keyframes slide-in-fade {
+        from {
+            opacity: 0;
+            transform: translateY(100px) scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    .scroll-reveal {
+        /* Apply the animation */
+        animation: slide-in-fade auto linear both;
+        /* Link it to the view timeline */
+        animation-timeline: view(block);
+        /* Run only when entering the scrollport (e.g. from 0% visible to 30% visible) */
+        animation-range: entry 10% cover 40%;
+    }
+
+    @keyframes scale-in {
+        from {
+            opacity: 0;
+            transform: scale(0.8);
+            filter: blur(10px);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+            filter: blur(0);
+        }
+    }
+
+    .scroll-scale {
+        animation: scale-in auto linear both;
+        animation-timeline: view(block);
+        animation-range: entry 20% cover 50%;
+    }
 }
 
-/* Scroll reveal helper class */
-.reveal {
-    opacity: 0;
-    transform: translateY(40px);
-    transition: all 1s cubic-bezier(0.25, 1, 0.5, 1);
-}
-
-.reveal.active {
-    opacity: 1;
-    transform: translateY(0);
+/* ── RESPONSIVE DESIGN ── */
+@media (max-width: 768px) {
+    .story-section {
+        padding: 4rem 1.5rem;
+        gap: 2rem;
+    }
+    
+    .story-card {
+        padding: 2.5rem 1.5rem;
+    }
+    
+    .story-icon {
+        font-size: 2.5rem;
+    }
+    
+    .story-text {
+        font-size: 1.2rem;
+    }
 }

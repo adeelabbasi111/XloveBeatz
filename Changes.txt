@@ -1,6 +1,0 @@
-- Fix The issue with the explore packs links , the link contains product id , but the player ig needs the pack id , because I have a pack with 8 product id , but nothing loads , but when I replace 8 with 2 the pack loads
-
-
-- I also want to add extra features to site , like offer and other things that can be toggled in admin panel , like buy 1 get 2 free , There should be infinite strip that should show messages like this , Also add randomize text , like 2 people purchase etc beat (take from data base) , 
-
-- I want to remove the seperate mp3 input from the admin panel , The input will be only in wav then mp3  will be converted through a python script that would be passed on to the preview section , no need to store mp3 files on the server , Cuz user will not download it 
