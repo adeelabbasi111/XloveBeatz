@@ -634,6 +634,26 @@
                 var orderData = await res.json();
                 if (orderData.error) throw new Error(orderData.error);
 
+                // --- TEST MODE BYPASS ---
+                if (orderData.test_mode_success) {
+                    showToast('✅ Test Payment Successful! Redirecting...', 'success');
+                    
+                    // Clear cart items that were checked out
+                    itemsToCheckout.forEach(function(item) {
+                        var idx = cart.findIndex(function(i) { return i.id === item.id && i.license === item.license; });
+                        if (idx > -1) cart.splice(idx, 1);
+                    });
+                    
+                    appliedCoupon = null;
+                    saveCoupon();
+                    updateCartUI();
+                    closeCart();
+                    
+                    window.location.href = '/payment/success/' + orderData.db_order_id;
+                    return;
+                }
+                // -------------------------
+
                 const cashfree = Cashfree({
                     mode: "production"
                 });

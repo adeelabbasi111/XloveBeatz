@@ -44,31 +44,69 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // Load real waveform from the before audio source
-        const beforeSrc = audioBefore.querySelector('source').src;
-        waveformUI.loadRealWaveform(beforeSrc);
+        // Note: Waveform is now loaded dynamically via the Blob URL below
+        // to bypass server range request issues.
     }
 
     // Set initial volumes
     audioBefore.volume = 1;
     audioAfter.volume = 0;
 
-    // ─── Loading State ───
+    // ─── Loading State & Server Range Fix ───
+    // Live servers sometimes don't support HTTP Range requests for static files,
+    // which breaks audio seeking (currentTime). To fix this bulletproofly, we fetch
+    // the audio into local memory (Blob) so seeking works instantly regardless of server config.
+    
     let loadedCount = 0;
+    bothLoaded = false;
+    playBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
     function checkLoaded() {
         loadedCount++;
         if (loadedCount >= 2) {
             bothLoaded = true;
             playBtn.innerHTML = '<i class="fas fa-play"></i>';
-            // Set total duration from the before track
             if (timeTotal) timeTotal.textContent = formatTime(audioBefore.duration);
         }
     }
 
-    playBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-
+    // Fallback if fetch fails
     audioBefore.addEventListener('canplaythrough', checkLoaded);
     audioAfter.addEventListener('canplaythrough', checkLoaded);
+
+    async function loadAudioAsBlob(audioElement) {
+        try {
+            const sourceEl = audioElement.querySelector('source');
+            if (!sourceEl) return null;
+            
+            const originalSrc = sourceEl.src;
+            const response = await fetch(originalSrc);
+            if (!response.ok) throw new Error("Network response was not ok");
+            
+            const blob = await response.blob();
+            const blobUrl = URL.createObjectURL(blob);
+            
+            // Replace src with local memory blob URL
+            audioElement.src = blobUrl;
+            audioElement.load();
+            return blobUrl;
+        } catch (error) {
+            console.warn("Failed to load audio as blob, falling back to original src:", error);
+            return null;
+        }
+    }
+
+    // Start loading both tracks into memory
+    Promise.all([
+        loadAudioAsBlob(audioBefore),
+        loadAudioAsBlob(audioAfter)
+    ]).then(([beforeBlobUrl, afterBlobUrl]) => {
+        // If we successfully got a blob URL, feed that into the waveform generator too!
+        // (WebAudio API decodeAudioData is much faster with a blob URL anyway)
+        if (beforeBlobUrl && waveformUI) {
+            waveformUI.loadRealWaveform(beforeBlobUrl);
+        }
+    });
 
     // ─── Play / Pause ───
     playBtn.addEventListener('click', () => {

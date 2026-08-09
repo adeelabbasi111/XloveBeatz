@@ -14,8 +14,8 @@ from helpers.models import DiscountCode
 logger = logging.getLogger(__name__)
 bp = Blueprint('payment', __name__)
 
-# ⚠️ TEMP: Set to True to bypass Razorpay for testing
-BYPASS_RAZORPAY = True
+# ⚠️ Set to True to bypass Cashfree and approve all orders instantly
+TEST_MODE_PAYMENT = True
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -203,6 +203,15 @@ def create_cashfree_order():
         db.session.commit()
 
         # Create Cashfree Order
+        if TEST_MODE_PAYMENT:
+            cf_test_id = f"test_cf_{int(time.time())}"
+            mark_order_paid(order.id, cf_test_id)
+            return jsonify({
+                "test_mode_success": True,
+                "db_order_id": order.id,
+                "cashfree_order_id": cf_test_id
+            })
+
         headers = {
             "x-client-id": current_app.cashfree_app_id,
             "x-client-secret": current_app.cashfree_secret_key,
@@ -213,7 +222,7 @@ def create_cashfree_order():
         }
         
         customer_id = f"cust_{user.id}" if user else f"guest_{int(time.time())}"
-        
+
         payload = {
             "order_amount": final_inr,
             "order_currency": "INR",
