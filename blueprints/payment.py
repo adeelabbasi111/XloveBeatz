@@ -1,6 +1,7 @@
 import logging
 import os
 import time
+import hashlib
 from datetime import datetime
 
 from flask import Blueprint, request, jsonify, render_template, session, current_app, redirect, url_for, flash, send_file
@@ -14,8 +15,8 @@ from helpers.models import DiscountCode
 logger = logging.getLogger(__name__)
 bp = Blueprint('payment', __name__)
 
-# ⚠️ Set to True to bypass Cashfree and approve all orders instantly
-TEST_MODE_PAYMENT = True
+# ⚠️ Set to True to bypass PayU and approve all orders instantly
+TEST_MODE_PAYMENT = False
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -100,11 +101,11 @@ def _generate_licenses_for_order(order):
 
 
 # ═══════════════════════════════════════════════════════════════
-#  CASHFREE ORDER CREATION
+#  PAYU ORDER CREATION
 # ═══════════════════════════════════════════════════════════════
 
-@bp.route('/api/create-cashfree-order', methods=['POST'])
-def create_cashfree_order():
+@bp.route('/api/create-payu-order', methods=['POST'])
+def create_payu_order():
     data = request.json or {}
     cart_items = data.get('items', [])
     coupon_code = (data.get('coupon_code') or '').strip().upper()
@@ -212,54 +213,38 @@ def create_cashfree_order():
                 "cashfree_order_id": cf_test_id
             })
 
-        headers = {
-            "x-client-id": current_app.cashfree_app_id,
-            "x-client-secret": current_app.cashfree_secret_key,
-            "x-api-version": "2023-08-01",
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-        }
+        # PayU Hash Generation
+        payu_key = current_app.config.get('PAYU_MERCHANT_KEY', '')
+        payu_salt = current_app.config.get('PAYU_MERCHANT_SALT', '')
         
-        customer_id = f"cust_{user.id}" if user else f"guest_{int(time.time())}"
-
-        payload = {
-            "order_amount": final_inr,
-            "order_currency": "INR",
-            "order_id": f"order_xlb_{order.id}",
-            "customer_details": {
-                "customer_id": customer_id,
-                "customer_email": email,
-                "customer_phone": "9999999999"  # Dummy if not captured
-            },
-            "order_meta": {
-                "return_url": request.host_url.rstrip('/') + "/payment-success?order_id={order_id}"
-            }
-        }
+        txnid = f"order_xlb_{order.id}"
+        amount = f"{final_inr:.2f}"
+        productinfo = "Xlovebeats Order"
+        firstname = user.username if user else "Guest"
         
-        import urllib.request
-        import json
+        # Sequence: key|txnid|amount|productinfo|firstname|email|udf1|udf2|udf3|udf4|udf5||||||SALT
+        hash_string = f"{payu_key}|{txnid}|{amount}|{productinfo}|{firstname}|{email}|||||||||||{payu_salt}"
+        payu_hash = hashlib.sha512(hash_string.encode('utf-8')).hexdigest()
         
-        req = urllib.request.Request("https://api.cashfree.com/pg/orders", data=json.dumps(payload).encode('utf-8'), headers=headers, method='POST')
+        surl = request.host_url.rstrip('/') + url_for('payment.payu_success')
+        furl = request.host_url.rstrip('/') + url_for('payment.payu_failure')
         
-        try:
-            with urllib.request.urlopen(req) as response:
-                resp_data = json.loads(response.read().decode('utf-8'))
-                
-            if 'payment_session_id' in resp_data:
-                return jsonify({
-                    "payment_session_id": resp_data['payment_session_id'],
-                    "db_order_id": order.id,
-                    "cashfree_order_id": payload["order_id"]
-                })
-            else:
-                logger.error("Cashfree API error (No session ID): %s", resp_data)
-                return jsonify({"error": "Failed to create payment session"}), 500
-                
-        except urllib.error.URLError as e:
-            error_msg = e.read().decode('utf-8') if hasattr(e, 'read') else str(e)
-            logger.error("Cashfree API HTTP error: %s", error_msg)
-            return jsonify({"error": f"Cashfree API Error: {error_msg}"}), 500
+        action_url = "https://secure.payu.in/_payment" if current_app.config.get('PAYU_ENV', 'production') == 'production' else "https://test.payu.in/_payment"
+        
+        return jsonify({
+            "action": action_url,
+            "key": payu_key,
+            "txnid": txnid,
+            "amount": amount,
+            "productinfo": productinfo,
+            "firstname": firstname,
+            "email": email,
+            "phone": "9999999999",
+            "surl": surl,
+            "furl": furl,
+            "hash": payu_hash,
+            "db_order_id": order.id
+        })
 
     except Exception as e:
         logger.error("Order creation failed: %s", e)
@@ -271,47 +256,55 @@ def create_cashfree_order():
 #  PAYMENT VERIFICATION
 # ═══════════════════════════════════════════════════════════════
 
-@bp.route('/api/verify-cashfree-payment', methods=['POST'])
-def verify_payment():
-    data = request.json or {}
-    db_order_id = data.get('db_order_id')
-    cf_order_id = data.get('order_id')
-
-    if not db_order_id or not cf_order_id:
-        return jsonify({"status": "failed", "message": "Missing order ID"}), 400
-
-    import urllib.request
-    import json
-    import urllib.error
+@bp.route('/payment/payu-success', methods=['POST'])
+def payu_success():
+    data = request.form
+    status = data.get('status', '')
+    firstname = data.get('firstname', '')
+    amount = data.get('amount', '')
+    txnid = data.get('txnid', '')
+    posted_hash = data.get('hash', '')
+    key = data.get('key', '')
+    productinfo = data.get('productinfo', '')
+    email = data.get('email', '')
+    udf1 = data.get('udf1', '')
+    udf2 = data.get('udf2', '')
+    udf3 = data.get('udf3', '')
+    udf4 = data.get('udf4', '')
+    udf5 = data.get('udf5', '')
     
-    headers = {
-        "x-client-id": current_app.cashfree_app_id,
-        "x-client-secret": current_app.cashfree_secret_key,
-        "x-api-version": "2023-08-01",
-        "Accept": "application/json",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-    }
+    payu_salt = current_app.config.get('PAYU_MERCHANT_SALT', '')
+    
+    # Reverse hash: SALT|status||||||udf5|udf4|udf3|udf2|udf1|email|firstname|productinfo|amount|txnid|key
+    hash_str = f"{payu_salt}|{status}||||||{udf5}|{udf4}|{udf3}|{udf2}|{udf1}|{email}|{firstname}|{productinfo}|{amount}|{txnid}|{key}"
+    
+    # Sometimes PayU includes additional fields depending on the integration (like additionalCharges), 
+    # but the standard reverse hash is exactly as above if additionalCharges is not present.
+    additional_charges = data.get('additionalCharges')
+    if additional_charges:
+        hash_str = f"{additional_charges}|{hash_str}"
+        
+    calc_hash = hashlib.sha512(hash_str.encode('utf-8')).hexdigest()
+    
+    if calc_hash == posted_hash and status == "success":
+        db_order_id = txnid.replace("order_xlb_", "")
+        payu_id = data.get('mihpayid', txnid)
+        mark_order_paid(db_order_id, payu_id)
+        
+        # Clear cart using session workaround since we don't have access to current_user inside a webhook easily if cookies aren't passed
+        _clear_user_cart()
+        
+        return redirect(url_for('payment.payment_success', order_id=db_order_id))
+    else:
+        logger.error("PayU Hash Mismatch or Failed Status. Calc: %s, Posted: %s", calc_hash, posted_hash)
+        flash("Payment verification failed. If money was deducted, it will be refunded automatically.", "error")
+        return redirect(url_for('public.home'))
 
-    try:
-        req = urllib.request.Request(f"https://api.cashfree.com/pg/orders/{cf_order_id}", headers=headers, method='GET')
-        with urllib.request.urlopen(req) as response:
-            resp_data = json.loads(response.read().decode('utf-8'))
-
-        if resp_data.get("order_status") == "PAID":
-            mark_order_paid(db_order_id, cf_order_id)
-            _clear_user_cart()
-        # Generate licenses
-        order = Order.query.get(db_order_id)
-        if order:
-            # License PDFs are now generated on-demand when downloaded
-            # _generate_licenses_for_order(order)
-            pass
-
-        return jsonify({"status": "success", "message": "Payment verified!", "order_id": db_order_id})
-    except Exception as e:
-        logger.error("Payment verification DB error: %s", e)
-        db.session.rollback()
-        return jsonify({"status": "failed", "message": "Verification error"}), 500
+@bp.route('/payment/payu-failure', methods=['POST'])
+def payu_failure():
+    logger.error("PayU Payment Failed")
+    flash("Your payment was declined or cancelled. Please try again.", "error")
+    return redirect(url_for('public.home'))
 
 
 # ═══════════════════════════════════════════════════════════════

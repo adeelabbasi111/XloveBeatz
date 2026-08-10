@@ -35,9 +35,10 @@ class Config:
     ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
     ALLOWED_ARCHIVE_EXTENSIONS = {'zip', 'rar'}
 
-    # --- Cashfree (REQUIRED in production) ---
-    CASHFREE_APP_ID = os.environ.get('CASHFREE_APP_ID', '')
-    CASHFREE_SECRET_KEY = os.environ.get('CASHFREE_SECRET_KEY', '')
+    # --- PayU (REQUIRED in production) ---
+    PAYU_MERCHANT_KEY = os.environ.get('PAYU_MERCHANT_KEY', '')
+    PAYU_MERCHANT_SALT = os.environ.get('PAYU_MERCHANT_SALT', '')
+    PAYU_ENV = os.environ.get('PAYU_ENV', 'production')
 
     # --- Rate limiting ---
     RATELIMIT_DEFAULT = "200 per day, 50 per hour"

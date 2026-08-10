@@ -607,10 +607,6 @@
         }
 
         async function proceedWithPayment(itemsToCheckout) {
-            if (typeof Cashfree === 'undefined') {
-                showToast('Payment system unavailable. Please refresh.', 'error');
-                return;
-            }
 
             var origHTML = els.checkoutBtn ? els.checkoutBtn.innerHTML : '';
             if (els.checkoutBtn) {
@@ -619,7 +615,7 @@
             }
 
             try {
-                var res = await fetch('/api/create-cashfree-order', {
+                var res = await fetch('/api/create-payu-order', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -654,58 +650,40 @@
                 }
                 // -------------------------
 
-                const cashfree = Cashfree({
-                    mode: "production"
-                });
+                if (els.checkoutBtn) {
+                    els.checkoutBtn.innerHTML = '<span class="checkout-btn-content"><i class="fas fa-spinner fa-spin"></i><span>Redirecting to PayU...</span></span>';
+                }
 
-                cashfree.checkout({
-                    paymentSessionId: orderData.payment_session_id,
-                    redirectTarget: "_modal"
-                }).then(async (result) => {
-                    if (result.error) {
-                        showToast('❌ Payment failed: ' + result.error.message, 'error');
-                        if (els.checkoutBtn) {
-                            els.checkoutBtn.innerHTML = origHTML;
-                            els.checkoutBtn.disabled = false;
-                        }
-                    }
-                    if (result.paymentDetails) {
-                        // Payment completed, verify on backend
-                        if (els.checkoutBtn) els.checkoutBtn.innerHTML = '<span class="checkout-btn-content"><i class="fas fa-spinner fa-spin"></i><span>Verifying...</span></span>';
-                        
-                        var verifyRes = await fetch('/api/verify-cashfree-payment', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRFToken': window.CSRF_TOKEN || ''
-                            },
-                            body: JSON.stringify({ 
-                                db_order_id: orderData.db_order_id,
-                                order_id: orderData.cashfree_order_id
-                            })
-                        });
+                // Dynamically create PayU form and submit
+                var form = document.createElement("form");
+                form.setAttribute("method", "POST");
+                form.setAttribute("action", orderData.action);
 
-                        var verifyData = await verifyRes.json();
-                        if (verifyData.status === 'success') {
-                            showToast('✅ Payment Successful!', 'success');
-                            itemsToCheckout.forEach(function(item) {
-                                var idx = cart.findIndex(function(i) { return i.id === item.id && i.license === item.license; });
-                                if (idx > -1) cart.splice(idx, 1);
-                            });
-                            appliedCoupon = null;
-                            saveCoupon();
-                            updateCartUI();
-                            closeCart();
-                            window.location.href = '/payment/success/' + orderData.db_order_id;
-                        } else {
-                            showToast('❌ Verification failed', 'error');
-                            if (els.checkoutBtn) {
-                                els.checkoutBtn.innerHTML = origHTML;
-                                els.checkoutBtn.disabled = false;
-                            }
-                        }
+                var fields = {
+                    "key": orderData.key,
+                    "txnid": orderData.txnid,
+                    "amount": orderData.amount,
+                    "productinfo": orderData.productinfo,
+                    "firstname": orderData.firstname,
+                    "email": orderData.email,
+                    "phone": orderData.phone,
+                    "surl": orderData.surl,
+                    "furl": orderData.furl,
+                    "hash": orderData.hash
+                };
+
+                for (var key in fields) {
+                    if (fields.hasOwnProperty(key)) {
+                        var hiddenField = document.createElement("input");
+                        hiddenField.setAttribute("type", "hidden");
+                        hiddenField.setAttribute("name", key);
+                        hiddenField.setAttribute("value", fields[key]);
+                        form.appendChild(hiddenField);
                     }
-                });
+                }
+
+                document.body.appendChild(form);
+                form.submit();
 
             } catch (err) {
                 console.error(err);

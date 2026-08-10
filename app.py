@@ -52,10 +52,9 @@ def create_app(config_class=Config):
     migrate.init_app(app, db)
     limiter.init_app(app)
 
-
-
-    app.cashfree_app_id = app.config['CASHFREE_APP_ID']
-    app.cashfree_secret_key = app.config['CASHFREE_SECRET_KEY']
+    # Exempt PayU Webhooks from CSRF (since PayU posts form-data directly)
+    csrf.exempt('blueprints.payment.payu_success')
+    csrf.exempt('blueprints.payment.payu_failure')
 
     # ---- Jinja filters ----
     register_template_filters(app)
