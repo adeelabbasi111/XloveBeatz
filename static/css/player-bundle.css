@@ -672,31 +672,22 @@ TRACKLIST PANEL
 /* Category tabs */
 .category-tabs {
   display: flex;
-  flex-wrap: nowrap;
-  gap: 6px;
-  margin-bottom: 10px;
-  overflow-x: auto;
-  padding-bottom: 4px;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.category-tabs::-webkit-scrollbar {
-  display: none;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
 .cat-tab {
-  padding: 6px 14px;
+  padding: 8px 18px;
   border-radius: 30px;
-  font-size: 0.75rem;
-  font-weight: 500;
+  font-size: 0.85rem;
+  font-weight: 600;
   cursor: pointer;
   border: 1px solid var(--border-light);
   background: transparent;
   color: var(--text-secondary);
   white-space: nowrap;
   transition: var(--transition-smooth);
-  flex-shrink: 0;
 }
 
 .cat-tab:hover {

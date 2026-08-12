@@ -100,7 +100,7 @@
 
     {# ============ TRENDING GENRES ============ #}
     {% if genres %}
-    <section class="trending-genres-section" style="content-visibility: auto; contain-intrinsic-size: auto none auto 250px;">
+    <section class="trending-genres-section">
         <div class="genres-header">
             <div class="fire-title-wrapper" id="fireTitleWrapper">
                 <canvas id="fireCanvas" class="fire-canvas"></canvas>
@@ -241,6 +241,13 @@
             var rect = wrapper.getBoundingClientRect();
             var w = rect.width;
             var h = rect.height;
+            
+            // Fix glitch where webfonts load after initial canvas setup,
+            // changing the wrapper width and causing the canvas to stretch horizontally.
+            if (Math.abs(canvas.width - w * dpr) > 1 || Math.abs(canvas.height - h * dpr) > 1) {
+                resize();
+            }
+
             ctx.clearRect(0, 0, w, h);
 
             // Additive blending for hot flame look
