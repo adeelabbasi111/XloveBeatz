@@ -183,7 +183,7 @@ def create_payu_order():
         order = create_order(
             user_id=user.id if user else None,
             total_cents=final_cents,
-            payment_method='cashfree',
+            payment_method='payu',
             email=email,
         )
 

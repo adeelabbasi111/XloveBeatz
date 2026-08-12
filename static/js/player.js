@@ -46,6 +46,7 @@ var volumeWrapper = document.getElementById('volumeWrapper');
 // ════════════════════════════════════════════════════════════
 var allTrackItems    = Array.prototype.slice.call(document.querySelectorAll('.track-item'));
 var currentTrackIndex = 0;
+var activeCategory    = 'all';
 var isPlaying         = false;
 var audioCtx          = null;
 var analyser          = null;
@@ -816,31 +817,48 @@ if (tracklistScroll) {
 // CATEGORY FILTERS
 // ════════════════════════════════════════════════════════════
 function getFilteredTracks() {
-  if (activeCategory === 'all') return allTrackItems;
+  if (!activeCategory || activeCategory === 'all') return allTrackItems;
+  var target = activeCategory.trim().toLowerCase();
   return allTrackItems.filter(function (t) {
-    return t.dataset.genre &&
-           t.dataset.genre.toLowerCase() === activeCategory.toLowerCase();
+    var g = (t.dataset.genre || '').trim().toLowerCase();
+    return g === target;
   });
 }
 
 function applyFilter(category) {
   activeCategory = category;
+  var target = category.trim().toLowerCase();
+  
   allTrackItems.forEach(function (t) {
-    var genreMatch = t.dataset.genre &&
-                     t.dataset.genre.toLowerCase() === category.toLowerCase();
-    t.style.display = (category === 'all' || genreMatch) ? '' : 'none';
+    var g = (t.dataset.genre || '').trim().toLowerCase();
+    var genreMatch = (g === target);
+    t.style.display = (target === 'all' || genreMatch) ? '' : 'none';
   });
+  
   var visible = getFilteredTracks();
   if (trackCount) trackCount.textContent = visible.length + ' tracks';
+  
   document.querySelectorAll('.cat-tab').forEach(function (tab) {
-    tab.classList.toggle('active', tab.dataset.category === category);
+    var tabCat = (tab.dataset.category || '').trim().toLowerCase();
+    tab.classList.toggle('active', tabCat === target);
   });
-  updateTracklistHeading(category);
+  
+  if (typeof updateTracklistHeading === 'function') {
+      updateTracklistHeading(category);
+  }
+  
   var currentTrackVisible = visible.find(function (t) {
     return parseInt(t.dataset.index, 10) === currentTrackIndex;
   });
+  
   if (currentTrackVisible) {
     highlightTrackItem(currentTrackIndex);
+  } else if (visible.length > 0) {
+    // Auto-select the first track in the new filter if current is hidden
+    var firstIdx = parseInt(visible[0].dataset.index, 10);
+    currentTrackIndex = firstIdx;
+    updatePlayerUI(visible[0].dataset);
+    highlightTrackItem(firstIdx);
   } else {
     allTrackItems.forEach(function (t) { t.classList.remove('active'); });
   }
@@ -849,7 +867,8 @@ function applyFilter(category) {
 function buildCategoryTabs() {
   var genres = {};
   allTrackItems.forEach(function (t) {
-    if (t.dataset.genre) genres[t.dataset.genre] = true;
+    var g = (t.dataset.genre || '').trim();
+    if (g) genres[g] = true;
   });
   Object.keys(genres).sort().forEach(function (genre) {
     var tab = document.createElement('button');
@@ -857,7 +876,7 @@ function buildCategoryTabs() {
     tab.dataset.category = genre.toLowerCase();
     tab.textContent = genre;
     tab.addEventListener('click', function () {
-      applyFilter(genre.toLowerCase());
+      applyFilter(genre);
     });
     if (categoryTabs) categoryTabs.appendChild(tab);
   });
@@ -1022,11 +1041,21 @@ function init() {
     if (volumeSlider) volumeSlider.value = 0.7;
     updateVolumeIcon(0.7);
   }
+  
+  // Default init
   if (allTrackItems.length > 0) {
     updatePlayerUI(allTrackItems[0].dataset);
     highlightTrackItem(0);
     currentTrackIndex = 0;
   }
+  
+  // Apply URL filter if present
+  var urlParams = new URLSearchParams(window.location.search);
+  var genreParam = urlParams.get('genre');
+  if (genreParam) {
+    applyFilter(genreParam);
+  }
+  
   if (trackCount) trackCount.textContent = allTrackItems.length + ' tracks';
   drawIdleTopography();
 }

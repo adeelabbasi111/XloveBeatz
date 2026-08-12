@@ -1,0 +1,263 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Manage Genres{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <h1><i class="fas fa-tags"></i> Manage Genres</h1>
+    <p class="admin-subtitle">Drag and drop to reorder genres on the home page. Click a genre's image to upload a new one.</p>
+</div>
+
+<div class="card admin-card">
+    <div class="card-header">
+        <h2>Active Genres</h2>
+        <span class="badge" style="background: var(--admin-accent); color: #fff; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight: bold; margin-left: 1rem;">Auto-synced</span>
+    </div>
+    
+    <div class="card-body p-0">
+        <ul id="genreList" class="genre-list">
+            {% for g in genres %}
+            <li class="genre-item" data-id="{{ g.id }}">
+                <div class="genre-drag-handle">
+                    <i class="fas fa-grip-vertical"></i>
+                </div>
+                
+                <div class="genre-image-container" onclick="document.getElementById('imageUpload_{{ g.id }}').click()">
+                    {% if g.image_path %}
+                        <img src="{{ url_for('static', filename=g.image_path) }}" alt="{{ g.name }}" id="preview_{{ g.id }}">
+                    {% else %}
+                        <div class="genre-image-placeholder" id="preview_{{ g.id }}">
+                            <span>{{ g.name[0] | upper }}</span>
+                        </div>
+                    {% endif %}
+                    <div class="genre-image-overlay">
+                        <i class="fas fa-camera"></i>
+                    </div>
+                </div>
+                <input type="file" id="imageUpload_{{ g.id }}" accept="image/*" style="display: none;" onchange="uploadGenreImage({{ g.id }}, this)">
+
+                <div class="genre-info">
+                    <h3>{{ g.name }}</h3>
+                </div>
+
+                <div class="genre-actions">
+                    <button class="btn btn-sm {% if g.is_active %}btn-success{% else %}btn-outline{% endif %}" 
+                            onclick="toggleGenre({{ g.id }}, this)">
+                        {% if g.is_active %}<i class="fas fa-eye"></i> Visible{% else %}<i class="fas fa-eye-slash"></i> Hidden{% endif %}
+                    </button>
+                </div>
+            </li>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-tags empty-icon"></i>
+                <h3>No genres found</h3>
+                <p>Upload a beat and specify a genre to automatically create one.</p>
+            </div>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+<style>
+.genre-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.genre-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--admin-border);
+    background: var(--admin-surface);
+    transition: background 0.2s;
+}
+.genre-item:hover {
+    background: var(--admin-elevated);
+}
+.genre-item:last-child {
+    border-bottom: none;
+}
+.genre-drag-handle {
+    cursor: grab;
+    color: var(--admin-text-sec);
+    margin-right: 1.5rem;
+    font-size: 1.2rem;
+    padding: 0.5rem;
+}
+.genre-drag-handle:active {
+    cursor: grabbing;
+}
+.genre-image-container {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    margin-right: 1.5rem;
+    background: var(--admin-bg);
+    flex-shrink: 0;
+}
+.genre-image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.genre-image-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--admin-accent), var(--admin-accent2));
+    color: white;
+    font-weight: bold;
+    font-size: 1.5rem;
+}
+.genre-image-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s;
+    color: white;
+}
+.genre-image-container:hover .genre-image-overlay {
+    opacity: 1;
+}
+.genre-info {
+    flex-grow: 1;
+}
+.genre-info h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--admin-text);
+}
+.genre-actions {
+    margin-left: 1rem;
+}
+
+/* SortableJS Ghost */
+.sortable-ghost {
+    opacity: 0.4;
+    background: var(--admin-elevated);
+}
+</style>
+
+<!-- Include SortableJS -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var el = document.getElementById('genreList');
+    if (el) {
+        var sortable = Sortable.create(el, {
+            handle: '.genre-drag-handle',
+            animation: 150,
+            onEnd: function (evt) {
+                // Get new order
+                var items = el.querySelectorAll('.genre-item');
+                var order = Array.from(items).map(item => item.dataset.id);
+                
+                // Save to server
+                fetch('{{ url_for("admin.admin_genres_reorder") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': window.CSRF_TOKEN || ''
+                    },
+                    body: JSON.stringify({ order: order })
+                }).then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        showToast('Genre order updated', 'success');
+                    }
+                }).catch(err => {
+                    console.error(err);
+                    showToast('Failed to update order', 'error');
+                });
+            }
+        });
+    }
+});
+
+function toggleGenre(id, btn) {
+    btn.disabled = true;
+    fetch(`/admin/api/genres/${id}/toggle`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': window.CSRF_TOKEN || ''
+        }
+    }).then(res => res.json())
+    .then(data => {
+        btn.disabled = false;
+        if (data.status === 'success') {
+            if (data.is_active) {
+                btn.className = 'btn btn-sm btn-success';
+                btn.innerHTML = '<i class="fas fa-eye"></i> Visible';
+            } else {
+                btn.className = 'btn btn-sm btn-outline';
+                btn.innerHTML = '<i class="fas fa-eye-slash"></i> Hidden';
+            }
+            showToast('Visibility updated', 'success');
+        }
+    }).catch(err => {
+        btn.disabled = false;
+        showToast('Error updating visibility', 'error');
+    });
+}
+
+function uploadGenreImage(id, input) {
+    if (!input.files || input.files.length === 0) return;
+    var file = input.files[0];
+    
+    var formData = new FormData();
+    formData.append('image', file);
+    
+    // Show loading state
+    var container = input.previousElementSibling;
+    var overlay = container.querySelector('.genre-image-overlay');
+    overlay.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    overlay.style.opacity = '1';
+
+    fetch(`/admin/api/genres/${id}/upload-image`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': window.CSRF_TOKEN || ''
+        },
+        body: formData
+    }).then(res => res.json())
+    .then(data => {
+        overlay.innerHTML = '<i class="fas fa-camera"></i>';
+        overlay.style.opacity = '';
+        
+        if (data.status === 'success') {
+            var preview = container.querySelector('img') || container.querySelector('.genre-image-placeholder');
+            
+            // If it was a placeholder, replace it with an img tag
+            if (preview.classList.contains('genre-image-placeholder')) {
+                var img = document.createElement('img');
+                img.id = 'preview_' + id;
+                img.src = data.image_path + '?t=' + new Date().getTime();
+                img.alt = 'Genre Cover';
+                container.insertBefore(img, overlay);
+                preview.remove();
+            } else {
+                preview.src = data.image_path + '?t=' + new Date().getTime();
+            }
+            showToast('Image uploaded successfully', 'success');
+        } else {
+            showToast(data.error || 'Upload failed', 'error');
+        }
+    }).catch(err => {
+        overlay.innerHTML = '<i class="fas fa-camera"></i>';
+        overlay.style.opacity = '';
+        showToast('Error uploading image', 'error');
+    });
+}
+</script>
+{% endblock %}

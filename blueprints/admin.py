@@ -21,6 +21,7 @@ from helpers.models import (
     db, Product, BeatDetail, BeatPack, VocalPreset,
     License, BeatLicensePrice, Order, OrderItem, User,
     Download, DiscountCode, ActivityLog, GeneratedLicense, Offer,
+    Genre,
 )
 from helpers.utils import (
     admin_required, get_current_user,
@@ -632,9 +633,12 @@ def admin_product_edit(product_id):
                 if detail:
                     old_pack_id = detail.pack_id
 
+                    genre = request.form.get('beat_genre', '').strip()
+                    _sync_genre(genre)
+
                     detail.bpm = request.form.get('bpm', type=int)
                     detail.musical_key = request.form.get('musical_key', '').strip()
-                    detail.genre = request.form.get('beat_genre', '').strip()
+                    detail.genre = genre
                     detail.pack_id = request.form.get('pack_id', type=int) or None
 
                     _update_beat_files(product.slug, detail)
@@ -793,6 +797,19 @@ def admin_product_toggle(product_id):
 #  PRIVATE HELPERS — FILE CREATION (TEMP-AWARE)
 # ═══════════════════════════════════════════════════════════════
 
+def _sync_genre(genre_name):
+    """Ensure genre exists in the genres table"""
+    if not genre_name: return
+    genre_name = genre_name.strip()
+    if not genre_name: return
+    
+    g = Genre.query.filter_by(name=genre_name).first()
+    if not g:
+        max_sort = db.session.query(db.func.max(Genre.sort_order)).scalar() or 0
+        new_g = Genre(name=genre_name, sort_order=max_sort + 1)
+        db.session.add(new_g)
+        db.session.flush()
+
 def _create_beat_details(product):
     """
     Create beat detail record. Workflow:
@@ -850,11 +867,14 @@ def _create_beat_details(product):
     # ── 6. Pack assignment ──
     pack_id = request.form.get('pack_id', type=int) or None
 
+    genre = request.form.get('beat_genre', '').strip()
+    _sync_genre(genre)
+
     beat_detail = BeatDetail(
         product_id=product.id,
         bpm=request.form.get('bpm', type=int),
         musical_key=request.form.get('musical_key', '').strip(),
-        genre=request.form.get('beat_genre', '').strip(),
+        genre=genre,
         duration=duration,
         preview_audio=preview_db_path,
         wav_file=wav_db_path or '',
@@ -1484,6 +1504,72 @@ def admin_settings():
     return render_template('admin/settings.html',
                            settings=settings,
                            strip_messages=strip_messages)
+
+# ═══════════════════════════════════════════════════════════════
+#  GENRES MANAGEMENT
+# ═══════════════════════════════════════════════════════════════
+
+@bp.route('/admin/genres')
+@admin_required
+def admin_genres():
+    genres = Genre.query.order_by(Genre.sort_order).all()
+    return render_template('admin/genres.html', genres=genres)
+
+@bp.route('/admin/api/genres/reorder', methods=['POST'])
+@admin_required
+def admin_genres_reorder():
+    data = request.get_json()
+    order = data.get('order', [])
+    for idx, genre_id in enumerate(order):
+        g = Genre.query.get(genre_id)
+        if g:
+            g.sort_order = idx
+    db.session.commit()
+    return jsonify({"status": "success"})
+
+@bp.route('/admin/api/genres/<int:genre_id>/toggle', methods=['POST'])
+@admin_required
+def admin_genres_toggle(genre_id):
+    g = Genre.query.get_or_404(genre_id)
+    g.is_active = not g.is_active
+    db.session.commit()
+    return jsonify({"status": "success", "is_active": g.is_active})
+
+@bp.route('/admin/api/genres/<int:genre_id>/upload-image', methods=['POST'])
+@admin_required
+def admin_genres_upload_image(genre_id):
+    g = Genre.query.get_or_404(genre_id)
+    if 'image' not in request.files:
+        return jsonify({"error": "No file"}), 400
+    
+    file = request.files['image']
+    if not file or not file.filename:
+        return jsonify({"error": "Empty file"}), 400
+
+    filename = secure_filename(f"genre_{g.id}_{int(time.time())}.jpg")
+    img_dir = os.path.join(current_app.root_path, 'static', FOLDER_BEAT_IMAGES)
+    os.makedirs(img_dir, exist_ok=True)
+    abs_path = os.path.join(img_dir, filename)
+    
+    try:
+        img = Image.open(file)
+        if img.mode in ('RGBA', 'P'):
+            img = img.convert('RGB')
+        img.thumbnail((600, 600))
+        img.save(abs_path, 'JPEG', quality=85)
+        
+        # Delete old image if exists
+        if g.image_path:
+            old_path = os.path.join(current_app.root_path, 'static', g.image_path)
+            if os.path.exists(old_path):
+                os.remove(old_path)
+                
+        g.image_path = f"{FOLDER_BEAT_IMAGES}/{filename}"
+        db.session.commit()
+        return jsonify({"status": "success", "image_path": f"/static/{g.image_path}"})
+    except Exception as e:
+        logger.error(f"Genre image upload failed: {e}")
+        return jsonify({"error": "Upload failed"}), 500
 
 # ═══════════════════════════════════════════════════════════════
 #  ACTIVITY LOGS

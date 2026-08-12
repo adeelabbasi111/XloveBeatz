@@ -85,8 +85,8 @@
         }
 
         // ── Configuration ──
-        var MIN_DISPLAY_MS   = 600;   // don't flash — show for at least this long
-        var MAX_DISPLAY_MS   = 5000;  // hard safety cap — never block longer than this
+        var MIN_DISPLAY_MS   = 400;   // don't flash — show for at least this long
+        var MAX_DISPLAY_MS   = 2000;  // hard safety cap — never block longer than this
         var FADE_DURATION_MS = 700;   // CSS transition matches this
 
         var startTime    = Date.now();
@@ -135,8 +135,8 @@
 
         // ── Strategy: listen to real load events ──
 
-        // 1) window.load — all images, fonts, stylesheets loaded
-        window.addEventListener('load', function () {
+        // 1) DOMContentLoaded — HTML parsed, no need to wait for heavy media
+        document.addEventListener('DOMContentLoaded', function () {
             loadComplete = true;
             if (bar) bar.style.width = '100%';
             removePreloader();

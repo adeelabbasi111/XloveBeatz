@@ -28,6 +28,9 @@
     <a href="{{ url_for('admin.admin_products') }}" class="nav-item {% if 'product' in (request.endpoint or '') %}active{% endif %}">
         <i class="fas fa-music"></i> <span>Products</span>
     </a>
+    <a href="{{ url_for('admin.admin_genres') }}" class="nav-item {% if 'genre' in (request.endpoint or '') %}active{% endif %}">
+        <i class="fas fa-tags"></i> <span>Genres</span>
+    </a>
     <a href="{{ url_for('admin.admin_orders') }}" class="nav-item {% if 'order' in (request.endpoint or '') %}active{% endif %}">
         <i class="fas fa-shopping-bag"></i> <span>Orders</span>
     </a>

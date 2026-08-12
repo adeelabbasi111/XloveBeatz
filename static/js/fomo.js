@@ -30,8 +30,28 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    function isModalOpen() {
+        const modals = document.querySelectorAll('.modal, .auth-modal');
+        for (let i = 0; i < modals.length; i++) {
+            const style = window.getComputedStyle(modals[i]);
+            if (style.display !== 'none') return true;
+        }
+        const cart = document.getElementById('cartSidebar');
+        if (cart && cart.classList.contains('open')) return true;
+        return false;
+    }
+
     function showNextEvent() {
         if (events.length === 0) return;
+
+        // Schedule the next one at a random interval (between 20s and 30s) for ~2-3 per minute
+        const nextInterval = Math.floor(Math.random() * (30000 - 20000 + 1)) + 20000;
+
+        // Skip showing the toast if a modal is open, but keep the loop running
+        if (isModalOpen()) {
+            setTimeout(showNextEvent, nextInterval);
+            return;
+        }
 
         // Get current event and advance index
         const event = events[currentIndex];
@@ -74,8 +94,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 500);
         }, 6000);
 
-        // Schedule the next one at a random interval (between 10s and 20s)
-        const nextInterval = Math.floor(Math.random() * (20000 - 10000 + 1)) + 10000;
         setTimeout(showNextEvent, nextInterval);
     }
 

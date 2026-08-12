@@ -11,6 +11,15 @@ db = SQLAlchemy()
 # MODELS
 # =========================
 
+class Genre(db.Model):
+    __tablename__ = "genres"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False, index=True)
+    image_path = db.Column(db.String(255), nullable=True)
+    sort_order = db.Column(db.Integer, default=0)
+    is_active = db.Column(db.Boolean, default=True)
+
 class User(db.Model):
     __tablename__ = "users"
 

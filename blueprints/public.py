@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, flash, redirect, url_for, current_app
-from helpers.models import Product
+from helpers.models import Product, Genre
 from helpers.services import get_homepage_products, get_player_beats, build_beats_data, get_beat_with_details
 
 bp = Blueprint('public', __name__)
@@ -10,9 +10,11 @@ def home():
     # We still fetch these so we can show counts or featured items if needed
     limit = current_app.config['HOMEPAGE_BEAT_LIMIT']
     beat_packs, beats, vocal_presets = get_homepage_products(limit)
+    genres = Genre.query.filter_by(is_active=True).order_by(Genre.sort_order).all()
     return render_template(
         'index.html',
         beat_packs=beat_packs, beats=beats, vocal_presets=vocal_presets,
+        genres=genres,
         site_title="XLOVEBEATZ",
         slogan="Crafted for artists who move the world",
     )
