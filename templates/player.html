@@ -90,13 +90,21 @@
     {# ============ TRACKLIST ============ #}
     <section class="tracklist-panel">
         <div class="panel-header">
-            <h2>
-                <i class="fas fa-list"></i>
-                <span id="tracklistTitle">
-                    {% if pack_info %}{{ pack_info.product.name }}{% else %}All Beats{% endif %}
-                </span>
-                <span class="track-count" id="trackCount">{{ beats | length }} tracks</span>
-            </h2>
+            <div class="panel-header-top">
+                <h2>
+                    <i class="fas fa-list"></i>
+                    <span id="tracklistTitle">
+                        {% if pack_info %}{{ pack_info.product.name }}{% else %}All Beats{% endif %}
+                    </span>
+                    <span class="track-count" id="trackCount">{{ beats | length }} tracks</span>
+                </h2>
+                
+                <div class="tracklist-search">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="trackSearchInput" placeholder="Search beats, genre, key, BPM..." autocomplete="off">
+                </div>
+            </div>
+            
             <div id="categoryTabs" class="category-tabs">
                 <button class="cat-tab active" data-category="all">All</button>
             </div>
@@ -160,6 +168,16 @@
                 <p>No beats available yet.</p>
             </div>
             {% endfor %}
+            
+            <div id="noSearchResults" class="search-empty-state" style="display: none;">
+                <div class="empty-icon-wrapper">
+                    <i class="fas fa-search"></i>
+                    <div class="empty-glow"></div>
+                </div>
+                <h3>No Beats Found</h3>
+                <p id="emptyStateMessage">Try adjusting your search or clearing the filters.</p>
+                <button class="btn btn-cart" id="clearSearchBtn" style="margin-top: 1rem;">Clear Search</button>
+            </div>
         </div>
     </section>
 

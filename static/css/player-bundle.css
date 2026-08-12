@@ -466,7 +466,7 @@ ACTION BUTTONS
 
 .btn-cart:hover {
   border-color: var(--accent-soft);
-  background: rgba(124, 141, 240, 0.08);
+  background: linear-gradient(135deg, var(--accent-soft), var(--accent-purple));
   transform: translateY(-1px);
 }
 
@@ -560,7 +560,7 @@ VOLUME CONTROL — fixed hover + auto-fade
 .volume-icon-btn:hover {
   color: var(--accent-soft);
   border-color: rgba(124, 141, 240, 0.3);
-  background: rgba(124, 141, 240, 0.08);
+  background: linear-gradient(135deg, var(--accent-soft), var(--accent-purple));
 }
 
 .volume-popover {
@@ -645,28 +645,138 @@ TRACKLIST PANEL
   backdrop-filter: blur(10px);
 }
 
-.panel-header h2 {
-  font-size: 1.1rem;
-  font-weight: 600;
+.panel-header-top {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
   margin-bottom: 12px;
+}
+
+.panel-header h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 0;
+  line-height: 1.3;
 }
 
 .panel-header h2 i {
   color: var(--accent-soft);
-  font-size: 0.9rem;
+  font-size: 1.1rem;
+  margin-top: 4px;
+}
+
+#tracklistTitle {
+  word-break: break-word;
 }
 
 .track-count {
-  font-weight: 400;
+  font-weight: 600;
   font-size: 0.75rem;
-  color: var(--text-muted);
-  margin-left: auto;
-  padding: 2px 9px;
-  background: var(--bg-elevated);
+  color: var(--accent-soft);
+  padding: 4px 10px;
+  background: rgba(124, 141, 240, 0.15);
+  border: 1px solid rgba(124, 141, 240, 0.3);
   border-radius: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  align-self: center;
+  margin-left: 6px;
+  box-shadow: 0 2px 8px rgba(124, 141, 240, 0.15);
+}
+
+/* Search Bar (Glassmorphism) */
+.tracklist-search {
+  position: relative;
+  width: 100%;
+}
+
+.tracklist-search .search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  pointer-events: none;
+  transition: color 0.3s ease;
+}
+
+.tracklist-search input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 30px;
+  padding: 10px 14px 10px 38px;
+  color: #fff;
+  font-size: 0.85rem;
+  outline: none;
+  backdrop-filter: blur(10px);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.tracklist-search input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.tracklist-search input:focus {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(124, 141, 240, 0.5);
+  box-shadow: 0 0 15px rgba(124, 141, 240, 0.2), inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.tracklist-search input:focus + .search-icon {
+  color: var(--accent-soft);
+}
+
+/* Empty State */
+.search-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 1rem;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.empty-icon-wrapper {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.empty-icon-wrapper i {
+  font-size: 3rem;
+  color: rgba(255, 255, 255, 0.2);
+  z-index: 2;
+}
+
+.empty-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(124, 141, 240, 0.2) 0%, transparent 70%);
+  z-index: 1;
+}
+
+.search-empty-state h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 0.5rem;
 }
 
 /* Category tabs */
@@ -726,7 +836,7 @@ TRACKLIST SCROLL + CUSTOM SCROLLBAR
 .tracklist-scroll::-webkit-scrollbar-thumb {
   background: rgba(124, 141, 240, 0.25);
   border-radius: 10px;
-  border: 1px solid rgba(124, 141, 240, 0.1);
+  border: 1px solid rgba(124, 141, 240, 0.15);
 }
 
 .tracklist-scroll::-webkit-scrollbar-thumb:hover {
@@ -758,9 +868,9 @@ TRACK ITEM — larger thumbnail + bigger title
 }
 
 .track-item.active {
-  background: rgba(124, 141, 240, 0.1);
+  background: rgba(124, 141, 240, 0.15);
   border-color: rgba(124, 141, 240, 0.35);
-  box-shadow: inset 3px 0 0 var(--accent-soft), 0 4px 20px rgba(124, 141, 240, 0.1);
+  box-shadow: inset 3px 0 0 var(--accent-soft), 0 4px 20px rgba(124, 141, 240, 0.15);
 }
 
 .track-item.active .track-num {
@@ -824,37 +934,29 @@ TRACK ITEM — larger thumbnail + bigger title
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  border-radius: 20px;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0.02em;
   background: transparent !important;
   border: none !important;
-  color: var(--text-muted) !important;
   padding: 0 4px !important;
-  font-size: 0.75rem !important;
+  font-size: 0.8rem !important;
 }
 
 .detail-badge i {
-  font-size: 0.6rem;
-  opacity: 0.5;
+  font-size: 0.7rem;
+  opacity: 0.9;
 }
 
-.bpm-badge {
-  background: rgba(124, 141, 240, 0.10);
-  border: 1px solid rgba(124, 141, 240, 0.18);
-  color: #9FAEF8;
+.bpm-badge, .bpm-badge i {
+  color: #D4B872 !important; /* Muted Gold */
 }
 
-.key-badge {
-  background: rgba(116, 194, 168, 0.10);
-  border: 1px solid rgba(116, 194, 168, 0.18);
-  color: #8FC8B2;
+.key-badge, .key-badge i {
+  color: #63A6B7 !important; /* Muted Cyan */
 }
 
-.genre-badge {
-  background: rgba(164, 93, 108, 0.10);
-  border: 1px solid rgba(164, 93, 108, 0.18);
-  color: #C88B9A;
+.genre-badge, .genre-badge i {
+  color: #A58AC7 !important; /* Muted Purple */
 }
 
 .track-price-tag {
@@ -1003,7 +1105,7 @@ LICENSE MODAL
 
 .license-card.selected {
   border-color: var(--accent-soft);
-  background: rgba(124, 141, 240, 0.08);
+  background: linear-gradient(135deg, var(--accent-soft), var(--accent-purple));
 }
 
 .license-card.exclusive {

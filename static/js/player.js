@@ -41,12 +41,17 @@ var volumeSlider  = document.getElementById('volumeSlider');
 var volumeIcon    = document.getElementById('volumeIcon');
 var volumeWrapper = document.getElementById('volumeWrapper');
 
+// Search Bar
+var trackSearchInput = document.getElementById('trackSearchInput');
+var clearSearchBtn   = document.getElementById('clearSearchBtn');
+
 // ════════════════════════════════════════════════════════════
 // STATE
 // ════════════════════════════════════════════════════════════
 var allTrackItems    = Array.prototype.slice.call(document.querySelectorAll('.track-item'));
 var currentTrackIndex = 0;
 var activeCategory    = 'all';
+var searchQuery       = '';
 var isPlaying         = false;
 var audioCtx          = null;
 var analyser          = null;
@@ -813,39 +818,72 @@ if (tracklistScroll) {
   });
 }
 
-// ════════════════════════════════════════════════════════════
-// CATEGORY FILTERS
+/// ════════════════════════════════════════════════════════════
+// CATEGORY & SEARCH FILTERS
 // ════════════════════════════════════════════════════════════
 function getFilteredTracks() {
-  if (!activeCategory || activeCategory === 'all') return allTrackItems;
-  var target = activeCategory.trim().toLowerCase();
+  var target = (activeCategory || 'all').trim().toLowerCase();
+  var query = (searchQuery || '').trim().toLowerCase();
+  
   return allTrackItems.filter(function (t) {
     var g = (t.dataset.genre || '').trim().toLowerCase();
-    return g === target;
+    var categoryMatch = (target === 'all' || g === target);
+    if (!categoryMatch) return false;
+    
+    if (!query) return true;
+    
+    var nameMatch = (t.dataset.name || '').toLowerCase().indexOf(query) !== -1;
+    var genreMatch = g.indexOf(query) !== -1;
+    var keyMatch = (t.dataset.key || '').toLowerCase().indexOf(query) !== -1;
+    var bpmMatch = (t.dataset.bpm || '').toLowerCase().indexOf(query) !== -1;
+    
+    return nameMatch || genreMatch || keyMatch || bpmMatch;
   });
 }
 
-function applyFilter(category) {
-  activeCategory = category;
-  var target = category.trim().toLowerCase();
+function updateTrackVisibility() {
+  var target = (activeCategory || 'all').trim().toLowerCase();
+  var query = (searchQuery || '').trim().toLowerCase();
   
   allTrackItems.forEach(function (t) {
     var g = (t.dataset.genre || '').trim().toLowerCase();
-    var genreMatch = (g === target);
-    t.style.display = (target === 'all' || genreMatch) ? '' : 'none';
+    var categoryMatch = (target === 'all' || g === target);
+    
+    var searchMatch = true;
+    if (query) {
+      var nameMatch = (t.dataset.name || '').toLowerCase().indexOf(query) !== -1;
+      var genreMatch = g.indexOf(query) !== -1;
+      var keyMatch = (t.dataset.key || '').toLowerCase().indexOf(query) !== -1;
+      var bpmMatch = (t.dataset.bpm || '').toLowerCase().indexOf(query) !== -1;
+      searchMatch = nameMatch || genreMatch || keyMatch || bpmMatch;
+    }
+    
+    t.style.display = (categoryMatch && searchMatch) ? '' : 'none';
   });
   
   var visible = getFilteredTracks();
   if (trackCount) trackCount.textContent = visible.length + ' tracks';
   
+  var noResults = document.getElementById('noSearchResults');
+  if (noResults) {
+      noResults.style.display = (visible.length === 0) ? 'flex' : 'none';
+      if (visible.length === 0) {
+          var msg = document.getElementById('emptyStateMessage');
+          if (msg) {
+              if (target !== 'all' && target !== '') {
+                  var capitalizedTarget = target.split(' ').map(function(word) { return word.charAt(0).toUpperCase() + word.slice(1); }).join(' ');
+                  msg.textContent = 'No result found in ' + capitalizedTarget + '. Try searching in All Beats.';
+              } else {
+                  msg.textContent = 'Try adjusting your search or clearing the filters.';
+              }
+          }
+      }
+  }
+  
   document.querySelectorAll('.cat-tab').forEach(function (tab) {
     var tabCat = (tab.dataset.category || '').trim().toLowerCase();
     tab.classList.toggle('active', tabCat === target);
   });
-  
-  if (typeof updateTracklistHeading === 'function') {
-      updateTracklistHeading(category);
-  }
   
   var currentTrackVisible = visible.find(function (t) {
     return parseInt(t.dataset.index, 10) === currentTrackIndex;
@@ -854,14 +892,21 @@ function applyFilter(category) {
   if (currentTrackVisible) {
     highlightTrackItem(currentTrackIndex);
   } else if (visible.length > 0) {
-    // Auto-select the first track in the new filter if current is hidden
     var firstIdx = parseInt(visible[0].dataset.index, 10);
     currentTrackIndex = firstIdx;
     updatePlayerUI(visible[0].dataset);
     highlightTrackItem(firstIdx);
-  } else {
-    allTrackItems.forEach(function (t) { t.classList.remove('active'); });
   }
+}
+
+function applyFilter(category) {
+  activeCategory = category;
+  
+  if (typeof updateTracklistHeading === 'function') {
+      updateTracklistHeading(category);
+  }
+  
+  updateTrackVisibility();
 }
 
 function buildCategoryTabs() {
@@ -1028,6 +1073,26 @@ if (buyNowBtn) {
   buyNowBtn.addEventListener('click', function (e) {
     e.stopPropagation();
     triggerPurchaseFlow(buyNowBtn.dataset.id, 'buy');
+  });
+}
+
+// ════════════════════════════════════════════════════════════
+// SEARCH EVENT LISTENERS
+// ════════════════════════════════════════════════════════════
+if (trackSearchInput) {
+  trackSearchInput.addEventListener('input', function (e) {
+    searchQuery = e.target.value;
+    updateTrackVisibility();
+  });
+}
+
+if (clearSearchBtn) {
+  clearSearchBtn.addEventListener('click', function (e) {
+    if (trackSearchInput) {
+      trackSearchInput.value = '';
+    }
+    searchQuery = '';
+    updateTrackVisibility();
   });
 }
 
