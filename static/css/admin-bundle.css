@@ -1168,4 +1168,29 @@ textarea::placeholder {
 .upload-remove-btn i {
     font-size: 0.65rem;
 }
-/* ── Mobile ── */
+/* ── Global Admin Custom Scrollbars ── */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(168, 85, 247, 0.25);
+    border-radius: 10px;
+    border: 1px solid rgba(168, 85, 247, 0.15);
+    transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(168, 85, 247, 0.55);
+}
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(168, 85, 247, 0.3) rgba(255, 255, 255, 0.02);
+}
+

@@ -25,8 +25,11 @@
     <a href="{{ url_for('admin.admin_dashboard') }}" class="nav-item {% if request.endpoint == 'admin.admin_dashboard' %}active{% endif %}">
         <i class="fas fa-chart-pie"></i> <span>Dashboard</span>
     </a>
-    <a href="{{ url_for('admin.admin_products') }}" class="nav-item {% if 'product' in (request.endpoint or '') %}active{% endif %}">
+    <a href="{{ url_for('admin.admin_products') }}" class="nav-item {% if request.endpoint in ['admin.admin_products', 'admin.admin_product_add', 'admin.admin_product_edit'] %}active{% endif %}">
         <i class="fas fa-music"></i> <span>Products</span>
+    </a>
+    <a href="{{ url_for('admin.admin_beats_sort') }}" class="nav-item {% if request.endpoint == 'admin.admin_beats_sort' %}active{% endif %}">
+        <i class="fas fa-sort-amount-down"></i> <span>Sort Beats</span>
     </a>
     <a href="{{ url_for('admin.admin_genres') }}" class="nav-item {% if 'genre' in (request.endpoint or '') %}active{% endif %}">
         <i class="fas fa-tags"></i> <span>Genres</span>

@@ -825,7 +825,7 @@ function getFilteredTracks() {
   var target = (activeCategory || 'all').trim().toLowerCase();
   var query = (searchQuery || '').trim().toLowerCase();
   
-  return allTrackItems.filter(function (t) {
+  var filtered = allTrackItems.filter(function (t) {
     var g = (t.dataset.genre || '').trim().toLowerCase();
     var categoryMatch = (target === 'all' || g === target);
     if (!categoryMatch) return false;
@@ -839,9 +839,50 @@ function getFilteredTracks() {
     
     return nameMatch || genreMatch || keyMatch || bpmMatch;
   });
+
+  filtered.sort(function(a, b) {
+    return parseInt(a.style.order || 0) - parseInt(b.style.order || 0);
+  });
+  
+  return filtered;
 }
 
-function updateTrackVisibility() {
+function sortTrackItems() {
+  var sortSelect = document.getElementById('beatSortSelect');
+  var sortMode = sortSelect ? sortSelect.value : 'recommended';
+  var target = (activeCategory || 'all').trim().toLowerCase();
+  var trackItemsArray = Array.from(allTrackItems);
+
+  if (sortMode === 'recommended') {
+      trackItemsArray.forEach(function(item) {
+          if (target === 'all') {
+              item.style.order = item.dataset.orderMaster || 0;
+          } else {
+              item.style.order = item.dataset.orderGenre || 0;
+          }
+      });
+      return;
+  }
+
+  trackItemsArray.sort(function(a, b) {
+      if (sortMode === 'newest') {
+          return parseFloat(b.dataset.createdAt || 0) - parseFloat(a.dataset.createdAt || 0);
+      } else if (sortMode === 'oldest') {
+          return parseFloat(a.dataset.createdAt || 0) - parseFloat(b.dataset.createdAt || 0);
+      } else if (sortMode === 'price_asc') {
+          return parseFloat(a.dataset.price || 0) - parseFloat(b.dataset.price || 0);
+      } else if (sortMode === 'price_desc') {
+          return parseFloat(b.dataset.price || 0) - parseFloat(a.dataset.price || 0);
+      }
+      return 0;
+  });
+
+  trackItemsArray.forEach(function(item, idx) {
+      item.style.order = idx;
+  });
+}
+
+window.updateTrackVisibility = function updateTrackVisibility() {
   var target = (activeCategory || 'all').trim().toLowerCase();
   var query = (searchQuery || '').trim().toLowerCase();
   
@@ -860,6 +901,9 @@ function updateTrackVisibility() {
     
     t.style.display = (categoryMatch && searchMatch) ? '' : 'none';
   });
+  
+  // Call sort whenever visibility updates
+  sortTrackItems();
   
   var visible = getFilteredTracks();
   if (trackCount) trackCount.textContent = visible.length + ' tracks';
@@ -1201,3 +1245,10 @@ VOLUME POPOVER — hover with delay
     });
   }
 })();
+
+var beatSortSelect = document.getElementById('beatSortSelect');
+if (beatSortSelect) {
+    beatSortSelect.addEventListener('change', function() {
+        if(typeof updateTrackVisibility === 'function') updateTrackVisibility();
+    });
+}

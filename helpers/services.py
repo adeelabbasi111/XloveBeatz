@@ -40,7 +40,7 @@ def get_homepage_products(limit=8):
     beats = (
         Product.query
         .filter_by(product_type='beat', is_active=True)
-        .order_by(Product.created_at.desc())
+        .order_by(Product.sort_order.asc(), Product.created_at.desc())
         .limit(limit)
         .all()
     )
@@ -71,7 +71,7 @@ def get_player_beats(pack_id=None):
                 Product.query
                 .options(db.joinedload(Product.beat_detail))
                 .filter_by(product_type='beat', is_active=True)
-                .order_by(Product.created_at.desc())
+                .order_by(Product.sort_order.asc(), Product.created_at.desc())
                 .all()
             )
             return beats, None, None
@@ -131,6 +131,9 @@ def build_beats_data(beats):
                 'license_tiers': license_tiers,
                 'preview_audio': detail.preview_audio if detail else None,
                 'beat_image': detail.beat_image if detail else None,
+                'sort_order': beat.sort_order if hasattr(beat, 'sort_order') else 0,
+                'genre_sort_order': detail.genre_sort_order if detail and hasattr(detail, 'genre_sort_order') else 0,
+                'created_at': beat.created_at.timestamp() if beat.created_at else 0,
             })
         except Exception as e:
             logger.error("build_beats_data error for beat %s: %s", beat.id, e)

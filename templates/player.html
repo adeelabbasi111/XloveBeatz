@@ -99,9 +99,18 @@
                     <span class="track-count" id="trackCount">{{ beats | length }} tracks</span>
                 </h2>
                 
-                <div class="tracklist-search">
-                    <i class="fas fa-search search-icon"></i>
-                    <input type="text" id="trackSearchInput" placeholder="Search beats, genre, key, BPM..." autocomplete="off">
+                <div style="display: flex; gap: 10px;">
+                    <div class="tracklist-search" style="flex: 1;">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" id="trackSearchInput" placeholder="Search beats, genre, key, BPM..." autocomplete="off">
+                    </div>
+                    <select id="beatSortSelect" onchange="if(typeof updateTrackVisibility === 'function') updateTrackVisibility();" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 30px; padding: 10px 14px; color: #fff; font-size: 0.85rem; outline: none; backdrop-filter: blur(10px); cursor: pointer;">
+                        <option value="recommended" style="background: #111d26;">Recommended</option>
+                        <option value="newest" style="background: #111d26;">Newest</option>
+                        <option value="oldest" style="background: #111d26;">Oldest</option>
+                        <option value="price_asc" style="background: #111d26;">Price: Low to High</option>
+                        <option value="price_desc" style="background: #111d26;">Price: High to Low</option>
+                    </select>
                 </div>
             </div>
             
@@ -120,6 +129,9 @@
      data-key="{{ beat.key }}"
      data-genre="{{ beat.genre }}"
      data-duration="{{ beat.duration }}"
+     data-order-master="{{ beat.sort_order }}"
+     data-order-genre="{{ beat.genre_sort_order }}"
+     data-created-at="{{ beat.created_at }}"
      data-price="{{ beat.price }}"
      data-pack-id="{{ beat.pack_id if beat.pack_id else '' }}"
      data-preview="{{ url_for('static', filename=beat.preview_audio) if beat.preview_audio else '' }}"

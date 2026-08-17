@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>500 • Server Error | XLOVEBEATZ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-deep: #0C0E13;
+            --bg-surface: #13151C;
+            --bg-elevated: #1B1E27;
+            --border-light: rgba(255, 255, 255, 0.06);
+            --text-primary: #F1F3F8;
+            --text-secondary: #A0A5B5;
+            --text-muted: #6C7285;
+            --accent-soft: #E06C75;
+            --accent-glow: rgba(224, 108, 117, 0.25);
+            --accent-gold-mute: #C9AE74;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at 30% 20%, rgba(224, 108, 117, 0.08), transparent 60%),
+                        radial-gradient(circle at 80% 70%, rgba(201, 174, 78, 0.04), transparent 70%);
+            pointer-events: none;
+            z-index: -2;
+        }
+
+        .error-container {
+            text-align: center;
+            padding: 40px 24px;
+            max-width: 600px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .glitch-500 {
+            font-size: clamp(4rem, 12vw, 7rem);
+            font-weight: 900;
+            line-height: 1;
+            margin-bottom: 20px;
+            position: relative;
+            color: var(--text-primary);
+            letter-spacing: -0.04em;
+        }
+
+        .error-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        .error-desc {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-bottom: 36px;
+            line-height: 1.6;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .home-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(135deg, #E06C75, #C9AE74);
+            color: white;
+            padding: 14px 32px;
+            border-radius: 60px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            box-shadow: 0 8px 20px var(--accent-glow);
+            border: none;
+            cursor: pointer;
+        }
+        .home-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 14px 30px rgba(224, 108, 117, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="glitch-500">500</div>
+        <h1 class="error-title">Internal Server Error</h1>
+        <p class="error-desc">Something unexpected happened on our end. Please try again or head back to the home page.</p>
+
+        <a href="/" class="home-btn">
+            <i class="fas fa-arrow-left"></i> Back to Studio
+        </a>
+    </div>
+</body>
+</html>

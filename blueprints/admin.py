@@ -558,10 +558,14 @@ def admin_product_add():
                     request.form, 'cover_image', FOLDER_IMAGES, current_app
                 )
 
+            if product_type == 'beat':
+                Product.query.filter_by(product_type='beat').update({Product.sort_order: Product.sort_order + 1})
+
             product = Product(
                 product_type=product_type, name=name, slug=slug,
                 description=description, price_cents=price_cents,
                 cover_image=cover_image_path, is_active=True,
+                sort_order=0
             )
             db.session.add(product)
             db.session.flush()
@@ -870,9 +874,12 @@ def _create_beat_details(product):
     genre = request.form.get('beat_genre', '').strip()
     _sync_genre(genre)
 
+    BeatDetail.query.filter_by(genre=genre).update({BeatDetail.genre_sort_order: BeatDetail.genre_sort_order + 1})
+
     beat_detail = BeatDetail(
         product_id=product.id,
         bpm=request.form.get('bpm', type=int),
+        genre_sort_order=0,
         musical_key=request.form.get('musical_key', '').strip(),
         genre=genre,
         duration=duration,
@@ -1599,3 +1606,62 @@ def admin_analytics():
         top_products=get_top_products(),
         genre_stats=get_genre_distribution(),
     )
+
+@bp.route('/admin/beats/sort')
+@admin_required
+def admin_beats_sort():
+    genres = Genre.query.filter_by(is_active=True).order_by(Genre.sort_order).all()
+    return render_template('admin/sort_beats.html', genres=genres)
+
+
+@bp.route('/admin/api/beats/get-sort-list', methods=['GET'])
+@admin_required
+def get_sort_list():
+    list_type = request.args.get('list_type', 'all')
+    
+    if list_type == 'all':
+        beats = (
+            Product.query
+            .filter_by(product_type='beat', is_active=True)
+            .order_by(Product.sort_order.asc(), Product.created_at.desc())
+            .all()
+        )
+        data = [{'id': b.id, 'name': b.name} for b in beats]
+        return jsonify({"status": "success", "beats": data})
+    else:
+        genre_name = request.args.get('genre', '')
+        beats = (
+            Product.query
+            .join(BeatDetail, BeatDetail.product_id == Product.id)
+            .filter(Product.product_type == 'beat', Product.is_active == True, BeatDetail.genre == genre_name)
+            .order_by(BeatDetail.genre_sort_order.asc(), Product.created_at.desc())
+            .all()
+        )
+        data = [{'id': b.id, 'name': b.name} for b in beats]
+        return jsonify({"status": "success", "beats": data})
+
+
+@bp.route('/admin/api/beats/reorder', methods=['POST'])
+@admin_required
+def api_beats_reorder():
+    data = request.get_json()
+    list_type = data.get('list_type', 'all')
+    order = data.get('order', [])
+    
+    if not order:
+        return jsonify({"status": "success"})
+        
+    if list_type == 'all':
+        for idx, product_id in enumerate(order):
+            p = Product.query.filter_by(id=product_id, product_type='beat').first()
+            if p:
+                p.sort_order = idx
+    else:
+        genre = data.get('genre', '')
+        for idx, product_id in enumerate(order):
+            bd = BeatDetail.query.filter_by(product_id=product_id, genre=genre).first()
+            if bd:
+                bd.genre_sort_order = idx
+                
+    db.session.commit()
+    return jsonify({"status": "success"})

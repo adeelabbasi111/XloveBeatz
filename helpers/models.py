@@ -50,6 +50,7 @@ class Product(db.Model):
     price_cents = db.Column(db.Integer, nullable=False)  # stored in paise (INR)
     cover_image = db.Column(db.String(500))
     is_active = db.Column(db.Boolean, default=True, index=True)
+    sort_order = db.Column(db.Integer, default=0, index=True)
     created_at = db.Column(db.DateTime, server_default=func.now())
 
 
@@ -73,6 +74,7 @@ class BeatDetail(db.Model):
     bpm = db.Column(db.Integer)
     musical_key = db.Column(db.String(20))
     genre = db.Column(db.String(100), index=True)
+    genre_sort_order = db.Column(db.Integer, default=0, index=True)
     duration = db.Column(db.String(20))
 
     preview_audio = db.Column(db.String(500))

@@ -1,0 +1,436 @@
+{% extends "admin/base.html" %}
+
+{% block admin_title %}Sort Beats{% endblock %}
+{% block page_heading %}Sort Beats{% endblock %}
+
+{% block content %}
+<div class="page-header" style="margin-bottom: 1.5rem;">
+    <p class="admin-subtitle" style="color: var(--admin-text-sec, #a0a0a0); margin: 0; font-size: 0.95rem;">
+        Drag and drop to rearrange beats globally or within specific genres. Order updates automatically when saved.
+    </p>
+</div>
+
+<div class="card admin-card sort-card">
+    <div class="card-header sort-header">
+        <div class="sort-selector-wrap">
+            <label for="listTypeSelect" class="sort-label">
+                <i class="fas fa-layer-group" style="color: var(--admin-accent, #a855f7); margin-right: 6px;"></i>
+                Select List to Sort:
+            </label>
+            <div class="custom-select-container">
+                <select id="listTypeSelect" class="sort-dropdown">
+                    <option value="all">★ Master List (All Beats)</option>
+                    <optgroup label="Genre Lists">
+                        {% for g in genres %}
+                        <option value="genre_{{ g.name }}">Genre: {{ g.name }}</option>
+                        {% endfor %}
+                    </optgroup>
+                </select>
+            </div>
+        </div>
+
+        <button id="saveOrderBtn" class="btn btn-primary save-order-btn" style="display: none;">
+            <i class="fas fa-save"></i> Save Order
+        </button>
+    </div>
+    
+    <div class="card-body p-0">
+        <div id="loadingIndicator" class="sort-loading">
+            <i class="fas fa-circle-notch fa-spin fa-2x" style="color: var(--admin-accent, #a855f7);"></i>
+            <p>Loading beats...</p>
+        </div>
+        
+        <div id="beatListContainer" class="sort-scroll-container">
+            <ul id="beatList" class="beat-sort-list">
+                <!-- Beats dynamically populated by JS -->
+            </ul>
+        </div>
+        
+        <div id="emptyState" class="sort-empty" style="display: none;">
+            <i class="fas fa-music fa-3x"></i>
+            <h3>No beats found in this list</h3>
+            <p>Upload beats in this genre to start custom sorting.</p>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* ─── CARD & HEADER ─── */
+    .sort-card {
+        background: var(--admin-surface, #12121a);
+        border: 1px solid var(--admin-border, rgba(255, 255, 255, 0.05));
+        border-radius: var(--admin-radius, 12px);
+        overflow: hidden;
+        margin-bottom: 2rem;
+    }
+
+    .sort-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1.25rem;
+        padding: 1.25rem 1.5rem;
+        background: rgba(255, 255, 255, 0.02);
+        border-bottom: 1px solid var(--admin-border, rgba(255, 255, 255, 0.05));
+    }
+
+    .sort-selector-wrap {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+        flex-wrap: wrap;
+    }
+
+    .sort-label {
+        font-weight: 600;
+        color: #ffffff;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+    }
+
+    /* ─── SLEEK DROPDOWN STYLING ─── */
+    .custom-select-container {
+        position: relative;
+        display: inline-block;
+    }
+
+    .sort-dropdown {
+        background: #181824 !important;
+        color: #ffffff !important;
+        border: 1px solid rgba(168, 85, 247, 0.3) !important;
+        border-radius: 8px !important;
+        padding: 0.65rem 2.5rem 0.65rem 1rem !important;
+        font-size: 0.9rem !important;
+        font-weight: 500 !important;
+        font-family: inherit !important;
+        outline: none !important;
+        cursor: pointer !important;
+        min-width: 260px;
+        transition: all 0.25s ease !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .sort-dropdown:hover,
+    .sort-dropdown:focus {
+        border-color: var(--admin-accent, #a855f7) !important;
+        background: #1e1e2d !important;
+        box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.15) !important;
+    }
+
+    .sort-dropdown optgroup {
+        background: #12121c !important;
+        color: #a855f7 !important;
+        font-weight: 700 !important;
+        padding: 6px 0;
+    }
+
+    .sort-dropdown option {
+        background: #181824 !important;
+        color: #ffffff !important;
+        padding: 8px 12px !important;
+        font-weight: 400 !important;
+    }
+
+    /* ─── SCROLLABLE LIST CONTAINER WITH CUSTOM SCROLLBAR ─── */
+    .sort-scroll-container {
+        max-height: 65vh;
+        overflow-y: auto;
+        padding: 0.5rem 0;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(168, 85, 247, 0.4) rgba(255, 255, 255, 0.02);
+    }
+
+    .sort-scroll-container::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .sort-scroll-container::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 10px;
+    }
+
+    .sort-scroll-container::-webkit-scrollbar-thumb {
+        background: rgba(168, 85, 247, 0.35);
+        border-radius: 10px;
+        border: 1px solid rgba(168, 85, 247, 0.2);
+        transition: background 0.2s ease;
+    }
+
+    .sort-scroll-container::-webkit-scrollbar-thumb:hover {
+        background: rgba(168, 85, 247, 0.65);
+    }
+
+    /* ─── LIST ITEMS ─── */
+    .beat-sort-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    .beat-item {
+        display: flex;
+        align-items: center;
+        padding: 0.9rem 1.5rem;
+        border-bottom: 1px solid var(--admin-border, rgba(255, 255, 255, 0.04));
+        background: transparent;
+        transition: all 0.2s ease;
+        user-select: none;
+    }
+
+    .beat-item:last-child {
+        border-bottom: none;
+    }
+
+    .beat-item:hover {
+        background: rgba(255, 255, 255, 0.03);
+    }
+
+    .beat-drag-handle {
+        color: var(--admin-text-muted, #666);
+        cursor: grab;
+        padding: 0.4rem 0.6rem;
+        margin-right: 0.75rem;
+        font-size: 1.1rem;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+    }
+
+    .beat-drag-handle:hover {
+        color: var(--admin-accent, #a855f7);
+        background: rgba(168, 85, 247, 0.1);
+    }
+
+    .beat-drag-handle:active {
+        cursor: grabbing;
+        color: #fff;
+    }
+
+    .beat-item.sortable-ghost {
+        opacity: 0.3;
+        background: rgba(168, 85, 247, 0.15) !important;
+        border: 1px dashed var(--admin-accent, #a855f7);
+    }
+
+    .beat-item.sortable-chosen {
+        background: rgba(168, 85, 247, 0.1) !important;
+    }
+
+    .beat-index {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        min-width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        font-weight: 700;
+        margin-right: 1.25rem;
+        color: var(--admin-text-sec, #a0a0a0);
+        font-family: 'DM Mono', monospace;
+    }
+
+    .beat-name {
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: #ffffff;
+        letter-spacing: 0.01em;
+    }
+
+    /* ─── LOADING & EMPTY STATES ─── */
+    .sort-loading {
+        padding: 3.5rem 1rem;
+        text-align: center;
+        color: var(--admin-text-sec, #a0a0a0);
+    }
+
+    .sort-loading p {
+        margin-top: 1rem;
+        font-size: 0.9rem;
+    }
+
+    .sort-empty {
+        padding: 4rem 1rem;
+        text-align: center;
+        color: var(--admin-text-muted, #666);
+    }
+
+    .sort-empty i {
+        opacity: 0.2;
+        margin-bottom: 1rem;
+    }
+
+    .sort-empty h3 {
+        color: var(--admin-text-sec, #a0a0a0);
+        font-size: 1.15rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .sort-empty p {
+        font-size: 0.85rem;
+    }
+
+    /* ─── SAVE BUTTON PULSE ─── */
+    .pulse-btn {
+        animation: pulse-glow 2s infinite;
+    }
+
+    @keyframes pulse-glow {
+        0% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.6); }
+        70% { box-shadow: 0 0 0 10px rgba(168, 85, 247, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0); }
+    }
+</style>
+
+<!-- Sortable.js -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const listTypeSelect = document.getElementById('listTypeSelect');
+    const beatList = document.getElementById('beatList');
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const emptyState = document.getElementById('emptyState');
+    const saveOrderBtn = document.getElementById('saveOrderBtn');
+    
+    let sortableInstance = null;
+    let hasUnsavedChanges = false;
+    
+    // Initialize Sortable
+    sortableInstance = new Sortable(beatList, {
+        handle: '.beat-drag-handle',
+        animation: 180,
+        ghostClass: 'sortable-ghost',
+        chosenClass: 'sortable-chosen',
+        onEnd: function() {
+            hasUnsavedChanges = true;
+            saveOrderBtn.style.display = 'inline-flex';
+            saveOrderBtn.classList.add('pulse-btn');
+            updateIndices();
+        }
+    });
+    
+    function updateIndices() {
+        const items = beatList.querySelectorAll('.beat-item');
+        items.forEach((item, index) => {
+            item.querySelector('.beat-index').textContent = index + 1;
+        });
+    }
+    
+    function loadBeats() {
+        if (hasUnsavedChanges && !confirm("You have unsaved order changes. Discard them?")) {
+            hasUnsavedChanges = false; 
+        }
+        
+        hasUnsavedChanges = false;
+        saveOrderBtn.style.display = 'none';
+        saveOrderBtn.classList.remove('pulse-btn');
+        
+        beatList.style.display = 'none';
+        emptyState.style.display = 'none';
+        loadingIndicator.style.display = 'block';
+        
+        const val = listTypeSelect.value;
+        let url = "{{ url_for('admin.get_sort_list') }}";
+        
+        if (val === 'all') {
+            url += "?list_type=all";
+        } else if (val.startsWith('genre_')) {
+            const genreName = val.substring(6);
+            url += "?list_type=genre&genre=" + encodeURIComponent(genreName);
+        }
+        
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                loadingIndicator.style.display = 'none';
+                beatList.innerHTML = '';
+                
+                if (data.status === 'success' && data.beats.length > 0) {
+                    data.beats.forEach((beat, idx) => {
+                        const li = document.createElement('li');
+                        li.className = 'beat-item';
+                        li.dataset.id = beat.id;
+                        li.innerHTML = `
+                            <div class="beat-drag-handle" title="Drag to reorder"><i class="fas fa-grip-vertical"></i></div>
+                            <div class="beat-index">${idx + 1}</div>
+                            <div class="beat-name">${beat.name}</div>
+                        `;
+                        beatList.appendChild(li);
+                    });
+                    beatList.style.display = 'block';
+                } else {
+                    emptyState.style.display = 'block';
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                loadingIndicator.style.display = 'none';
+                alert('Error loading beats.');
+            });
+    }
+    
+    listTypeSelect.addEventListener('change', loadBeats);
+    
+    saveOrderBtn.addEventListener('click', function() {
+        const val = listTypeSelect.value;
+        const items = Array.from(beatList.querySelectorAll('.beat-item'));
+        const orderIds = items.map(item => parseInt(item.dataset.id));
+        
+        const payload = {
+            order: orderIds
+        };
+        
+        if (val === 'all') {
+            payload.list_type = 'all';
+        } else if (val.startsWith('genre_')) {
+            payload.list_type = 'genre';
+            payload.genre = val.substring(6);
+        }
+        
+        const originalText = saveOrderBtn.innerHTML;
+        saveOrderBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        saveOrderBtn.disabled = true;
+        
+        fetch("{{ url_for('admin.api_beats_reorder') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': window.CSRF_TOKEN || ''
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                saveOrderBtn.innerHTML = '<i class="fas fa-check"></i> Saved!';
+                saveOrderBtn.classList.remove('pulse-btn');
+                saveOrderBtn.classList.replace('btn-primary', 'btn-success');
+                hasUnsavedChanges = false;
+                
+                setTimeout(() => {
+                    saveOrderBtn.style.display = 'none';
+                    saveOrderBtn.innerHTML = originalText;
+                    saveOrderBtn.classList.replace('btn-success', 'btn-primary');
+                    saveOrderBtn.disabled = false;
+                }, 2000);
+            } else {
+                throw new Error("Failed to save");
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Error saving new order.');
+            saveOrderBtn.innerHTML = originalText;
+            saveOrderBtn.disabled = false;
+        });
+    });
+    
+    // Initial load
+    loadBeats();
+});
+</script>
+{% endblock %}
