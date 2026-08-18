@@ -35,11 +35,17 @@ class Config:
     ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
     ALLOWED_ARCHIVE_EXTENSIONS = {'zip', 'rar'}
 
-    # --- PayU (REQUIRED in production) ---
-    PAYU_MERCHANT_KEY = os.environ.get('PAYU_MERCHANT_KEY', '')
-    PAYU_MERCHANT_SALT = os.environ.get('PAYU_MERCHANT_SALT', '')
-    PAYU_ENV = os.environ.get('PAYU_ENV', 'production')
-
+    # --- Payment Gateways (Razorpay & PayPal) ---
+    RAZORPAY_KEY_ID = os.environ.get('RAZORPAY_KEY_ID', '')
+    RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET', '')
+    
+    PAYPAL_CLIENT_ID = os.environ.get('PAYPAL_CLIENT_ID', '')
+    PAYPAL_CLIENT_SECRET = os.environ.get('PAYPAL_CLIENT_SECRET', '')
+    PAYPAL_MODE = os.environ.get('PAYPAL_MODE', 'sandbox') # 'sandbox' or 'live'
+    
+    # Currency Conversion (1 USD = ₹85 INR)
+    USD_INR_EXCHANGE_RATE = float(os.environ.get('USD_INR_EXCHANGE_RATE', '85.0'))
+    
     # --- Rate limiting ---
     RATELIMIT_DEFAULT = "200 per day, 50 per hour"
     RATELIMIT_STORAGE_URI = "memory://"

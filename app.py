@@ -12,12 +12,12 @@ from flask_migrate import Migrate
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
+from dotenv import load_dotenv
+load_dotenv()  # Ensure env vars are loaded before importing config
+
 from helpers.config import Config
 from helpers.models import db, init_db
 from helpers.utils import register_template_filters
-from dotenv import load_dotenv
-
-load_dotenv()  # ← Sirf YAHAN
 
 # Extensions (initialized without app, bound in create_app)
 csrf = CSRFProtect()
@@ -130,6 +130,8 @@ def create_app(config_class=Config):
             'spotify_url': get_site_setting('spotify_url', '#'),
             'youtube_url': get_site_setting('youtube_url', '#'),
             'whatsapp_number': get_site_setting('whatsapp_number', ''),
+            'PAYPAL_CLIENT_ID': app.config.get('PAYPAL_CLIENT_ID', ''),
+            'USD_INR_EXCHANGE_RATE': app.config.get('USD_INR_EXCHANGE_RATE', 85.0),
         }
 
     # ---- Error handlers ----

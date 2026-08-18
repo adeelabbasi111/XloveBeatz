@@ -116,10 +116,14 @@
             <div class="summary-divider"></div>
             <div class="summary-row grand">
                 <span>Total</span>
-                <span id="cartGrandTotal">₹0.00</span>
+                <div style="text-align: right;">
+                    <span id="cartGrandTotal">₹0.00</span>
+                    <div id="cartGrandTotalUsd" style="font-size: 0.8rem; color: var(--accent-muted); margin-top: 4px;">≈ $0.00 USD</div>
+                </div>
             </div>
         </div>
 
+        
         <button class="checkout-btn-premium" id="checkoutBtn" disabled>
             <span class="checkout-btn-content">
                 <i class="fas fa-lock"></i>
@@ -128,11 +132,109 @@
             <span class="checkout-btn-shine"></span>
         </button>
 
-        <div class="cart-trust-badges">
+        <!-- Payment Method Modal -->
+        <dialog id="paymentMethodModal" class="payment-modal">
+            <div class="payment-modal-content">
+                <div class="payment-modal-header">
+                    <h3>Select Payment Method</h3>
+                    <button class="payment-modal-close" id="closePaymentModalBtn"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="payment-modal-body">
+                    <p class="payment-modal-desc">How would you like to pay?</p>
+                    
+                    <button class="checkout-btn-premium razorpay-btn" id="razorpayBtn">
+                        <span class="checkout-btn-content">
+                            <i class="fas fa-rupee-sign"></i>
+                            <span>Pay with Razorpay (India)</span>
+                        </span>
+                        <span class="checkout-btn-shine"></span>
+                    </button>
+                    
+                    <div class="payment-modal-divider"><span>OR</span></div>
+                    
+                    <div id="paypal-button-container" class="paypal-btn-wrapper"></div>
+                </div>
+            </div>
+        </dialog>
+
+        <style>
+            .payment-modal {
+                border: none;
+                border-radius: 16px;
+                background: var(--bg-card);
+                color: var(--text-primary);
+                padding: 0;
+                width: 90%;
+                max-width: 400px;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+                backdrop-filter: blur(10px);
+                margin: auto;
+            }
+            .payment-modal::backdrop {
+                background: rgba(11, 13, 16, 0.85);
+                backdrop-filter: blur(4px);
+            }
+            .payment-modal-content {
+                padding: 24px;
+            }
+            .payment-modal-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 16px;
+            }
+            .payment-modal-header h3 {
+                margin: 0;
+                font-size: 1.25rem;
+                color: var(--text-primary);
+            }
+            .payment-modal-close {
+                background: none;
+                border: none;
+                color: var(--text-muted);
+                font-size: 1.25rem;
+                cursor: pointer;
+                transition: color 0.2s;
+            }
+            .payment-modal-close:hover {
+                color: var(--accent-gold);
+            }
+            .payment-modal-desc {
+                color: var(--text-muted);
+                font-size: 0.95rem;
+                margin-bottom: 24px;
+            }
+            .payment-modal-divider {
+                display: flex;
+                align-items: center;
+                text-align: center;
+                margin: 20px 0;
+                color: var(--text-muted);
+                font-size: 0.85rem;
+            }
+            .payment-modal-divider::before, .payment-modal-divider::after {
+                content: '';
+                flex: 1;
+                border-bottom: 1px solid rgba(255,255,255,0.1);
+            }
+            .payment-modal-divider span {
+                padding: 0 10px;
+            }
+            
+            /* Add animation for dialog */
+            dialog[open] {
+                animation: dialogZoom 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            }
+            @keyframes dialogZoom {
+                0% { opacity: 0; transform: scale(0.95); }
+                100% { opacity: 1; transform: scale(1); }
+            }
+        </style>
+<div class="cart-trust-badges">
             <span><i class="fas fa-shield-alt"></i> Secure</span>
             <span><i class="fas fa-bolt"></i> Instant</span>
             <span><i class="fas fa-undo"></i> 7-Day Refund</span>
         </div>
     </div>
 </div>
-
+

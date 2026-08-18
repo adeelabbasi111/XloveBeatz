@@ -159,6 +159,8 @@
     {# ─── CSRF + API Helper ─── #}
     <script>
         window.CSRF_TOKEN = '{{ csrf_token() }}';
+        window.PAYPAL_CLIENT_ID = '{{ PAYPAL_CLIENT_ID|default("") }}';
+        window.USD_INR_EXCHANGE_RATE = {{ USD_INR_EXCHANGE_RATE|default(85.0) }};
 
         window.apiFetch = function(url, options) {
             options = options || {};
@@ -176,6 +178,7 @@
     </script>
 
     {# ─── External scripts ─── #}
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script src="{{ url_for('static', filename='js/cart.js') }}"></script>
     <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
     <script src="{{ url_for('static', filename='js/fomo.js') }}"></script>

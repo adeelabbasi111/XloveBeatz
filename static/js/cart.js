@@ -43,7 +43,13 @@
             couponAppliedCode: $('couponAppliedCode'),
             couponAppliedDesc: $('couponAppliedDesc'),
             couponRemoveBtn: $('couponRemoveBtn'),
-            couponError: $('couponError')
+            couponError: $('couponError'),
+            checkoutBtn: $('checkoutBtn'),
+            paymentModal: $('paymentMethodModal'),
+            closePaymentModalBtn: $('closePaymentModalBtn'),
+            razorpayBtn: $('razorpayBtn'),
+            paypalContainer: $('paypal-button-container'),
+            grandTotalUsd: $('cartGrandTotalUsd')
         };
 
         if (!els.drawer) { console.error('[CART] #cartDrawer missing'); return; }
@@ -245,6 +251,7 @@
                 if (els.checkoutBtn) els.checkoutBtn.disabled = true;
                 if (els.subtotal) els.subtotal.textContent = formatPrice(0);
                 if (els.grandTotal) els.grandTotal.textContent = formatPrice(0);
+                if (els.grandTotalUsd) els.grandTotalUsd.textContent = '≈ $0.00 USD';
                 if (els.discountRow) els.discountRow.style.display = 'none';
                 if (els.offerDiscountRow) els.offerDiscountRow.style.display = 'none';
                 if (els.footer) els.footer.style.opacity = '0.6';
@@ -263,7 +270,7 @@
 
             if (els.suggestions) els.suggestions.style.display = 'none';
             if (els.footer) els.footer.style.opacity = '1';
-            if (els.checkoutBtn) els.checkoutBtn.disabled = false;
+            // We set razorpayBtn and paypal dynamically when computing total
 
             els.itemsList.innerHTML = '';
             cart.forEach(function(item, index) {
@@ -319,6 +326,7 @@
             }
 
             if (els.grandTotal) els.grandTotal.textContent = formatPrice(total);
+            updateCheckoutButtons(total);
 
             if (offerBlocksCoupons && offerDiscount > 0) {
                 if (els.couponSection) {
@@ -378,6 +386,7 @@
                             if (els.offerDiscountRow) els.offerDiscountRow.style.display = offerRupees > 0 ? 'flex' : 'none';
                             if (els.cartOfferDiscount && offerRupees > 0) els.cartOfferDiscount.textContent = '-' + formatPrice(offerRupees);
                             if (els.grandTotal) els.grandTotal.textContent = formatPrice(newTotal);
+                            updateCheckoutButtons(newTotal);
 
                             if (els.offerSavingsSection && data.offer_summary && data.offer_summary.length > 0) {
                                 els.offerSavingsSection.style.display = 'block';
@@ -413,6 +422,22 @@
                     }
                 } catch (e) { /* silent fail */ }
             }
+        }
+
+        
+        function updateCheckoutButtons(totalRupees) {
+            let isDisabled = totalRupees <= 0;
+            if (els.checkoutBtn) els.checkoutBtn.disabled = isDisabled;
+            
+            // We can load paypal script preemptively if cart has items
+            if (!isDisabled && !window.paypalScriptLoaded) {
+                loadPayPalScript();
+            }
+            
+            let exRate = window.USD_INR_EXCHANGE_RATE || 85.0;
+            let usdAmount = totalRupees / exRate;
+            if (usdAmount > 0 && usdAmount < 0.50) usdAmount = 0.50;
+            if (els.grandTotalUsd) els.grandTotalUsd.textContent = '≈ $' + usdAmount.toFixed(2) + ' USD';
         }
 
         function openCart() {
@@ -570,59 +595,161 @@
             }
         }
 
-        async function initiateCheckout(itemsToCheckout) {
-            if (!itemsToCheckout || itemsToCheckout.length === 0 || isProcessing) return;
+        
+        window.paypalScriptLoaded = false;
+        let currentDbOrderId = null;
+
+        function loadPayPalScript() {
+            if (window.paypalScriptLoaded || !window.PAYPAL_CLIENT_ID) return;
+            window.paypalScriptLoaded = true;
+            let script = document.createElement('script');
+            script.src = `https://www.paypal.com/sdk/js?client-id=${window.PAYPAL_CLIENT_ID}&currency=USD`;
+            script.onload = () => {
+                renderPayPalButtons();
+            };
+            document.head.appendChild(script);
+        }
+
+        function renderPayPalButtons() {
+            if (!els.paypalContainer || !window.paypal) return;
+            els.paypalContainer.innerHTML = '';
+            
+            paypal.Buttons({
+                style: {
+                    color: 'gold',
+                    shape: 'rect',
+                    label: 'pay'
+                },
+                createOrder: async function(data, actions) {
+                    if (isProcessing) return Promise.reject(new Error("Already processing"));
+                    isProcessing = true;
+                    
+                    var isLoggedIn = await checkIfUserLoggedIn();
+                    if (!isLoggedIn) {
+                        closeCart();
+                        pendingCheckoutItems = cart;
+                        showLoginModal();
+                        showToast('🔐 Login required to checkout', 'warning');
+                        isProcessing = false;
+                        return Promise.reject(new Error("Login required"));
+                    }
+                    
+                    // Handle exclusive items
+                    var exclusiveItems = cart.filter(function(i) { return i.license === 'exclusive'; });
+                    if (exclusiveItems.length > 0) {
+                        var names = exclusiveItems.map(function(i) { return i.name; }).join(', ');
+                        var msg = 'Hello, I am interested in buying the Exclusive License for: ' + names + '. Please let me know the price.';
+                        window.open('https://wa.me/918329189796?text=' + encodeURIComponent(msg), '_blank');
+                        showToast('📱 Redirecting to WhatsApp...', 'info');
+                        isProcessing = false;
+                        return Promise.reject(new Error("Redirected to WhatsApp"));
+                    }
+                    
+                    try {
+                        const res = await fetch('/api/create-paypal-order', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': window.CSRF_TOKEN || ''
+                            },
+                            body: JSON.stringify({
+                                items: cart,
+                                coupon_code: appliedCoupon ? appliedCoupon.code : null
+                            })
+                        });
+                        const orderData = await res.json();
+                        if (orderData.error) throw new Error(orderData.error);
+                        
+                        if (orderData.test_mode_success) {
+                            showToast('✅ Test Payment Successful! Redirecting...', 'success');
+                            window.location.href = '/payment/success/' + orderData.db_order_id;
+                            return Promise.reject(new Error("Bypassed for test mode"));
+                        }
+                        
+                        currentDbOrderId = orderData.db_order_id;
+                        return orderData.paypal_order_id;
+                    } catch(e) {
+                        showToast('❌ ' + e.message, 'error');
+                        isProcessing = false;
+                        return Promise.reject(e);
+                    }
+                },
+                onApprove: async function(data, actions) {
+                    try {
+                        const res = await fetch('/api/capture-paypal-order', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': window.CSRF_TOKEN || ''
+                            },
+                            body: JSON.stringify({
+                                paypal_order_id: data.orderID,
+                                db_order_id: currentDbOrderId
+                            })
+                        });
+                        const result = await res.json();
+                        if (result.status === 'success') {
+                            window.location.href = '/payment/success/' + result.order_id;
+                        } else {
+                            throw new Error(result.error || "Capture failed");
+                        }
+                    } catch(e) {
+                        showToast('❌ ' + e.message, 'error');
+                        isProcessing = false;
+                    }
+                },
+                onCancel: function(data) {
+                    isProcessing = false;
+                    showToast('Payment cancelled', 'info');
+                },
+                onError: function(err) {
+                    isProcessing = false;
+                    showToast('❌ PayPal error', 'error');
+                    console.error(err);
+                }
+            }).render('#paypal-button-container');
+        }
+
+        async function initiateRazorpayCheckout() {
+            if (!cart || cart.length === 0 || isProcessing) return;
             isProcessing = true;
 
             var isLoggedIn = await checkIfUserLoggedIn();
             if (!isLoggedIn) {
                 closeCart();
-                pendingCheckoutItems = itemsToCheckout;
+                pendingCheckoutItems = cart;
                 showLoginModal();
                 showToast('🔐 Login required to checkout', 'warning');
                 isProcessing = false;
                 return;
             }
 
-            // Handle exclusive items first (WhatsApp redirect for both regions)
-            var exclusiveItems = itemsToCheckout.filter(function(i) { return i.license === 'exclusive'; });
+            // Handle exclusive items
+            var exclusiveItems = cart.filter(function(i) { return i.license === 'exclusive'; });
             if (exclusiveItems.length > 0) {
                 var names = exclusiveItems.map(function(i) { return i.name; }).join(', ');
                 var msg = 'Hello, I am interested in buying the Exclusive License for: ' + names + '. Please let me know the price.';
                 window.open('https://wa.me/918329189796?text=' + encodeURIComponent(msg), '_blank');
                 showToast('📱 Redirecting to WhatsApp...', 'info');
-                exclusiveItems.forEach(function(item) {
-                    var idx = cart.findIndex(function(i) { return i.id === item.id && i.license === item.license; });
-                    if (idx > -1) cart.splice(idx, 1);
-                });
-                updateCartUI();
-                closeCart();
                 isProcessing = false;
                 return;
             }
 
-            // Proceed directly to Cashfree checkout
-            await proceedWithPayment(itemsToCheckout);
-            isProcessing = false;
-        }
-
-        async function proceedWithPayment(itemsToCheckout) {
-
-            var origHTML = els.checkoutBtn ? els.checkoutBtn.innerHTML : '';
-            if (els.checkoutBtn) {
-                els.checkoutBtn.innerHTML = '<span class="checkout-btn-content"><i class="fas fa-spinner fa-spin"></i><span>Processing...</span></span>';
-                els.checkoutBtn.disabled = true;
+            var origHTML = els.razorpayBtn ? els.razorpayBtn.innerHTML : '';
+            if (els.razorpayBtn) {
+                els.razorpayBtn.innerHTML = '<span class="checkout-btn-content"><i class="fas fa-spinner fa-spin"></i><span>Processing...</span></span>';
+                els.razorpayBtn.disabled = true;
             }
 
             try {
-                var res = await fetch('/api/create-payu-order', {
+                var res = await fetch('/api/create-razorpay-order', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRFToken': window.CSRF_TOKEN || ''
                     },
                     body: JSON.stringify({
-                        items: itemsToCheckout,
+                        items: cart,
                         coupon_code: appliedCoupon ? appliedCoupon.code : null
                     })
                 });
@@ -630,68 +757,64 @@
                 var orderData = await res.json();
                 if (orderData.error) throw new Error(orderData.error);
 
-                // --- TEST MODE BYPASS ---
                 if (orderData.test_mode_success) {
                     showToast('✅ Test Payment Successful! Redirecting...', 'success');
-                    
-                    // Clear cart items that were checked out
-                    itemsToCheckout.forEach(function(item) {
-                        var idx = cart.findIndex(function(i) { return i.id === item.id && i.license === item.license; });
-                        if (idx > -1) cart.splice(idx, 1);
-                    });
-                    
-                    appliedCoupon = null;
-                    saveCoupon();
-                    updateCartUI();
-                    closeCart();
-                    
                     window.location.href = '/payment/success/' + orderData.db_order_id;
                     return;
                 }
-                // -------------------------
 
-                if (els.checkoutBtn) {
-                    els.checkoutBtn.innerHTML = '<span class="checkout-btn-content"><i class="fas fa-spinner fa-spin"></i><span>Redirecting to PayU...</span></span>';
-                }
-
-                // Dynamically create PayU form and submit
-                var form = document.createElement("form");
-                form.setAttribute("method", "POST");
-                form.setAttribute("action", orderData.action);
-
-                var fields = {
-                    "key": orderData.key,
-                    "txnid": orderData.txnid,
+                var options = {
+                    "key": orderData.key_id,
                     "amount": orderData.amount,
-                    "productinfo": orderData.productinfo,
-                    "firstname": orderData.firstname,
-                    "email": orderData.email,
-                    "phone": orderData.phone,
-                    "surl": orderData.surl,
-                    "furl": orderData.furl,
-                    "hash": orderData.hash
+                    "currency": orderData.currency,
+                    "name": "XLoveBeats",
+                    "description": "Premium Beats",
+                    "order_id": orderData.order_id,
+                    "handler": async function (response) {
+                        try {
+                            const verifyRes = await fetch('/api/verify-razorpay-payment', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRFToken': window.CSRF_TOKEN || ''
+                                },
+                                body: JSON.stringify({
+                                    db_order_id: orderData.db_order_id,
+                                    razorpay_payment_id: response.razorpay_payment_id,
+                                    razorpay_order_id: response.razorpay_order_id,
+                                    razorpay_signature: response.razorpay_signature
+                                })
+                            });
+                            const verifyData = await verifyRes.json();
+                            if (verifyData.status === 'success') {
+                                window.location.href = '/payment/success/' + verifyData.order_id;
+                            } else {
+                                throw new Error(verifyData.error || "Verification failed");
+                            }
+                        } catch(e) {
+                            showToast('❌ ' + e.message, 'error');
+                        }
+                    },
+                    "theme": {
+                        "color": "#C2A45A"
+                    }
                 };
 
-                for (var key in fields) {
-                    if (fields.hasOwnProperty(key)) {
-                        var hiddenField = document.createElement("input");
-                        hiddenField.setAttribute("type", "hidden");
-                        hiddenField.setAttribute("name", key);
-                        hiddenField.setAttribute("value", fields[key]);
-                        form.appendChild(hiddenField);
-                    }
-                }
-
-                document.body.appendChild(form);
-                form.submit();
+                var rzp1 = new Razorpay(options);
+                rzp1.on('payment.failed', function (response){
+                    showToast('❌ Payment Failed: ' + response.error.description, 'error');
+                });
+                rzp1.open();
 
             } catch (err) {
                 console.error(err);
                 showToast('❌ ' + err.message, 'error');
-                if (els.checkoutBtn) {
-                    els.checkoutBtn.innerHTML = origHTML;
-                    els.checkoutBtn.disabled = false;
+            } finally {
+                if (els.razorpayBtn) {
+                    els.razorpayBtn.innerHTML = origHTML;
+                    els.razorpayBtn.disabled = false;
                 }
+                isProcessing = false;
             }
         }
 
@@ -704,9 +827,8 @@
             setTimeout(async function() {
                 var isLoggedIn = await checkIfUserLoggedIn();
                 if (isLoggedIn) {
-                    showToast('✅ Login successful! Resuming...', 'success');
+                    showToast('✅ Login successful! Please select a payment method.', 'success');
                     openCart();
-                    await proceedWithPayment(items);
                 } else {
                     showToast('❌ Login failed. Try again.', 'error');
                 }
@@ -748,7 +870,17 @@
         }
 
         if (els.checkoutBtn) {
-            els.checkoutBtn.addEventListener('click', function() { initiateCheckout(cart); });
+            els.checkoutBtn.addEventListener('click', function() {
+                if (els.paymentModal) els.paymentModal.showModal();
+            });
+        }
+        if (els.closePaymentModalBtn) {
+            els.closePaymentModalBtn.addEventListener('click', function() {
+                if (els.paymentModal) els.paymentModal.close();
+            });
+        }
+        if (els.razorpayBtn) {
+            els.razorpayBtn.addEventListener('click', function() { initiateRazorpayCheckout(); });
         }
 
         // Coupon events
