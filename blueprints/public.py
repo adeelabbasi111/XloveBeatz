@@ -11,10 +11,20 @@ def home():
     limit = current_app.config['HOMEPAGE_BEAT_LIMIT']
     beat_packs, beats, vocal_presets = get_homepage_products(limit)
     genres = Genre.query.filter_by(is_active=True).order_by(Genre.sort_order).all()
+    
+    from helpers.models import TrendingBeat
+    trending_beats = TrendingBeat.query.order_by(TrendingBeat.sort_order).all()
+    
+    # We need to build the player data for trending beats so the player works.
+    from helpers.services import build_beats_data
+    trending_beats_models = [tb.product for tb in trending_beats]
+    trending_beats_data = build_beats_data(trending_beats_models)
+    
     return render_template(
         'index.html',
         beat_packs=beat_packs, beats=beats, vocal_presets=vocal_presets,
         genres=genres,
+        trending_beats_data=trending_beats_data,
         site_title="XLOVEBEATZ",
         slogan="Crafted for artists who move the world",
     )

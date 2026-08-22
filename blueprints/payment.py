@@ -15,8 +15,8 @@ from helpers.models import DiscountCode
 logger = logging.getLogger(__name__)
 bp = Blueprint('payment', __name__)
 
-# ⚠️ Set to True to bypass PayU/Razorpay and approve all orders instantly
-TEST_MODE_PAYMENT = True
+# ⚠️ If True, bypasses Razorpay/PayPal completely (for local dev without valid keys)
+TEST_MODE_PAYMENT = False
 
 
 # ═══════════════════════════════════════════════════════════════

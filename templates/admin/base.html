@@ -29,7 +29,10 @@
         <i class="fas fa-music"></i> <span>Products</span>
     </a>
     <a href="{{ url_for('admin.admin_beats_sort') }}" class="nav-item {% if request.endpoint == 'admin.admin_beats_sort' %}active{% endif %}">
-        <i class="fas fa-sort-amount-down"></i> <span>Sort Beats</span>
+        <i class="fas fa-sort-numeric-down"></i> Sort Beats
+    </a>
+    <a href="{{ url_for('admin.admin_trending') }}" class="nav-item {% if request.endpoint == 'admin.admin_trending' %}active{% endif %}">
+        <i class="fas fa-fire"></i> Trending Beats
     </a>
     <a href="{{ url_for('admin.admin_genres') }}" class="nav-item {% if 'genre' in (request.endpoint or '') %}active{% endif %}">
         <i class="fas fa-tags"></i> <span>Genres</span>

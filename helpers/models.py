@@ -279,6 +279,14 @@ class Newsletter(db.Model):
     is_active = db.Column(db.Boolean, default=True)
 
 
+class TrendingBeat(db.Model):
+    __tablename__ = "trending_beats"
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id', ondelete='CASCADE'), nullable=False)
+    sort_order = db.Column(db.Integer, default=0)
+
+    product = db.relationship('Product', backref=db.backref('trending_entries', cascade='all, delete-orphan'))
+
 # =========================
 # DATABASE INITIALIZATION
 # =========================

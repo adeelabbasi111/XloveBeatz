@@ -1107,7 +1107,14 @@ LICENSE MODAL
 
 .license-card.selected {
   border-color: var(--accent-soft);
-  background: linear-gradient(135deg, var(--accent-soft), var(--accent-purple));
+  background: linear-gradient(135deg, var(--accent-soft), #9D7CEC);
+  color: white;
+}
+
+.license-card.exclusive.selected {
+  background: linear-gradient(var(--bg-elevated), var(--bg-elevated)) padding-box,
+    linear-gradient(135deg, #C9AE74, #F4E4BC, #C9AE74) border-box;
+  box-shadow: 0 0 25px rgba(201, 174, 116, 0.2);
 }
 
 .license-card.exclusive {
@@ -1129,6 +1136,10 @@ LICENSE MODAL
   font-size: 0.9rem;
 }
 
+.license-card.selected:not(.exclusive) .card-header i {
+  color: white;
+}
+
 .license-card.exclusive .card-header i {
   color: var(--accent-gold-mute);
 }
@@ -1138,6 +1149,10 @@ LICENSE MODAL
   font-weight: 800;
   margin: 16px 0;
   color: var(--text-primary);
+}
+
+.license-card.selected:not(.exclusive) .card-price {
+  color: white;
 }
 
 .card-features {
@@ -1153,9 +1168,17 @@ LICENSE MODAL
   margin-bottom: 9px;
 }
 
+.license-card.selected:not(.exclusive) .card-features li {
+  color: rgba(255, 255, 255, 0.9);
+}
+
 .card-features li i {
   color: #10b981;
   font-size: 0.75rem;
+}
+
+.license-card.selected:not(.exclusive) .card-features li i {
+  color: white;
 }
 
 .card-select-indicator {
@@ -1168,8 +1191,14 @@ LICENSE MODAL
   transition: opacity 0.2s;
 }
 
-.license-card.selected .card-select-indicator {
+.license-card.selected:not(.exclusive) .card-select-indicator {
   opacity: 1;
+  color: white;
+}
+
+.license-card.exclusive.selected .card-select-indicator {
+  opacity: 1;
+  color: var(--accent-gold-mute);
 }
 
 .exclusive-glow {

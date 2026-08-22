@@ -1,0 +1,240 @@
+{% extends "admin/base.html" %}
+
+{% block admin_title %}Trending Beats{% endblock %}
+
+{% block page_heading %}Trending Beats{% endblock %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<style>
+    .search-container {
+        position: relative;
+        margin-bottom: 20px;
+    }
+    #beatSearchInput {
+        width: 100%;
+        padding: 12px 16px;
+        background: #0f1115; /* Solid dark color */
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        color: white;
+    }
+    .search-results {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: #16181d; /* Solid dark color instead of variable */
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        z-index: 9999;
+        max-height: 200px;
+        overflow-y: auto;
+        display: none;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+    }
+    .search-result-item {
+        padding: 10px 16px;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .search-result-item:last-child {
+        border-bottom: none;
+    }
+    .search-result-item:hover {
+        background: rgba(255, 255, 255, 0.05);
+    }
+    .trending-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .trending-item {
+        background: #16181d; /* Solid dark color */
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .trending-item .drag-handle {
+        cursor: grab;
+        color: var(--text-muted);
+        margin-right: 16px;
+    }
+    .remove-btn {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .remove-btn:hover {
+        background: rgba(239, 68, 68, 0.2);
+    }
+</style>
+
+<div class="admin-header">
+    <div class="header-content">
+        <h2>🔥 Trending Beats</h2>
+        <p class="text-muted">Manage the trending beats shown on the homepage (max 10).</p>
+    </div>
+</div>
+
+<div class="admin-card">
+    <div class="search-container">
+        <input type="text" id="beatSearchInput" placeholder="Search beats to add...">
+        <div id="searchResults" class="search-results"></div>
+    </div>
+    
+    <div class="admin-card-header">
+        <h3>Current Trending Beats</h3>
+        <span class="badge" id="countBadge">{{ trending|length }}/10</span>
+    </div>
+    
+    <div id="trendingList" class="trending-list">
+        {% for tb in trending %}
+        <div class="trending-item" data-id="{{ tb.id }}">
+            <div>
+                <i class="fas fa-grip-vertical drag-handle"></i>
+                <span class="beat-name">{{ tb.product.name }}</span>
+            </div>
+            <button class="remove-btn" onclick="removeTrending({{ tb.id }}, this)">
+                <i class="fas fa-trash"></i> Remove
+            </button>
+        </div>
+        {% else %}
+        <div class="empty-state text-center" style="padding: 40px; color: var(--text-muted);" id="emptyState">
+            No trending beats added yet.
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block admin_scripts %}
+<script>
+    let searchTimer;
+    const searchInput = document.getElementById('beatSearchInput');
+    const searchResults = document.getElementById('searchResults');
+    const trendingList = document.getElementById('trendingList');
+    const countBadge = document.getElementById('countBadge');
+    
+    searchInput.addEventListener('input', (e) => {
+        clearTimeout(searchTimer);
+        const q = e.target.value.trim();
+        if (q.length < 2) {
+            searchResults.style.display = 'none';
+            return;
+        }
+        
+        searchTimer = setTimeout(() => {
+            fetch(`/admin/api/trending/search?q=${encodeURIComponent(q)}`)
+                .then(res => res.json())
+                .then(data => {
+                    searchResults.innerHTML = '';
+                    if (data.length === 0) {
+                        searchResults.innerHTML = '<div class="search-result-item text-muted">No beats found</div>';
+                    } else {
+                        data.forEach(beat => {
+                            const div = document.createElement('div');
+                            div.className = 'search-result-item';
+                            div.innerHTML = `<span>${beat.name}</span> <button class="btn btn-sm btn-primary" style="padding:4px 8px;font-size:0.8rem">Add</button>`;
+                            div.onclick = () => addTrending(beat.id);
+                            searchResults.appendChild(div);
+                        });
+                    }
+                    searchResults.style.display = 'block';
+                });
+        }, 300);
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+            searchResults.style.display = 'none';
+        }
+    });
+
+    function addTrending(beatId) {
+        fetch('/admin/api/trending/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': window.CSRF_TOKEN
+            },
+            body: JSON.stringify({ beat_id: beatId })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+            searchInput.value = '';
+            searchResults.style.display = 'none';
+            location.reload(); // Refresh to update list and sortable
+        });
+    }
+
+    function removeTrending(id, btn) {
+        if (!confirm('Remove this beat from trending?')) return;
+        
+        fetch(`/admin/api/trending/remove/${id}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': window.CSRF_TOKEN
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                btn.closest('.trending-item').remove();
+                updateCount();
+            }
+        });
+    }
+    
+    function updateCount() {
+        const count = document.querySelectorAll('.trending-item').length;
+        countBadge.textContent = `${count}/10`;
+        const empty = document.getElementById('emptyState');
+        if (count === 0 && !empty) {
+            trendingList.innerHTML = `<div class="empty-state text-center" style="padding: 40px; color: var(--text-muted);" id="emptyState">No trending beats added yet.</div>`;
+        }
+    }
+
+    // Initialize Sortable
+    if (trendingList) {
+        new Sortable(trendingList, {
+            animation: 150,
+            handle: '.drag-handle',
+            ghostClass: 'sortable-ghost',
+            onEnd: function() {
+                const order = Array.from(trendingList.children)
+                    .filter(el => el.classList.contains('trending-item'))
+                    .map(el => el.dataset.id);
+                    
+                fetch('/admin/api/trending/reorder', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': window.CSRF_TOKEN
+                    },
+                    body: JSON.stringify({ order: order })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    // silently save order without toast
+                });
+            }
+        });
+    }
+</script>
+{% endblock %}

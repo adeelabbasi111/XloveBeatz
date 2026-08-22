@@ -131,6 +131,146 @@
             <button class="carousel-arrow carousel-arrow-right" aria-label="Scroll right"><i class="fas fa-chevron-right"></i></button>
         </div>
     </section>
+
+    {# ============ TRENDING BEATS ============ #}
+    {% if trending_beats_data %}
+    <section class="trending-beats-section" style="padding: 60px 20px; max-width: 1200px; margin: 0 auto;">
+        <div style="margin-bottom: 30px; text-align: center;">
+            <h2 class="home-section-title" style="color: var(--accent-gold); font-size: 2rem; margin-bottom: 10px;">Trending Beats</h2>
+            <p style="color: var(--text-muted);">The most popular beats right now.</p>
+        </div>
+        
+        <div class="trending-beats-list" style="display: flex; flex-direction: column; gap: 15px;">
+            {% for beat in trending_beats_data %}
+            <div class="trending-beat-card" style="background: var(--bg-card); border-radius: 12px; padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; border: 1px solid rgba(255,255,255,0.05); transition: 0.3s;">
+                <div style="display: flex; align-items: center; gap: 20px; flex: 1;">
+                    <button class="trending-play-btn" data-url="{{ url_for('static', filename=beat.preview_audio) if beat.preview_audio else '' }}" data-id="{{ beat.id }}">
+                        <i class="fas fa-play"></i>
+                    </button>
+                    
+                    {% if beat.beat_image %}
+                        <img src="{{ url_for('static', filename=beat.beat_image) }}" alt="{{ beat.name }}" style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover; flex-shrink: 0;">
+                    {% else %}
+                        <div style="width: 50px; height: 50px; border-radius: 8px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; color: var(--text-muted); flex-shrink: 0;">
+                            <i class="fas fa-music"></i>
+                        </div>
+                    {% endif %}
+                    
+                    <div>
+                        <h4 style="margin: 0; font-size: 1.1rem; color: white;">{{ beat.name }}</h4>
+                        <div style="color: var(--text-muted); font-size: 0.85rem; margin-top: 5px; display: flex; gap: 15px;">
+                            <span><i class="fas fa-tag"></i> {{ beat.genre if beat.genre else 'Unknown' }}</span>
+                            <span><i class="fas fa-drum"></i> {{ beat.bpm }} BPM</span>
+                            <span><i class="fas fa-music"></i> {{ beat.key }}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 10px;">
+                    <button class="trending-buy-btn" onclick='openLicenseModal({{ beat | tojson | safe }})'>
+                        <i class="fas fa-shopping-cart"></i> ₹{{ beat.price|int }}
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <style>
+            .trending-buy-btn {
+                background: linear-gradient(135deg, var(--accent-gold-mute), #A4884B);
+                color: #0f1115;
+                border: none;
+                padding: 10px 24px;
+                border-radius: 30px;
+                font-weight: 700;
+                font-size: 0.95rem;
+                cursor: pointer;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                box-shadow: 0 4px 15px rgba(201, 174, 116, 0.25);
+            }
+            .trending-buy-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(201, 174, 116, 0.4);
+            }
+            .trending-beat-card:hover {
+                background: rgba(255, 255, 255, 0.03) !important;
+                border-color: rgba(255, 255, 255, 0.1) !important;
+                transform: translateX(4px);
+            }
+            .trending-play-btn {
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                background: rgba(255, 255, 255, 0.05);
+                color: white;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.2rem;
+                transition: all 0.3s ease;
+                flex-shrink: 0;
+            }
+            .trending-play-btn:hover {
+                transform: scale(1.1);
+                background: rgba(255, 255, 255, 0.1);
+                color: var(--accent-gold-mute);
+                border-color: var(--accent-gold-mute);
+                box-shadow: 0 0 15px rgba(201, 174, 116, 0.2);
+            }
+        </style>
+    </section>
+
+    <!-- Mini Audio Player logic for home page -->
+    <audio id="homeAudioPlayer" preload="none"></audio>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const player = document.getElementById('homeAudioPlayer');
+            let currentBtn = null;
+            
+            document.querySelectorAll('.trending-play-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const url = btn.dataset.url;
+                    
+                    if (currentBtn === btn && !player.paused) {
+                        player.pause();
+                        btn.innerHTML = '<i class="fas fa-play"></i>';
+                        return;
+                    }
+                    
+                    if (currentBtn && currentBtn !== btn) {
+                        currentBtn.innerHTML = '<i class="fas fa-play"></i>';
+                    }
+                    
+                    if (player.src !== new URL(url, window.location.href).href) {
+                        player.src = url;
+                    }
+                    
+                    player.play();
+                    btn.innerHTML = '<i class="fas fa-pause"></i>';
+                    currentBtn = btn;
+                });
+            });
+            
+            player.addEventListener('ended', () => {
+                if (currentBtn) {
+                    currentBtn.innerHTML = '<i class="fas fa-play"></i>';
+                }
+            });
+        });
+        
+        // Helper to open license modal for cart (reusing global function if exists, otherwise fallback to player page)
+        window.openLicenseModal = window.openLicenseModal || function(beat) {
+            // If license modal isn't injected on home page, redirect to player with this beat selected
+            window.location.href = `/player?beat_id=${beat.id}`;
+        };
+    </script>
+    {% endif %}
+
     
     <script>
         document.addEventListener('DOMContentLoaded', () => {

@@ -1665,3 +1665,82 @@ def api_beats_reorder():
                 
     db.session.commit()
     return jsonify({"status": "success"})
+
+# ═══════════════════════════════════════════════════════════════
+#  TRENDING BEATS
+# ═══════════════════════════════════════════════════════════════
+
+@bp.route('/admin/trending')
+@admin_required
+def admin_trending():
+    from helpers.models import TrendingBeat
+    trending = TrendingBeat.query.order_by(TrendingBeat.sort_order).all()
+    return render_template('admin/trending_beats.html', trending=trending)
+
+
+@bp.route('/admin/api/trending/search')
+@admin_required
+def api_trending_search():
+    query = request.args.get('q', '').strip()
+    if not query:
+        return jsonify([])
+    
+    beats = Product.query.filter(
+        Product.product_type == 'beat',
+        Product.name.ilike(f"%{query}%"),
+        Product.is_active == True
+    ).limit(10).all()
+    
+    return jsonify([{'id': b.id, 'name': b.name} for b in beats])
+
+
+@bp.route('/admin/api/trending/add', methods=['POST'])
+@admin_required
+def api_trending_add():
+    from helpers.models import TrendingBeat, Product
+    data = request.json
+    beat_id = data.get('beat_id')
+    
+    if not beat_id:
+        return jsonify({'error': 'Missing beat_id'}), 400
+        
+    count = TrendingBeat.query.count()
+    if count >= 10:
+        return jsonify({'error': 'Maximum 10 trending beats allowed'}), 400
+        
+    exists = TrendingBeat.query.filter_by(product_id=beat_id).first()
+    if exists:
+        return jsonify({'error': 'Beat is already trending'}), 400
+        
+    tb = TrendingBeat(product_id=beat_id, sort_order=count)
+    db.session.add(tb)
+    db.session.commit()
+    
+    return jsonify({'status': 'success', 'id': tb.id, 'name': tb.product.name})
+
+
+@bp.route('/admin/api/trending/remove/<int:id>', methods=['POST'])
+@admin_required
+def api_trending_remove(id):
+    from helpers.models import TrendingBeat
+    tb = TrendingBeat.query.get(id)
+    if tb:
+        db.session.delete(tb)
+        db.session.commit()
+    return jsonify({'status': 'success'})
+
+
+@bp.route('/admin/api/trending/reorder', methods=['POST'])
+@admin_required
+def api_trending_reorder():
+    from helpers.models import TrendingBeat
+    data = request.json
+    order = data.get('order', [])
+    
+    for idx, tb_id in enumerate(order):
+        tb = TrendingBeat.query.get(tb_id)
+        if tb:
+            tb.sort_order = idx
+            
+    db.session.commit()
+    return jsonify({'status': 'success'})

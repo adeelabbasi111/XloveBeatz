@@ -1010,7 +1010,7 @@ function openLicenseModal(beatData, action) {
     if (!beatData.license_tiers[tier]) return;
     var tierData = beatData.license_tiers[tier];
     if (priceEl) {
-      if (tier === 'exclusive' && (tierData.price === 0 || tierData.price === 'Negotiable')) {
+      if (tier === 'exclusive' && (tierData.price == 0 || tierData.price === '' || tierData.price === '0.0' || String(tierData.price).toLowerCase() === 'negotiable')) {
         priceEl.textContent = 'Negotiable';
       } else {
         priceEl.textContent = '₹' + tierData.price;
@@ -1161,8 +1161,39 @@ function init() {
   // Apply URL filter if present
   var urlParams = new URLSearchParams(window.location.search);
   var genreParam = urlParams.get('genre');
+  var beatIdParam = urlParams.get('beat_id');
+  
   if (genreParam) {
     applyFilter(genreParam);
+  }
+  
+  if (beatIdParam) {
+    var targetIdx = Array.from(allTrackItems).findIndex(function(item) {
+        return item.dataset.id === beatIdParam;
+    });
+    if (targetIdx !== -1) {
+      currentTrackIndex = targetIdx;
+      updatePlayerUI(allTrackItems[targetIdx].dataset);
+      highlightTrackItem(targetIdx);
+      
+      // Auto-open license modal since they likely clicked "Add to Cart" externally
+      setTimeout(function() {
+          var ds = allTrackItems[targetIdx].dataset;
+          if (typeof openLicenseModal === 'function') {
+              // Reconstruct beat object for the modal
+              var beatObj = {
+                  id: ds.id, name: ds.name, bpm: ds.bpm, key: ds.key,
+                  beat_image: ds.beatImage, preview_audio: ds.preview,
+                  license_tiers: {
+                      basic: { price: ds.priceBasic, files: ds.filesBasic },
+                      premium: { price: ds.pricePremium, files: ds.filesPremium },
+                      exclusive: { price: ds.priceExclusive, files: ds.filesExclusive }
+                  }
+              };
+              openLicenseModal(beatObj);
+          }
+      }, 500);
+    }
   }
   
   if (trackCount) trackCount.textContent = allTrackItems.length + ' tracks';
