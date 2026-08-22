@@ -31,14 +31,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function isModalOpen() {
-        const modals = document.querySelectorAll('.modal, .auth-modal');
-        for (let i = 0; i < modals.length; i++) {
-            const style = window.getComputedStyle(modals[i]);
-            if (style.display !== 'none') return true;
-        }
-        const cart = document.getElementById('cartSidebar');
-        if (cart && cart.classList.contains('open')) return true;
-        return false;
+        const authOpen = document.querySelector('.auth-modal-overlay.active');
+        const licenseOpen = document.querySelector('.license-modal-overlay.active');
+        const cartOpen = document.querySelector('#cartSidebar.open');
+        
+        return !!(authOpen || licenseOpen || cartOpen);
     }
 
     function showNextEvent() {
