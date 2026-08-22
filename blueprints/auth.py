@@ -31,15 +31,6 @@ def forgot_password():
         reset_url = f"{request.host_url}reset-password/{token}"
         send_reset_email(user.email, reset_url)
 
-        # DEV MODE: return reset link directly
-        is_dev = os.getenv('FLASK_ENV') == 'development' or os.getenv('DEBUG') == 'true' or not os.getenv('SMTP_USER')
-        if is_dev:
-            return jsonify({
-                'success': True,
-                'message': f'Dev mode: Reset link generated.',
-                'dev_reset_url': reset_url
-            })
-
     return jsonify({
         'success': True,
         'message': 'If an account with that email exists, a reset link has been sent.'
