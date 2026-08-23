@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, flash, redirect, url_for, current_app
 from helpers.models import Product, Genre
 from helpers.services import get_homepage_products, get_player_beats, build_beats_data, get_beat_with_details
+from helpers.geo import get_geo_pricing, apply_geo_pricing_to_beats
 
 bp = Blueprint('public', __name__)
 
@@ -19,6 +20,11 @@ def home():
     from helpers.services import build_beats_data
     trending_beats_models = [tb.product for tb in trending_beats]
     trending_beats_data = build_beats_data(trending_beats_models)
+
+    # Apply geo-pricing for trending beats
+    from helpers.geo import get_geo_pricing, apply_geo_pricing_to_beats
+    geo_info = get_geo_pricing()
+    trending_beats_data = apply_geo_pricing_to_beats(trending_beats_data, geo_info)
     
     return render_template(
         'index.html',
@@ -61,9 +67,15 @@ def player_page(pack_id=None):
     page_title = f"Playing: {pack_info.product.name}" if pack_info else "All Beats & Singles"
     beats_data = build_beats_data(beats)   # batch: 2 queries total
 
+    # Apply geo-pricing for foreign users
+    geo_info = get_geo_pricing()
+    beats_data = apply_geo_pricing_to_beats(beats_data, geo_info)
+
     return render_template(
         'player.html', beats=beats_data, pack_info=pack_info,
         site_title="XLOVEBEATZ", page_title=page_title,
+        currency_symbol=geo_info['currency_symbol'],
+        is_foreign_user=geo_info['is_foreign'],
     )
 
 

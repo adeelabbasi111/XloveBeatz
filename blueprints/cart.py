@@ -207,11 +207,22 @@ def offer_check():
             # Spend threshold: spend ₹X, get ₹Y off
             subtotal = sum(i.get('price', 0) for i in eligible)
             min_spend = (offer.min_spend_cents or 0) / 100
+            discount_cents = offer.discount_fixed_cents or 0
+            
+            from helpers.geo import get_geo_pricing
+            geo_info = get_geo_pricing()
+            if geo_info['is_foreign']:
+                rate = current_app.config.get('USD_INR_EXCHANGE_RATE', 85.0)
+                mult = geo_info['multiplier']
+                min_spend = round((min_spend * mult) / rate, 2)
+                discount_cents = int(round((discount_cents * mult) / rate, 0)) # cents in USD
+
+            sym = geo_info.get('currency_symbol', '₹') if geo_info else '₹'
+
             if subtotal >= min_spend:
-                discount_cents = offer.discount_fixed_cents or 0
                 total_discount += discount_cents
                 summaries.append({
-                    'label': offer.name or f'Spend ₹{int(min_spend)}+ Get ₹{int(discount_cents/100)} Off',
+                    'label': offer.name or f'Spend {sym}{int(min_spend)}+ Get {sym}{int(discount_cents/100)} Off',
                     'saving_cents': discount_cents
                 })
 

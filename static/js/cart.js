@@ -85,7 +85,7 @@
             els.toastContainer = tc;
         }
 
-        const formatPrice = (n) => '₹' + (parseFloat(n) || 0).toFixed(2);
+        const formatPrice = (n) => (window.CURRENCY_SYMBOL || '₹') + (parseFloat(n) || 0).toFixed(2);
 
         const saveCart = () => {
             try { localStorage.setItem('xlovebeats_cart', JSON.stringify(cart)); } catch (e) {}
@@ -394,7 +394,7 @@
                                     els.offerSavingsRows.innerHTML = data.offer_summary.map(function(s) {
                                         return '<div style="display:flex;justify-content:space-between;font-size:0.8rem;padding:4px 8px;background:rgba(52,211,153,0.08);border-radius:6px;margin-bottom:4px;color:#34d399">' +
                                             '<span>' + escapeHtml(s.label) + '</span>' +
-                                            '<span>-₹' + (s.saving_cents / 100).toFixed(0) + '</span>' +
+                                            '<span>-' + (window.CURRENCY_SYMBOL || '₹') + (s.saving_cents / 100).toFixed(0) + '</span>' +
                                         '</div>';
                                     }).join('');
                                 }
@@ -434,10 +434,17 @@
                 loadPayPalScript();
             }
             
-            let exRate = window.USD_INR_EXCHANGE_RATE || 85.0;
-            let usdAmount = totalRupees / exRate;
-            if (usdAmount > 0 && usdAmount < 0.50) usdAmount = 0.50;
-            if (els.grandTotalUsd) els.grandTotalUsd.textContent = '≈ $' + usdAmount.toFixed(2) + ' USD';
+            if (window.IS_FOREIGN_USER) {
+                // Foreign users: prices are already in USD, hide the USD approximation
+                if (els.grandTotalUsd) els.grandTotalUsd.style.display = 'none';
+                // Hide Razorpay button for foreign users (INR only gateway)
+                if (els.razorpayBtn) els.razorpayBtn.style.display = 'none';
+            } else {
+                let exRate = window.USD_INR_EXCHANGE_RATE || 85.0;
+                let usdAmount = totalRupees / exRate;
+                if (usdAmount > 0 && usdAmount < 0.50) usdAmount = 0.50;
+                if (els.grandTotalUsd) els.grandTotalUsd.textContent = '≈ $' + usdAmount.toFixed(2) + ' USD';
+            }
         }
 
         function openCart() {
@@ -804,6 +811,12 @@
                 rzp1.on('payment.failed', function (response){
                     showToast('❌ Payment Failed: ' + response.error.description, 'error');
                 });
+                
+                // Close the payment modal so Razorpay can sit cleanly on top
+                if (els.paymentModal) {
+                    els.paymentModal.close();
+                }
+                
                 rzp1.open();
 
             } catch (err) {

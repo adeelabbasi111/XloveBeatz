@@ -102,10 +102,7 @@
     {% if genres %}
     <section class="trending-genres-section">
         <div class="genres-header">
-            <div class="fire-title-wrapper" id="fireTitleWrapper">
-                <canvas id="fireCanvas" class="fire-canvas"></canvas>
-                <h2 class="home-section-title fire-animated-title">Trending Beat Genres</h2>
-            </div>
+            <h2 class="home-section-title">Trending Beat Genres</h2>
         </div>
         
         <div class="genres-carousel-container" style="position: relative;">
@@ -168,7 +165,7 @@
                 
                 <div style="display: flex; gap: 10px;">
                     <button class="trending-buy-btn" onclick='openLicenseModal({{ beat | tojson | safe }})'>
-                        <i class="fas fa-shopping-cart"></i> ₹{{ beat.price|int }}
+                        <i class="fas fa-shopping-cart"></i> {{ currency_symbol }}{% if is_foreign_user %}{{ "%.2f"|format(beat.price) }}{% else %}{{ beat.price | int }}{% endif %}
                     </button>
                 </div>
             </div>
@@ -266,7 +263,7 @@
         // Helper to open license modal for cart (reusing global function if exists, otherwise fallback to player page)
         window.openLicenseModal = window.openLicenseModal || function(beat) {
             // If license modal isn't injected on home page, redirect to player with this beat selected
-            window.location.href = `/player?beat_id=${beat.id}`;
+            window.location.href = `/player?beat_id=${beat.id}&action=buy`;
         };
     </script>
     {% endif %}
@@ -301,112 +298,6 @@
             // Initial check
             setTimeout(updateArrows, 100);
         });
-    </script>
-    <script>
-    /* ═══════ FIRE PARTICLE SYSTEM ═══════ */
-    (function() {
-        var canvas = document.getElementById('fireCanvas');
-        var wrapper = document.getElementById('fireTitleWrapper');
-        if (!canvas || !wrapper) return;
-        var ctx = canvas.getContext('2d');
-        var particles = [];
-        var dpr = Math.min(window.devicePixelRatio || 1, 2);
-
-        function resize() {
-            var rect = wrapper.getBoundingClientRect();
-            canvas.width = rect.width * dpr;
-            canvas.height = rect.height * dpr;
-            canvas.style.width = rect.width + 'px';
-            canvas.style.height = rect.height + 'px';
-            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        }
-        resize();
-        window.addEventListener('resize', resize);
-
-        function Particle() {
-            this.reset();
-        }
-        Particle.prototype.reset = function() {
-            var rect = wrapper.getBoundingClientRect();
-            var w = rect.width;
-            var h = rect.height;
-            // Spawn along the bottom ~60% of the wrapper, concentrated around text
-            this.x = Math.random() * w;
-            this.y = h * (0.5 + Math.random() * 0.5);
-            this.vx = (Math.random() - 0.5) * 1.2;
-            this.vy = -(1.5 + Math.random() * 3);
-            this.life = 1.0;
-            this.decay = 0.01 + Math.random() * 0.025;
-            this.size = 3 + Math.random() * 8;
-            // Fire palette: bright yellow → deep orange → dark red as it fades
-            var palette = Math.random();
-            if (palette < 0.4) {
-                this.r = 255; this.g = 220 + Math.floor(Math.random() * 35); this.b = 50;  // bright yellow
-            } else if (palette < 0.75) {
-                this.r = 255; this.g = 140 + Math.floor(Math.random() * 60); this.b = 0;   // orange
-            } else {
-                this.r = 255; this.g = 80 + Math.floor(Math.random() * 40); this.b = 0;    // deep orange
-            }
-        };
-        Particle.prototype.update = function() {
-            this.x += this.vx + (Math.random() - 0.5) * 0.8; // horizontal jitter
-            this.y += this.vy;
-            this.vy *= 0.98; // slow down as rises
-            this.life -= this.decay;
-            this.size *= 0.995;
-        };
-        Particle.prototype.draw = function(c) {
-            if (this.life <= 0) return;
-            var alpha = this.life * 0.7;
-            // Draw soft radial circle
-            var grad = c.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size);
-            grad.addColorStop(0, 'rgba(' + this.r + ',' + this.g + ',' + this.b + ',' + alpha + ')');
-            grad.addColorStop(0.4, 'rgba(' + this.r + ',' + Math.max(this.g - 60, 0) + ',' + this.b + ',' + (alpha * 0.6) + ')');
-            grad.addColorStop(1, 'rgba(' + this.r + ',' + Math.max(this.g - 120, 0) + ',' + this.b + ',0)');
-            c.beginPath();
-            c.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-            c.fillStyle = grad;
-            c.fill();
-        };
-
-        // Pre-populate some particles
-        var maxParticles = 60;
-        for (var i = 0; i < maxParticles; i++) {
-            var p = new Particle();
-            p.life = Math.random(); // stagger initial life
-            particles.push(p);
-        }
-
-        function loop() {
-            var rect = wrapper.getBoundingClientRect();
-            var w = rect.width;
-            var h = rect.height;
-            
-            // Fix glitch where webfonts load after initial canvas setup,
-            // changing the wrapper width and causing the canvas to stretch horizontally.
-            if (Math.abs(canvas.width - w * dpr) > 1 || Math.abs(canvas.height - h * dpr) > 1) {
-                resize();
-            }
-
-            ctx.clearRect(0, 0, w, h);
-
-            // Additive blending for hot flame look
-            ctx.globalCompositeOperation = 'lighter';
-
-            for (var i = 0; i < particles.length; i++) {
-                var p = particles[i];
-                p.update();
-                p.draw(ctx);
-                if (p.life <= 0 || p.y < -10) {
-                    p.reset();
-                }
-            }
-
-            ctx.globalCompositeOperation = 'source-over';
-            requestAnimationFrame(loop);
-        }
-        loop();
-    })();
     </script>
     {% endif %}
 

@@ -114,6 +114,12 @@ def create_razorpay_order():
     cart_items = data.get('items', [])
     coupon_code = (data.get('coupon_code') or '').strip().upper()
 
+    # Block foreign users from Razorpay (INR-only gateway)
+    from helpers.geo import get_geo_pricing
+    geo_info = get_geo_pricing()
+    if geo_info['is_foreign']:
+        return jsonify({"error": "Razorpay is not available for international users. Please use PayPal."}), 400
+
     if not cart_items:
         return jsonify({"error": "Cart is empty"}), 400
 
@@ -346,8 +352,20 @@ def create_paypal_order():
     final_cents = max(100, total_cents - discount_cents)
     final_inr = final_cents / 100.0
     
-    rate = current_app.config.get('USD_INR_EXCHANGE_RATE', 85.0)
-    usd_amount = round(final_inr / rate, 2)
+    # Check if user is foreign (prices already in USD from geo-pricing)
+    from helpers.geo import get_geo_pricing
+    geo_info = get_geo_pricing()
+    
+    if geo_info['is_foreign']:
+        # Apply the geo multiplier and convert to USD
+        rate = current_app.config.get('USD_INR_EXCHANGE_RATE', 85.0)
+        multiplier = geo_info['multiplier']
+        usd_amount = round((final_inr * multiplier) / rate, 2)
+    else:
+        # Indian user: convert INR to USD
+        rate = current_app.config.get('USD_INR_EXCHANGE_RATE', 85.0)
+        usd_amount = round(final_inr / rate, 2)
+    
     if usd_amount < 0.50:
         usd_amount = 0.50 # minimum for paypal typically
 

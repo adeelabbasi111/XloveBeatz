@@ -161,6 +161,8 @@
         window.CSRF_TOKEN = '{{ csrf_token() }}';
         window.PAYPAL_CLIENT_ID = '{{ PAYPAL_CLIENT_ID|default("") }}';
         window.USD_INR_EXCHANGE_RATE = {{ USD_INR_EXCHANGE_RATE|default(85.0) }};
+        window.IS_FOREIGN_USER = {{ is_foreign_user|default(false)|tojson }};
+        window.CURRENCY_SYMBOL = '{{ currency_symbol|default("₹") }}';
 
         window.apiFetch = function(url, options) {
             options = options || {};

@@ -104,8 +104,36 @@ def generate_unique_slug(name, model_class):
 # =========================
 
 def cents_to_rupees(cents):
-    """10050 -> '₹100.50'"""
+    try:
+        from flask import current_app, has_request_context
+        if has_request_context():
+            from helpers.geo import get_geo_pricing
+            geo_info = get_geo_pricing()
+            sym = geo_info.get('currency_symbol', '\u20b9')
+            if geo_info.get('is_foreign'):
+                rate = current_app.config.get('USD_INR_EXCHANGE_RATE', 85.0)
+                mult = geo_info.get('multiplier', 1.0)
+                usd = ((cents / 100) * mult) / rate
+                return f"{sym}{usd:.2f}"
+            return f"{sym}{cents / 100:.2f}"
+    except Exception:
+        pass
     return f"\u20b9{cents / 100:.2f}"
+
+def cents_to_geo_val(cents):
+    try:
+        from flask import current_app, has_request_context
+        if has_request_context():
+            from helpers.geo import get_geo_pricing
+            geo_info = get_geo_pricing()
+            if geo_info.get('is_foreign'):
+                rate = current_app.config.get('USD_INR_EXCHANGE_RATE', 85.0)
+                mult = geo_info.get('multiplier', 1.0)
+                usd = ((cents / 100) * mult) / rate
+                return float(f"{usd:.2f}")
+    except Exception:
+        pass
+    return float(f"{cents / 100:.2f}")
 
 
 def rupees_to_cents(rupees):
@@ -201,3 +229,7 @@ def register_template_filters(app):
     @app.template_filter('rupees')
     def rupees_filter(cents):
         return cents_to_rupees(cents)
+        
+    @app.template_filter('geo_price_val')
+    def geo_price_val_filter(cents):
+        return cents_to_geo_val(cents)

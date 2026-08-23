@@ -55,6 +55,38 @@
         <button type="button" class="strip-btn strip-btn-add" onclick="addStripMessage()">
             <i class="fas fa-plus"></i> Add Message
         </button>
+
+        {# ─── Geo Pricing ─── #}
+        <div class="form-section" style="margin-top: 2rem;">
+            <h3><i class="fas fa-globe"></i> Geo Pricing</h3>
+            <p class="text-muted" style="margin-bottom:1rem;">
+                When enabled, users outside India will see prices multiplied by the multiplier below and converted to USD.
+                Foreign users will only see PayPal as a payment option.
+            </p>
+            <div class="form-group">
+                <label class="toggle-label" style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+
+                    <input type="checkbox" name="geo_pricing_enabled" value="true"
+                           id="geoPricingEnabled"
+                           style="width: 20px; height: 20px; accent-color: #C2A45A;"
+                           {% if settings.geo_pricing_enabled == 'true' %}checked{% endif %}>
+                    <span>Enable Geo Pricing for Foreign Users</span>
+                </label>
+            </div>
+            <div class="form-group">
+                <label for="geo_pricing_multiplier"><i class="fas fa-times"></i> Price Multiplier</label>
+                <input type="number" name="geo_pricing_multiplier" id="geo_pricing_multiplier"
+                       value="{{ settings.geo_pricing_multiplier }}"
+                       min="1" max="20" step="0.5"
+                       placeholder="3"
+                       style="max-width: 120px;">
+                <p class="text-muted" style="font-size: 0.8rem; margin-top: 4px;">
+                    E.g. "3" means foreign price = INR price × 3, then converted to USD.
+                    A ₹1000 beat would show as ~$35 USD (at ₹85 rate).
+                </p>
+            </div>
+        </div>
+
         <div class="form-actions">
             <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Settings</button>
         </div>
