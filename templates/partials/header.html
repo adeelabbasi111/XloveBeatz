@@ -1,10 +1,7 @@
 <header class="site-header">
     <!-- Logo -->
-    <a href="{{ url_for('public.home') }}" class="logo">
-        <div class="logo-icon">
-            <i class="fas fa-music"></i>
-        </div>
-        <span class="logo-text">XLOVEBEATS</span>
+    <a href="{{ url_for('public.home') }}" class="logo" style="display: flex; align-items: center; gap: 10px;">
+        <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="XLOVEBEATS Logo" style="height: 40px; width: auto; border-radius: 4px; object-fit: contain;">
     </a>
 
     <!-- Desktop Navigation -->
