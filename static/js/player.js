@@ -765,18 +765,30 @@ if (shareBeatBtn) {
     }
     var beatId = trackItem.dataset.id;
     var shareUrl = window.location.origin + window.location.pathname + '?beat_id=' + beatId;
-    navigator.clipboard.writeText(shareUrl).then(function() {
-      showToast('Link copied to clipboard! 📋');
-    }).catch(function(err) {
-      // Fallback
+    
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(shareUrl).then(function() {
+        showToast('Link copied to clipboard! 📋');
+      }).catch(function(err) {
+        fallbackCopy(shareUrl);
+      });
+    } else {
+      fallbackCopy(shareUrl);
+    }
+    
+    function fallbackCopy(url) {
       var tempInput = document.createElement('input');
-      tempInput.value = shareUrl;
+      tempInput.value = url;
       document.body.appendChild(tempInput);
       tempInput.select();
-      document.execCommand('copy');
+      try {
+        document.execCommand('copy');
+        showToast('Link copied to clipboard! 📋');
+      } catch (err) {
+        showToast('Failed to copy link');
+      }
       document.body.removeChild(tempInput);
-      showToast('Link copied to clipboard! 📋');
-    });
+    }
   });
 }
 
