@@ -34,6 +34,11 @@ def _get_reader():
 
 def _get_client_ip():
     """Extract the real client IP, respecting proxy headers."""
+    # Check Cloudflare IP first if the site uses it
+    cf_ip = flask_request.headers.get('CF-Connecting-IP', '')
+    if cf_ip:
+        return cf_ip.strip()
+
     # Check common proxy headers
     forwarded_for = flask_request.headers.get('X-Forwarded-For', '')
     if forwarded_for:
@@ -50,19 +55,17 @@ def _get_client_ip():
 def detect_country(req=None):
     """
     Detect the user's country code (ISO 3166-1 alpha-2, e.g. 'IN', 'US').
-    Caches the result in the Flask session for the duration of the session.
     Returns 'IN' as default if detection fails.
     """
     # Allow testing via URL parameter (e.g. ?force_country=US)
     force_country = flask_request.args.get('force_country')
     if force_country:
-        force_country = force_country.upper()
-        session['user_country'] = force_country
-        return force_country
+        return force_country.upper()
 
-    # Check session cache first
-    if 'user_country' in session:
-        return session['user_country']
+    # If Cloudflare IP Geolocation is enabled
+    cf_country = flask_request.headers.get('CF-IPCountry')
+    if cf_country and cf_country != 'XX':
+        return cf_country.upper()
 
     reader = _get_reader()
     if not reader:
@@ -72,7 +75,6 @@ def detect_country(req=None):
 
     # Skip localhost / private IPs
     if ip in ('127.0.0.1', '::1', 'localhost') or ip.startswith('192.168.') or ip.startswith('10.'):
-        session['user_country'] = 'IN'
         return 'IN'
 
     try:
@@ -84,7 +86,6 @@ def detect_country(req=None):
         print(f"[GeoIP] Lookup failed for {ip}: {e}")
         country = 'IN'
 
-    session['user_country'] = country
     return country
 
 

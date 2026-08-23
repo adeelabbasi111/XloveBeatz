@@ -1070,6 +1070,7 @@ function openLicenseModal(beatData, action) {
   if (confirmLicenseBtn) confirmLicenseBtn.disabled = false;
   if (licenseModal) licenseModal.classList.add('active');
 }
+window.openLicenseModal = openLicenseModal;
 
 function closeLicenseModal() {
   if (licenseModal) licenseModal.classList.remove('active');

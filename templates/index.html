@@ -137,25 +137,25 @@
             <p style="color: var(--text-muted);">The most popular beats right now.</p>
         </div>
         
-        <div class="trending-beats-list" style="display: flex; flex-direction: column; gap: 15px;">
+        <div class="trending-beats-list">
             {% for beat in trending_beats_data %}
-            <div class="trending-beat-card" style="background: var(--bg-card); border-radius: 12px; padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; border: 1px solid rgba(255,255,255,0.05); transition: 0.3s;">
-                <div style="display: flex; align-items: center; gap: 20px; flex: 1;">
+            <div class="trending-beat-card">
+                <div class="trending-beat-info">
                     <button class="trending-play-btn" data-url="{{ url_for('static', filename=beat.preview_audio) if beat.preview_audio else '' }}" data-id="{{ beat.id }}">
                         <i class="fas fa-play"></i>
                     </button>
                     
                     {% if beat.beat_image %}
-                        <img src="{{ url_for('static', filename=beat.beat_image) }}" alt="{{ beat.name }}" style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover; flex-shrink: 0;">
+                        <img src="{{ url_for('static', filename=beat.beat_image) }}" alt="{{ beat.name }}" class="trending-beat-img">
                     {% else %}
-                        <div style="width: 50px; height: 50px; border-radius: 8px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; color: var(--text-muted); flex-shrink: 0;">
+                        <div class="trending-beat-img trending-beat-placeholder">
                             <i class="fas fa-music"></i>
                         </div>
                     {% endif %}
                     
-                    <div>
-                        <h4 style="margin: 0; font-size: 1.1rem; color: white;">{{ beat.name }}</h4>
-                        <div style="color: var(--text-muted); font-size: 0.85rem; margin-top: 5px; display: flex; gap: 15px;">
+                    <div class="trending-beat-meta">
+                        <h4>{{ beat.name }}</h4>
+                        <div class="trending-beat-stats">
                             <span><i class="fas fa-tag"></i> {{ beat.genre if beat.genre else 'Unknown' }}</span>
                             <span><i class="fas fa-drum"></i> {{ beat.bpm }} BPM</span>
                             <span><i class="fas fa-music"></i> {{ beat.key }}</span>
@@ -163,7 +163,7 @@
                     </div>
                 </div>
                 
-                <div style="display: flex; gap: 10px;">
+                <div class="trending-beat-action">
                     <button class="trending-buy-btn" onclick='openLicenseModal({{ beat | tojson | safe }})'>
                         <i class="fas fa-shopping-cart"></i> {{ currency_symbol }}{% if is_foreign_user %}{{ "%.2f"|format(beat.price) }}{% else %}{{ beat.price | int }}{% endif %}
                     </button>
@@ -173,6 +173,67 @@
         </div>
         
         <style>
+            .trending-beats-list {
+                display: flex;
+                flex-direction: column;
+                gap: 15px;
+            }
+            .trending-beat-card {
+                background: var(--bg-card);
+                border-radius: 12px;
+                padding: 15px 20px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                border: 1px solid rgba(255,255,255,0.05);
+                transition: 0.3s;
+                gap: 15px;
+            }
+            .trending-beat-info {
+                display: flex;
+                align-items: center;
+                gap: 20px;
+                flex: 1;
+                min-width: 0; /* allows text truncation if needed */
+            }
+            .trending-beat-img {
+                width: 50px;
+                height: 50px;
+                border-radius: 8px;
+                object-fit: cover;
+                flex-shrink: 0;
+            }
+            .trending-beat-placeholder {
+                background: rgba(255,255,255,0.05);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: var(--text-muted);
+            }
+            .trending-beat-meta {
+                min-width: 0;
+            }
+            .trending-beat-meta h4 {
+                margin: 0;
+                font-size: 1.1rem;
+                color: white;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .trending-beat-stats {
+                color: var(--text-muted);
+                font-size: 0.85rem;
+                margin-top: 5px;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px 15px;
+            }
+            .trending-beat-action {
+                display: flex;
+                gap: 10px;
+                flex-shrink: 0;
+            }
             .trending-buy-btn {
                 background: linear-gradient(135deg, var(--accent-gold-mute), #A4884B);
                 color: #0f1115;
@@ -187,6 +248,7 @@
                 align-items: center;
                 gap: 8px;
                 box-shadow: 0 4px 15px rgba(201, 174, 116, 0.25);
+                white-space: nowrap;
             }
             .trending-buy-btn:hover {
                 transform: translateY(-2px);
@@ -218,6 +280,43 @@
                 color: var(--accent-gold-mute);
                 border-color: var(--accent-gold-mute);
                 box-shadow: 0 0 15px rgba(201, 174, 116, 0.2);
+            }
+
+            /* Responsive Adjustments for Mobile */
+            @media (max-width: 768px) {
+                .trending-beat-card {
+                    flex-direction: column;
+                    align-items: flex-start;
+                    padding: 15px;
+                    gap: 15px;
+                }
+                .trending-beat-info {
+                    width: 100%;
+                }
+                .trending-beat-action {
+                    width: 100%;
+                    justify-content: flex-end;
+                }
+                .trending-buy-btn {
+                    width: 100%;
+                    justify-content: center;
+                }
+                .trending-beat-stats {
+                    font-size: 0.75rem;
+                    gap: 8px 10px;
+                }
+                .trending-play-btn {
+                    width: 40px;
+                    height: 40px;
+                    font-size: 1rem;
+                }
+                .trending-beat-img {
+                    width: 40px;
+                    height: 40px;
+                }
+                .trending-beat-info {
+                    gap: 12px;
+                }
             }
         </style>
     </section>

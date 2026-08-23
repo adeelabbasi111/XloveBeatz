@@ -75,7 +75,12 @@
         {# ─── MAIN ─── #}
         <div class="admin-main">
             <header class="admin-header">
-                <h1 class="page-title">{% block page_heading %}Admin{% endblock %}</h1>
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <button id="mobileSidebarToggle" class="mobile-toggle-btn" style="display: none; background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer;">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1 class="page-title">{% block page_heading %}Admin{% endblock %}</h1>
+                </div>
                 <div class="admin-user">
                     <i class="fas fa-user-shield"></i>
                     <span>{{ g.user.username if g.user else 'Admin' }}</span>
@@ -111,8 +116,25 @@
     <!-- In admin/base.html, add in the <head>: -->
 
 
-<!-- And before </body>: -->
+    <!-- And before </body>: -->
 <script src="{{ url_for('static', filename='js/upload-progress.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggleBtn = document.getElementById('mobileSidebarToggle');
+            const sidebar = document.querySelector('.admin-sidebar');
+            if (toggleBtn && sidebar) {
+                toggleBtn.addEventListener('click', () => {
+                    sidebar.classList.toggle('open');
+                });
+                // Close sidebar if clicked outside on mobile
+                document.addEventListener('click', (e) => {
+                    if (window.innerWidth <= 768 && sidebar.classList.contains('open') && !sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
+                        sidebar.classList.remove('open');
+                    }
+                });
+            }
+        });
+    </script>
     {% block admin_scripts %}{% endblock %}
 </body>
 </html>

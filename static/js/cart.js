@@ -799,7 +799,25 @@
                                 throw new Error(verifyData.error || "Verification failed");
                             }
                         } catch(e) {
-                            showToast('❌ ' + e.message, 'error');
+                            showToast('Error: ' + e.message, 'error');
+                            // Reset UI on failure
+                            if (els.razorpayBtn) {
+                                els.razorpayBtn.innerHTML = origHTML;
+                                els.razorpayBtn.disabled = false;
+                            }
+                            isProcessing = false;
+                        }
+                    },
+                    "modal": {
+                        "ondismiss": function(){
+                            // Reset UI if user closes Razorpay without paying
+                            if (els.razorpayBtn) {
+                                els.razorpayBtn.innerHTML = origHTML;
+                                els.razorpayBtn.disabled = false;
+                            }
+                            isProcessing = false;
+                            // Optionally close the payment modal here
+                            // if (els.paymentModal) els.paymentModal.close();
                         }
                     },
                     "theme": {
@@ -809,26 +827,29 @@
 
                 var rzp1 = new Razorpay(options);
                 rzp1.on('payment.failed', function (response){
-                    showToast('❌ Payment Failed: ' + response.error.description, 'error');
+                    showToast('Payment Failed: ' + response.error.description, 'error');
+                    if (els.razorpayBtn) {
+                        els.razorpayBtn.innerHTML = origHTML;
+                        els.razorpayBtn.disabled = false;
+                    }
+                    isProcessing = false;
                 });
                 
-                // Close the payment modal so Razorpay can sit cleanly on top
-                if (els.paymentModal) {
-                    els.paymentModal.close();
-                }
+                // Do NOT close the payment modal yet, so the user sees the loading spinner 
+                // on the button until the Razorpay iframe fully renders over top!
                 
                 rzp1.open();
 
             } catch (err) {
                 console.error(err);
-                showToast('❌ ' + err.message, 'error');
-            } finally {
+                showToast('Error: ' + err.message, 'error');
                 if (els.razorpayBtn) {
                     els.razorpayBtn.innerHTML = origHTML;
                     els.razorpayBtn.disabled = false;
                 }
                 isProcessing = false;
             }
+            // Removed finally block so that the spinner stays active while Razorpay is open
         }
 
         window.resumeCheckoutAfterLogin = async function() {

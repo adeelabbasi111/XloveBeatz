@@ -220,10 +220,24 @@ body {
     .page-header {
         flex-direction: column;
         align-items: flex-start;
+        gap: 15px;
     }
 
     .admin-content {
         padding: 1rem;
+    }
+    
+    .mobile-toggle-btn {
+        display: block !important;
+    }
+    
+    .admin-sidebar.open {
+        position: fixed;
+        left: 0;
+        top: 0;
+        height: 100vh;
+        z-index: 1000;
+        box-shadow: 5px 0 25px rgba(0,0,0,0.5);
     }
 }
 
@@ -241,7 +255,7 @@ body {
 /* ─── STATS GRID ─── */
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
     gap: 1.25rem;
     margin-bottom: 2rem;
 }
@@ -293,7 +307,7 @@ body {
 /* ─── DASHBOARD GRID ─── */
 .dashboard-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
     gap: 1.25rem;
 }
 
@@ -329,6 +343,7 @@ body {
 
 .card-body {
     padding: 1.25rem;
+    overflow-x: auto;
 }
 
 /* ─── DATA TABLES ─── */

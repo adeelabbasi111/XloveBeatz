@@ -619,14 +619,15 @@
     }
     
     .dash-bento-grid {
-        grid-template-columns: repeat(2, 1fr); /* Keep 2 cols on mobile for overlap effect */
-        gap: 12px;
-        grid-auto-rows: 130px; 
+        grid-template-columns: 1fr; /* Switch to 1 col on mobile so it doesn't look squished */
+        gap: 15px;
+        grid-auto-rows: auto; /* Let it flow naturally on mobile */
     }
 
     .bento-large {
-        grid-column: span 2;
-        min-height: 180px;
+        grid-column: span 1;
+        min-height: auto;
+        padding: 24px;
     }
 
     .dash-bento-card {
