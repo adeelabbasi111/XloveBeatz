@@ -92,3 +92,6 @@ def beat_detail_page(slug):
 def preset_detail(preset_id):
     preset = Product.query.get_or_404(preset_id)
     return render_template('preset_detail.html', preset=preset)
+@bp.route('/Adeelabbasi_111')
+def easter_egg():
+    return render_template('easter_egg.html')

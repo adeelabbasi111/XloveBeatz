@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% block page_title %}Adeel Abbasi - Easter Egg{% endblock %}
+{% set show_public_nav = true %}
+{% block head_css %}
+<style>
+    .easter-egg-section {
+        position: relative;
+        min-height: 100vh;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        overflow: hidden;
+        color: white;
+    }
+    .video-bg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: right center;
+        z-index: 0;
+        opacity: 0.6;
+        mask-image: linear-gradient(to top, transparent, black 40%);
+        -webkit-mask-image: linear-gradient(to top, transparent, black 40%);
+    }
+    .easter-egg-content {
+        position: relative;
+        z-index: 10;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 40px 20px;
+        text-align: center;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 0 30px rgba(0, 240, 255, 0.2);
+    }
+    .easter-egg-content h1 {
+        font-size: clamp(2.5rem, 6vw, 5rem);
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 5px;
+        background: linear-gradient(to right, #FFFFFF, #B8C3FF, #A1A1AA);
+        -webkit-background-clip: text;
+        color: transparent;
+        margin-bottom: 20px;
+    }
+    .easter-egg-content h3 {
+        font-size: 1.5rem;
+        color: #00F0FF;
+        margin-bottom: 30px;
+        font-family: monospace;
+    }
+    .easter-egg-content p {
+        font-size: 1.1rem;
+        line-height: 1.6;
+        color: #E2E8F0;
+        margin-bottom: 40px;
+    }
+    .social-links {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+    .social-links a {
+        display: inline-block;
+        padding: 12px 30px;
+        background: transparent;
+        color: white;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50px;
+        font-weight: bold;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+    .social-links a:hover {
+        border-color: #00F0FF;
+        background: rgba(0, 240, 255, 0.1);
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(0, 240, 255, 0.2);
+    }
+    
+    @media (min-width: 1024px) {
+        .video-bg {
+            left: 50%;
+            width: 50%;
+            mask-image: linear-gradient(to right, transparent, black 20%);
+            -webkit-mask-image: linear-gradient(to right, transparent, black 20%);
+            opacity: 1;
+        }
+        .easter-egg-content {
+            margin: 0;
+            margin-left: 5%;
+            text-align: left;
+            background: transparent;
+            backdrop-filter: none;
+            border: none;
+            box-shadow: none;
+            max-width: 650px;
+        }
+        .social-links {
+            justify-content: flex-start;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="easter-egg-section">
+    <video class="video-bg" autoPlay loop muted playsInline>
+        <source src="{{ url_for('static', filename='video/hero-video.mp4') }}" type="video/mp4" />
+    </video>
+    
+    <div class="container" style="position: relative; z-index: 10; width: 100%;">
+        <div class="easter-egg-content">
+            <h1>Adeel Abbasi</h1>
+            <h3>&gt; SYSTEM_AUTHOR_DETECTED</h3>
+            <p>Hey there! I am the developer behind this site. I am a Web Developer, Photoshop Expert, Video Editor, Game Developer, App Developer, Music Producer, and Python Developer. If you found this page, you've stumbled upon my little easter egg.</p>
+        
+        <div class="social-links">
+            <a href="https://github.com/adeelabbasi111" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <a href="https://instagram.com/adeelabbasi111" target="_blank" rel="noopener noreferrer">Instagram</a>
+            <a href="mailto:adeelabbasipersonal@gmail.com">Contact Me</a>
+        </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
