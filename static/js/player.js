@@ -592,7 +592,9 @@ function updatePlayerUI(trackData) {
   if (previewUrl) {
     loadRealWaveform(previewUrl);
   } else {
-    buildWaveformUI(null);
+    if (waveformUI) {
+      waveformUI.buildFakeWaveform();
+    }
   }
 }
 
