@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block page_title %}About • {{ site_title }}{% endblock %}
+{% block page_title %}About � {{ site_title }}{% endblock %}
 
 {% set show_public_nav = true %}
 {% set active_page = 'about' %}
@@ -12,47 +12,79 @@
 {% block content %}
 <main class="about-page">
     
-    {# ============ HERO ============ #}
-    <section class="about-hero">
-        <img src="{{ url_for('static', filename='images/hero2.jpg') }}" class="about-hero-bg" onerror="this.src='https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?q=80&w=1600&auto=format&fit=crop'" alt="Studio Background">
-        <div class="about-hero-gradient"></div>
-        <div class="about-hero-content">
-            <h1 class="about-title">PRODUCER XLOVEBEATZ</h1>
-            <p class="about-subtitle">The Architect of Indian Hip-Hop</p>
+    <section class="hero-section">
+        <div class="hero-bg-wrapper">
+            <img src="{{ url_for('static', filename='images/hero2.jpg') }}" class="hero-bg" onerror="this.src='https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?q=80&w=2000&auto=format&fit=crop'" alt="Studio Background">
+            <div class="hero-overlay"></div>
         </div>
-    </section>
-
-    {# ============ THE STORY (SCROLL DRIVEN) ============ #}
-    <section class="story-section">
         
-        <div class="story-card glass-panel scroll-reveal">
-            <div class="story-icon"><i class="fas fa-fire"></i></div>
-            <p class="story-text">
-                Hey! I’m Producer XlovebeatzBeats, and I’ve been making beats for over 7 years. Music has always been my passion, and now I’m bringing that passion straight to you.
-            </p>
+        <div class="hero-content">
+            <h1 class="hero-title reveal-text">
+                <span class="title-outline">XLOVE</span><br>
+                <span class="title-solid">BEATZ</span>
+            </h1>
+            <p class="hero-subtitle fade-up">The Architect of Indian Hip-Hop.</p>
         </div>
-
-        <div class="story-card glass-panel scroll-reveal delay-1">
-            <div class="story-icon"><i class="fas fa-globe-asia"></i></div>
-            <p class="story-text">
-                I truly believe <span class="highlight">Indian hip-hop</span> is growing fast, and in the next 5 years it will be one of the biggest movements in the world. 
-                My vision is clear — I want to become India’s <span class="highlight">best and most affordable</span> beat maker, giving rappers across the country high-quality beats they can rely on.
-            </p>
-        </div>
-
-        <div class="story-card glass-panel scroll-reveal delay-2">
-            <div class="story-icon"><i class="fas fa-users"></i></div>
-            <p class="story-text">
-                This is not just about me — <span class="highlight">it’s about us.</span> I’m here to support upcoming rappers from India, so we can grow together, push the culture forward, and make history with our sound.
-            </p>
-        </div>
-
     </section>
 
-    {# ============ QUOTE ============ #}
-    <section class="quote-section scroll-scale">
-        <p class="quote-text">"Pushing the culture forward, making history with our sound."</p>
+    <section class="scrolly-section">
+        <div class="scrolly-container">
+            <div class="scrolly-text-block view-reveal">
+                <h2 class="scrolly-heading">7+ Years of Sonic Mastery</h2>
+                <p class="scrolly-p">Hey! I'm Producer Xlovebeatz. Music isn't just my passion�it's my pulse. For over seven years, I've been meticulously crafting beats, studying the science of sound, and perfecting the art of the bounce. Now, I'm bringing that unrelenting energy straight to your studio.</p>
+            </div>
+            
+            <div class="scrolly-text-block view-reveal">
+                <h2 class="scrolly-heading">The Vision</h2>
+                <p class="scrolly-p">I truly believe <span class="gold-text">Indian hip-hop</span> is on the verge of global domination. In the next 5 years, it will be one of the biggest movements in the world. My mission is to fuel that fire by becoming India's most reliable, high-quality beatmaker�equipping artists with the premium sound they deserve.</p>
+            </div>
+            
+            <div class="scrolly-text-block view-reveal">
+                <h2 class="scrolly-heading">The Movement</h2>
+                <p class="scrolly-p">This isn't just about me�it's about <span class="gold-text">us</span>. I'm here to support upcoming rappers across the country. We grow together, we push the culture forward, and we make history with our sound.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="manifesto-section">
+        <div class="manifesto-grid">
+            <div class="manifesto-card glass-panel view-reveal">
+                <div class="manifesto-icon"><i class="fas fa-gem"></i></div>
+                <h3>Premium Quality</h3>
+                <p>Industry-standard mixing, uncompromised fidelity, and hard-hitting 808s that shake the room.</p>
+            </div>
+            <div class="manifesto-card glass-panel view-reveal" style="animation-delay: 0.1s;">
+                <div class="manifesto-icon"><i class="fas fa-handshake"></i></div>
+                <h3>Artist First</h3>
+                <p>Fair licensing, affordable pricing, and absolute transparency. Your success is my success.</p>
+            </div>
+            <div class="manifesto-card glass-panel view-reveal" style="animation-delay: 0.2s;">
+                <div class="manifesto-icon"><i class="fas fa-fire"></i></div>
+                <h3>Culture Driven</h3>
+                <p>Rooted in the underground, built for the mainstream. Shaping the future of Desi Hip-Hop.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta-section view-reveal">
+        <h2 class="cta-title">Ready to Make History?</h2>
+        <a href="{{ url_for('public.home') }}" class="cta-btn magnetic-btn">Explore the Catalog <i class="fas fa-arrow-right"></i></a>
     </section>
 
 </main>
+
+<script>
+    // Fallback for browsers without animation-timeline support
+    if (!CSS.supports('(animation-timeline: view()) and (animation-range: entry)')) {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('fallback-visible');
+                }
+            });
+        }, { threshold: 0.1 });
+        
+        document.querySelectorAll('.view-reveal, .hero-bg').forEach(el => observer.observe(el));
+    }
+</script>
 {% endblock %}

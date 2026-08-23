@@ -1,251 +1,263 @@
 /* ============================================================
-   ABOUT.CSS — A masterclass in modern web design
+   ABOUT.CSS - Modern Luxury Aesthetic
    ============================================================ */
 
 .about-page {
-    position: relative;
-    background: #0f1016; /* Deep dark background */
+    background: #08090a;
     color: var(--text-primary);
     font-family: 'Outfit', sans-serif;
     overflow-x: hidden;
 }
 
-/* ── Hero Section with Parallax Image ── */
-.about-hero {
+/* HERO SECTION */
+.hero-section {
     position: relative;
     height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
-}
-
-.about-hero-bg {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 120%; /* Extra height for parallax */
-    object-fit: cover;
-    opacity: 0.4;
-    z-index: 0;
-    filter: saturate(1.2) contrast(1.1);
-}
-
-/* Scroll-driven parallax for the background */
-@supports (animation-timeline: scroll()) {
-    .about-hero-bg {
-        animation: parallax-bg linear;
-        animation-timeline: scroll();
-    }
-    
-    @keyframes parallax-bg {
-        from { transform: translateY(0); }
-        to { transform: translateY(-20%); }
-    }
-}
-
-.about-hero-gradient {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(to bottom, 
-                rgba(15, 16, 22, 0.1) 0%, 
-                rgba(15, 16, 22, 0.6) 50%,
-                #0f1016 100%);
-    z-index: 1;
-}
-
-.about-hero-content {
-    position: relative;
-    z-index: 2;
     text-align: center;
-    max-width: 800px;
-    padding: 0 2rem;
 }
 
-.about-title {
-    font-size: clamp(3rem, 8vw, 6rem);
-    font-family: 'Syne', sans-serif;
-    font-weight: 800;
-    margin-bottom: 1rem;
-    background: linear-gradient(135deg, #ffffff 0%, var(--accent-soft) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    opacity: 0;
-    animation: fadeUpHero 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards 0.2s;
-    transform: translateY(40px);
-    text-shadow: 0 10px 30px rgba(124, 141, 240, 0.2);
+.hero-bg-wrapper {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    overflow: hidden;
+    z-index: 0;
 }
 
-.about-subtitle {
-    font-size: clamp(1rem, 3vw, 1.5rem);
-    color: var(--text-secondary);
-    letter-spacing: 6px;
-    text-transform: uppercase;
-    font-weight: 600;
-    opacity: 0;
-    animation: fadeUpHero 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards 0.5s;
-    transform: translateY(40px);
+.hero-bg {
+    width: 100%;
+    height: 120%;
+    object-fit: cover;
+    opacity: 0.3;
+    filter: saturate(1.2) contrast(1.1);
+    transform-origin: center;
 }
 
-@keyframes fadeUpHero {
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+.hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, transparent 40%, #08090a 100%);
 }
 
-
-/* ── The Story Section ── */
-.story-section {
-    padding: 6rem 2rem 10rem;
-    max-width: 1000px;
-    margin: 0 auto;
+.hero-content {
     position: relative;
+    z-index: 1;
     display: flex;
     flex-direction: column;
-    gap: 4rem;
-    z-index: 10;
+    align-items: center;
+    gap: 1rem;
 }
 
-/* Glassmorphism Cards */
-.story-card {
-    background: rgba(25, 27, 38, 0.4);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 24px;
-    padding: 4rem;
+.hero-title {
+    font-size: clamp(4rem, 10vw, 10rem);
+    font-weight: 900;
+    line-height: 0.85;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    margin: 0;
+}
+
+.title-outline {
+    color: transparent;
+    -webkit-text-stroke: 2px rgba(255, 255, 255, 0.4);
+}
+
+.title-solid {
+    color: var(--accent-gold);
+}
+
+.hero-subtitle {
+    font-size: 1.25rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* SCROLLYTELLING SECTION */
+.scrolly-section {
     position: relative;
-    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
-    overflow: hidden;
+    padding: 100px 20px;
+    max-width: 900px;
+    margin: 0 auto;
 }
 
-/* Subtle glowing orb inside the card */
-.story-card::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle at center, rgba(124, 141, 240, 0.03) 0%, transparent 60%);
-    pointer-events: none;
-    z-index: 0;
+.scrolly-container {
+    display: flex;
+    flex-direction: column;
+    gap: 150px;
 }
 
-.story-icon {
-    font-size: 3rem;
-    color: var(--accent-soft);
-    margin-bottom: 1.5rem;
-    position: relative;
-    z-index: 1;
-    filter: drop-shadow(0 0 15px rgba(124, 141, 240, 0.4));
-}
-
-.story-text {
-    font-size: 1.6rem;
-    line-height: 1.8;
-    color: #e2e8f0;
-    position: relative;
-    z-index: 1;
-    font-weight: 300;
-}
-
-.story-text .highlight {
-    color: #ffffff;
-    font-weight: 600;
-    background: linear-gradient(120deg, var(--accent-soft), var(--accent-purple));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-
-/* ── Quote Section ── */
-.quote-section {
-    padding: 8rem 2rem;
+.scrolly-text-block {
     text-align: center;
-    background: linear-gradient(to bottom, #0f1016, rgba(124, 141, 240, 0.05), #0f1016);
-    position: relative;
 }
 
-.quote-text {
-    font-size: clamp(2rem, 5vw, 4rem);
-    font-family: 'Syne', sans-serif;
-    font-weight: 800;
-    line-height: 1.2;
+.scrolly-heading {
+    font-size: 2.5rem;
+    color: white;
+    margin-bottom: 1.5rem;
+    font-weight: 700;
+}
+
+.scrolly-p {
+    font-size: 1.25rem;
+    line-height: 1.8;
+    color: var(--text-muted);
+}
+
+.gold-text {
+    color: var(--accent-gold);
+    font-weight: 600;
+}
+
+/* MANIFESTO GRID */
+.manifesto-section {
+    padding: 100px 20px;
+    background: #0a0b0e;
+}
+
+.manifesto-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
     max-width: 1200px;
     margin: 0 auto;
-    background: linear-gradient(to right, #ffffff, var(--text-secondary));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    font-style: italic;
 }
 
+.manifesto-card {
+    padding: 40px 30px;
+    border-radius: 20px;
+    text-align: center;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
+    backdrop-filter: blur(10px);
+}
 
-/* ── MODERN SCROLL-DRIVEN ANIMATIONS ── */
-/* Using @supports to ensure graceful degradation on older browsers */
-@supports ((animation-timeline: view()) and (animation-range: entry)) {
-    
-    @keyframes slide-in-fade {
-        from {
-            opacity: 0;
-            transform: translateY(100px) scale(0.95);
+.manifesto-icon {
+    font-size: 2.5rem;
+    color: var(--accent-gold);
+    margin-bottom: 20px;
+}
+
+.manifesto-card h3 {
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+    color: white;
+}
+
+.manifesto-card p {
+    color: var(--text-muted);
+    line-height: 1.6;
+}
+
+/* CTA SECTION */
+.cta-section {
+    padding: 150px 20px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+}
+
+.cta-title {
+    font-size: 3rem;
+    color: white;
+}
+
+.cta-btn {
+    padding: 15px 40px;
+    background: var(--accent-gold);
+    color: black;
+    font-size: 1.1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    border-radius: 50px;
+    text-decoration: none;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.cta-btn:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 10px 30px rgba(194, 164, 90, 0.4);
+}
+
+/* ============================================================
+   MODERN SCROLL ANIMATIONS (ViewTimeline & ScrollTimeline)
+   ============================================================ */
+
+@media (prefers-reduced-motion: no-preference) {
+    /* Background Parallax mapped to scroll */
+    @supports (animation-timeline: scroll()) {
+        .hero-bg {
+            animation: bg-parallax linear forwards;
+            animation-timeline: scroll();
         }
-        to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
+        @keyframes bg-parallax {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(20%); }
         }
     }
 
-    .scroll-reveal {
-        /* Apply the animation */
-        animation: slide-in-fade auto linear both;
-        /* Link it to the view timeline */
-        animation-timeline: view(block);
-        /* Run only when entering the scrollport (e.g. from 0% visible to 30% visible) */
-        animation-range: entry 10% cover 40%;
-    }
-
-    @keyframes scale-in {
-        from {
-            opacity: 0;
-            transform: scale(0.8);
-            filter: blur(10px);
+    /* Scroll Entry Effects */
+    @supports ((animation-timeline: view()) and (animation-range: entry)) {
+        .view-reveal {
+            animation: block-reveal linear both;
+            animation-timeline: view(block);
+            animation-range: entry 10% cover 40%;
         }
-        to {
-            opacity: 1;
-            transform: scale(1);
-            filter: blur(0);
-        }
-    }
 
-    .scroll-scale {
-        animation: scale-in auto linear both;
-        animation-timeline: view(block);
-        animation-range: entry 20% cover 50%;
+        @keyframes block-reveal {
+            from {
+                opacity: 0;
+                transform: translateY(100px) scale(0.9);
+                filter: blur(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+                filter: blur(0);
+            }
+        }
     }
 }
 
-/* ── RESPONSIVE DESIGN ── */
+/* Initial load animations */
+.reveal-text {
+    animation: fade-up 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.fade-up {
+    opacity: 0;
+    animation: fade-up 1s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
+}
+
+@keyframes fade-up {
+    from { opacity: 0; transform: translateY(40px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Fallback Classes */
+.fallback-visible {
+    opacity: 1 !important;
+    transform: translateY(0) scale(1) !important;
+    filter: blur(0) !important;
+    transition: all 0.8s ease-out;
+}
+.view-reveal:not(.fallback-visible) {
+    /* Only apply initial invisible state if CSS supports doesn't trigger native animations */
+    @supports not ((animation-timeline: view()) and (animation-range: entry)) {
+        opacity: 0;
+        transform: translateY(50px);
+    }
+}
+
+/* Responsive */
 @media (max-width: 768px) {
-    .story-section {
-        padding: 4rem 1.5rem;
-        gap: 2rem;
-    }
-    
-    .story-card {
-        padding: 2.5rem 1.5rem;
-    }
-    
-    .story-icon {
-        font-size: 2.5rem;
-    }
-    
-    .story-text {
-        font-size: 1.2rem;
-    }
+    .scrolly-heading { font-size: 2rem; }
+    .scrolly-p { font-size: 1.1rem; }
+    .scrolly-container { gap: 100px; }
+    .cta-title { font-size: 2.2rem; }
+    .title-outline { -webkit-text-stroke: 1px rgba(255, 255, 255, 0.4); }
 }
