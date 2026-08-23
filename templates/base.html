@@ -27,12 +27,7 @@
 
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.png') }}">
 </head>
-<body class="{% block body_class %}{% endblock %}">
-    {% include 'partials/preloader.html' %}
-
-    <div id="floatingNotes"></div>
-
-{# ============ GLOBAL LOOPING ANNOUNCEMENT STRIP ============ #}
+<body class="{% block body_class %}{% endblock %}">{% include 'partials/preloader.html' %}<div id="floatingNotes"></div>{# ============ GLOBAL LOOPING ANNOUNCEMENT STRIP ============ #}
 {% if strip_messages %}
 <div class="looping-strip-wrapper">
     <div class="looping-strip-track">
@@ -94,23 +89,18 @@
         var removed      = false;
 
         // ── Fake progress (visual only, doesn't control dismissal) ──
+        var textNode = document.getElementById('preloaderText');
         var progress = 0;
-        if (bar) {
-            var progressInterval = setInterval(function () {
-                // Accelerate toward 90%, then wait for real load
-                if (loadComplete) {
-                    progress = 100;
-                } else if (progress < 90) {
-                    progress += Math.random() * 8 + 3;
-                    if (progress > 90) progress = 90;
-                }
-                bar.style.width = progress + '%';
-
-                if (progress >= 100) {
-                    clearInterval(progressInterval);
-                }
-            }, 120);
-        }
+        var progressInterval = setInterval(function () {
+            if (loadComplete) {
+                progress = 100;
+            } else if (progress < 90) {
+                progress += Math.random() * 5 + 1;
+            }
+            if (bar) bar.style.width = Math.min(progress, 100) + '%';
+            if (textNode) textNode.textContent = 'LOADING... ' + Math.min(Math.round(progress), 100) + '%';
+            if (progress >= 100) clearInterval(progressInterval);
+        }, 80);
 
         // ── Remove preloader with fade ──
         function removePreloader() {
@@ -125,7 +115,7 @@
             var remaining = Math.max(0, MIN_DISPLAY_MS - elapsed);
 
             setTimeout(function () {
-                preloader.classList.add('done');
+                preloader.classList.add('hidden');
                 // Remove from DOM after CSS transition finishes
                 setTimeout(function () {
                     if (preloader.parentNode) preloader.remove();

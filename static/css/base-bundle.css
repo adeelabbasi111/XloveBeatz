@@ -446,110 +446,204 @@ a {
 
 /* --- preloader.css --- */
 /* ============================================================
-   PRELOADER - MODERN METALLIC & MINIMAL
+   PRELOADER.CSS — Loading screen
    ============================================================ */
+/* ============================================================
+   LOOPING ANNOUNCEMENT STRIP
+   ============================================================ */
+
+.looping-strip-wrapper {
+    position: relative; /* Changed from fixed so it doesn't overlap the header */
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 9999;
+    background: linear-gradient(90deg, #13151C, rgba(124, 141, 240, 0.15), #13151C);
+    border-bottom: 1px solid rgba(124, 141, 240, 0.2);
+    padding: 12px 0; /* Changed from 120px to fix the massive height bug */
+    overflow: hidden;
+    display: flex;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.looping-strip-track {
+    display: flex;
+    width: fit-content;
+    animation: scroll-seamless 30s linear infinite;
+}
+
+/* Pause the animation when a user hovers over the strip */
+.looping-strip-track:hover {
+    animation-play-state: paused;
+    cursor: default;
+}
+
+.looping-content {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    padding-right: 20px; /* Space between the original and duplicate */
+}
+
+.looping-content span {
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-primary, #ffffff);
+    margin: 0 20px;
+    display: inline-flex;
+    align-items: center;
+}
+
+/* Emphasize specific elements with the gold accent used in your prices */
+.looping-content span:nth-child(odd) {
+    color: var(--accent-gold-mute, #C9AE74);
+}
+
+/* Animated rotating separators */
+.strip-separator {
+    color: rgba(124, 141, 240, 0.8) !important;
+    font-size: 1.1rem !important;
+    animation: spin-pulse 3s linear infinite;
+}
+
+/* ── Animations ── */
+@keyframes scroll-seamless {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        /* Shifts exactly 50% of the total width to create the perfect loop */
+        transform: translateX(-50%);
+    }
+}
+
+@keyframes spin-pulse {
+    0% {
+        transform: rotate(0deg) scale(1);
+        opacity: 0.7;
+    }
+    50% {
+        transform: rotate(180deg) scale(1.3);
+        opacity: 1;
+        color: white; /* Flashes white mid-spin */
+    }
+    100% {
+        transform: rotate(360deg) scale(1);
+        opacity: 0.7;
+    }
+}
 
 .preloader {
     position: fixed;
-    top: 0; left: 0;
-    width: 100vw; height: 100vh;
-    background-color: #08090a;
+    inset: 0;
+    background: var(--bg-deep);
     z-index: 99999;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.6s;
-    font-family: 'Outfit', sans-serif;
-}
-
-.preloader.hidden {
-    opacity: 0;
-    visibility: hidden;
-}
-
-.preloader-content {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 30px;
-    width: 250px;
+    justify-content: center;
+    gap: 24px;
+    transition: opacity 0.7s ease, transform 0.7s ease;
 }
 
-.preloader-logo-wrapper {
-    position: relative;
+.preloader.done {
+    opacity: 0;
+    transform: scale(1.08);
+    pointer-events: none;
+}
+
+.preloader-vinyl {
     width: 100px;
     height: 100px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    animation: float-pulse 2.5s ease-in-out infinite;
+    border-radius: 50%;
+    background: repeating-radial-gradient(
+        var(--bg-elevated) 0, var(--bg-elevated) 6px,
+        #1f2230 6px, #1f2230 8px
+    );
+    position: relative;
+    animation: preloaderSpin 1.4s linear infinite;
+    box-shadow: 0 0 50px rgba(124, 141, 240, 0.2);
 }
 
-.preloader-logo {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    z-index: 2;
-    filter: drop-shadow(0 0 10px rgba(194, 164, 90, 0.3));
-}
-
-.preloader-glow {
+.preloader-vinyl-inner {
     position: absolute;
-    width: 80%;
-    height: 80%;
-    background: radial-gradient(circle, rgba(194, 164, 90, 0.4) 0%, transparent 70%);
-    z-index: 1;
-    animation: pulse-glow 2s ease-in-out infinite alternate;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 34px;
+    height: 34px;
+    background: linear-gradient(135deg, var(--accent-soft), var(--accent-purple));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.65rem;
+    color: white;
+    letter-spacing: 0.05em;
+}
+
+@keyframes preloaderSpin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+.preloader-eq {
+    display: flex;
+    gap: 4px;
+    height: 28px;
+    align-items: flex-end;
+}
+
+.preloader-eq span {
+    width: 4px;
+    background: linear-gradient(to top, var(--accent-soft), var(--accent-gold-mute));
+    border-radius: 2px;
+    animation: preloaderEq 0.7s ease-in-out infinite;
+    transform-origin: bottom;
+}
+
+.preloader-eq span:nth-child(1) { height: 40%; animation-delay: 0s;    }
+.preloader-eq span:nth-child(2) { height: 80%; animation-delay: 0.1s;  }
+.preloader-eq span:nth-child(3) { height: 60%; animation-delay: 0.2s;  }
+.preloader-eq span:nth-child(4) { height: 100%;animation-delay: 0.15s; }
+.preloader-eq span:nth-child(5) { height: 50%; animation-delay: 0.05s; }
+
+@keyframes preloaderEq {
+    0%, 100% { transform: scaleY(1); }
+    50%      { transform: scaleY(1.7); }
+}
+
+.preloader-text {
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.35em;
+    color: var(--text-primary);
+    animation: preloaderPulse 2s ease-in-out infinite;
+}
+
+@keyframes preloaderPulse {
+    0%, 100% { opacity: 0.5; letter-spacing: 0.35em; }
+    50%      { opacity: 1;   letter-spacing: 0.42em; }
 }
 
 .preloader-bar {
-    width: 100%;
-    height: 4px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 4px;
-    overflow: hidden;
-    position: relative;
-    box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--bg-elevated);
 }
 
 .preloader-progress {
     height: 100%;
     width: 0%;
-    background: linear-gradient(90deg, #8B7340, #C2A45A, #E5CD82);
-    border-radius: 4px;
-    transition: width 0.1s linear;
-    position: relative;
-}
-
-.preloader-progress::after {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
-    animation: shimmer-bar 1.5s infinite linear;
-}
-
-.preloader-text {
-    font-size: 0.85rem;
-    letter-spacing: 0.3em;
-    color: var(--accent-gold);
-    text-transform: uppercase;
-    font-weight: 500;
-}
-
-@keyframes float-pulse {
-    0%, 100% { transform: translateY(0) scale(1); }
-    50% { transform: translateY(-5px) scale(1.03); }
-}
-
-@keyframes pulse-glow {
-    0% { transform: scale(1); opacity: 0.5; }
-    100% { transform: scale(1.5); opacity: 0.8; }
-}
-
-@keyframes shimmer-bar {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(100%); }
+    background: linear-gradient(90deg, var(--accent-soft), var(--accent-gold-mute));
+    transition: width 0.25s ease;
+    box-shadow: 0 0 12px var(--accent-glow);
 }
 
 /* --- mobile.css --- */
