@@ -64,8 +64,12 @@ If you didn't request this, ignore this email.
     msg.attach(MIMEText(html_body, 'html'))
 
     try:
-        server = smtplib.SMTP(smtp_host, smtp_port)
-        server.starttls()
+        if int(smtp_port) == 465:
+            server = smtplib.SMTP_SSL(smtp_host, smtp_port)
+        else:
+            server = smtplib.SMTP(smtp_host, smtp_port)
+            server.starttls()
+            
         server.login(smtp_user, smtp_pass)
         server.sendmail(smtp_user, to_email, msg.as_string())
         server.quit()
