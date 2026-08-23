@@ -87,6 +87,31 @@
             </div>
         </div>
 
+        {# ─── Waiting Page ─── #}
+        <div class="form-section" style="margin-top: 2rem;">
+            <h3><i class="fas fa-clock"></i> Waiting / Coming Soon Page</h3>
+            <p class="text-muted" style="margin-bottom:1rem;">
+                Enable this to show a "Coming Soon" landing page to visitors. Admins can still access the site.
+            </p>
+            <div class="form-group">
+                <label class="toggle-label" style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+                    <input type="checkbox" name="waiting_page_enabled" value="true"
+                           id="waitingPageEnabled"
+                           style="width: 20px; height: 20px; accent-color: #C2A45A;"
+                           {% if settings.waiting_page_enabled == 'true' %}checked{% endif %}>
+                    <span>Enable Waiting Page</span>
+                </label>
+            </div>
+            
+            <div class="form-group" style="margin-top: 1rem;">
+                <label for="countdown_target_date">Countdown Target Date</label>
+                <input type="datetime-local" id="countdown_target_date" name="countdown_target_date" 
+                       value="{{ settings.countdown_target_date }}"
+                       style="background: #1a1a1a; border: 1px solid #333; color: white; padding: 0.5rem; border-radius: 4px; width: 100%; max-width: 300px;">
+                <small class="text-muted" style="display: block; margin-top: 0.25rem;">Select the date and time when the countdown should end.</small>
+            </div>
+        </div>
+
         <div class="form-actions">
             <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Settings</button>
         </div>

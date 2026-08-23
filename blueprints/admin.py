@@ -1475,7 +1475,7 @@ def admin_license_download(lic_id):
 def admin_settings():
     keys = ['site_title', 'site_slogan', 'contact_email',
             'whatsapp_number', 'instagram_url', 'spotify_url', 'youtube_url',
-            'geo_pricing_enabled', 'geo_pricing_multiplier']
+            'geo_pricing_enabled', 'geo_pricing_multiplier', 'waiting_page_enabled', 'countdown_target_date']
 
     if request.method == 'POST':
         # Handle regular text settings
@@ -1487,6 +1487,9 @@ def admin_settings():
         # Handle geo_pricing_enabled toggle (checkbox won't send value if unchecked)
         if 'geo_pricing_enabled' not in request.form:
             set_site_setting('geo_pricing_enabled', 'false')
+
+        if 'waiting_page_enabled' not in request.form:
+            set_site_setting('waiting_page_enabled', 'false')
 
         # Handle strip messages (dynamic list)
         strip_messages = request.form.getlist('strip_message')

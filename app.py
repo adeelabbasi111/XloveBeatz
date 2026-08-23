@@ -62,9 +62,13 @@ def create_app(config_class=Config):
     # ---- Before-request: load current user into g ----
     @app.before_request
     def _load_user():
-        from flask import g
+        from flask import g, request, redirect, url_for
         from helpers.utils import get_current_user
+        from helpers.services import get_site_setting
         g.user = get_current_user()
+
+        if request.endpoint and 'static' not in request.endpoint and not request.endpoint.startswith('admin.') and not request.endpoint.startswith('auth.'):
+            pass
 
     # ---- Register blueprints ----
     from blueprints.public import bp as public_bp

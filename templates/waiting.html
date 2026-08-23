@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -267,7 +267,7 @@
             <div class="logo-wrap">
                 <div class="logo">XLOVEBEATZ</div>
             </div>
-            <h1>STUDIO SESSION IN PROGRESS</h1>
+            <h1>Something's cooking 🔥</h1>
             
             <div class="countdown-wrapper" id="countdown">
                 <div class="time-box">
@@ -309,21 +309,27 @@
     </div>
 
     <script>
-        // Set target date to August 27th of the current year
+        // Check if admin has set a specific target date
+        let targetDateStr = "{{ target_date }}";
         const now = new Date();
         let targetYear = now.getFullYear();
-        
-        // Month is 0-indexed (7 = August)
-        let targetDate = new Date(targetYear, 7, 27, 0, 0, 0); 
-        
-        if (now > targetDate) {
-            targetDate.setFullYear(targetYear + 1);
-        }
+        let targetDate;
+        let startDate;
 
-        // Start date for progress bar calculation (e.g. Aug 1st)
-        let startDate = new Date(targetYear, 7, 1, 0, 0, 0);
-        if (now > targetDate) {
-            startDate.setFullYear(targetYear + 1);
+        if (targetDateStr && targetDateStr.trim() !== '') {
+            targetDate = new Date(targetDateStr);
+            // Assume start date was 7 days before the target date for the progress bar
+            startDate = new Date(targetDate.getTime() - (7 * 24 * 60 * 60 * 1000));
+        } else {
+            // Fallback: Set target date to August 27th of the current year
+            targetDate = new Date(targetYear, 7, 27, 0, 0, 0); 
+            if (now > targetDate) {
+                targetDate.setFullYear(targetYear + 1);
+            }
+            startDate = new Date(targetYear, 7, 1, 0, 0, 0);
+            if (now > targetDate) {
+                startDate.setFullYear(targetYear + 1);
+            }
         }
         
         const totalDuration = targetDate - startDate;
