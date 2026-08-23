@@ -124,6 +124,13 @@ def create_app(config_class=Config):
                 '🎧 50% OFF ALL VOCAL PRESETS',
             ]
 
+        # Geo pricing context
+        try:
+            from helpers.geo import get_geo_pricing
+            geo_info = get_geo_pricing()
+        except Exception:
+            geo_info = {'is_foreign': False, 'currency_symbol': '₹'}
+
         return {
             'strip_messages': strip_messages,
             'instagram_url': get_site_setting('instagram_url', '#'),
@@ -132,6 +139,8 @@ def create_app(config_class=Config):
             'whatsapp_number': get_site_setting('whatsapp_number', ''),
             'PAYPAL_CLIENT_ID': app.config.get('PAYPAL_CLIENT_ID', ''),
             'USD_INR_EXCHANGE_RATE': app.config.get('USD_INR_EXCHANGE_RATE', 85.0),
+            'is_foreign_user': geo_info['is_foreign'],
+            'currency_symbol': geo_info['currency_symbol'],
         }
 
     # ---- Error handlers ----

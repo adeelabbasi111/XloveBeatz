@@ -71,6 +71,9 @@
         <button class="ctrl-btn-sm download-btn" id="downloadPreviewBtn" title="Download Preview">
             <i class="fas fa-download"></i>
         </button>
+        <button class="ctrl-btn-sm share-btn" id="shareBeatBtn" title="Share Beat">
+            <i class="fas fa-share-nodes"></i>
+        </button>
     </div>
 </div>
 
@@ -168,7 +171,7 @@
                     </div>
                 </div>
 
-                <div class="track-price-tag">₹{{ beat.price | int }}</div>
+                <div class="track-price-tag">{{ currency_symbol }}{% if is_foreign_user %}{{ "%.2f"|format(beat.price) }}{% else %}{{ beat.price | int }}{% endif %}</div>
 
                 <div class="play-track-icon">
                     <i class="fas fa-play"></i>

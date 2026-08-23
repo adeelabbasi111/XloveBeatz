@@ -1474,7 +1474,8 @@ def admin_license_download(lic_id):
 @admin_required
 def admin_settings():
     keys = ['site_title', 'site_slogan', 'contact_email',
-            'whatsapp_number', 'instagram_url', 'spotify_url', 'youtube_url']
+            'whatsapp_number', 'instagram_url', 'spotify_url', 'youtube_url',
+            'geo_pricing_enabled', 'geo_pricing_multiplier']
 
     if request.method == 'POST':
         # Handle regular text settings
@@ -1482,6 +1483,10 @@ def admin_settings():
             val = request.form.get(key)
             if val is not None:
                 set_site_setting(key, val.strip())
+
+        # Handle geo_pricing_enabled toggle (checkbox won't send value if unchecked)
+        if 'geo_pricing_enabled' not in request.form:
+            set_site_setting('geo_pricing_enabled', 'false')
 
         # Handle strip messages (dynamic list)
         strip_messages = request.form.getlist('strip_message')
@@ -1493,6 +1498,9 @@ def admin_settings():
         return redirect(url_for('admin.admin_settings'))
 
     settings = {k: get_site_setting(k, '') for k in keys}
+    # Defaults for geo pricing
+    if not settings.get('geo_pricing_multiplier'):
+        settings['geo_pricing_multiplier'] = '3'
 
     # Parse strip messages for the template
     raw = get_site_setting('strip_messages', '[]')

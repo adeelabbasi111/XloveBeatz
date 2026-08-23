@@ -566,7 +566,11 @@ window.addEventListener('beforeunload', function () {
 // ════════════════════════════════════════════════════════════
 function updatePlayerUI(trackData) {
   if (playerTrackName) playerTrackName.textContent = trackData.name;
-  if (playerPriceBadge) playerPriceBadge.textContent = '₹' + parseInt(trackData.price, 10);
+  if (playerPriceBadge) {
+    var sym = window.CURRENCY_SYMBOL || '₹';
+    var p = parseFloat(trackData.price) || 0;
+    playerPriceBadge.textContent = sym + (window.IS_FOREIGN_USER ? p.toFixed(2) : parseInt(p, 10));
+  }
   if (currentBpm) currentBpm.textContent = trackData.bpm + ' BPM';
   if (currentKey) currentKey.textContent = trackData.key;
   if (currentGenre) currentGenre.textContent = trackData.genre;
@@ -745,6 +749,34 @@ if (downloadBtn) {
     link.click();
     document.body.removeChild(link);
     showToast('Downloading preview...');
+  });
+}
+
+// ── Share Beat ──
+var shareBeatBtn = document.getElementById('shareBeatBtn');
+if (shareBeatBtn) {
+  shareBeatBtn.addEventListener('click', function () {
+    var trackItem = allTrackItems.find(function (t) {
+      return parseInt(t.dataset.index, 10) === currentTrackIndex;
+    });
+    if (!trackItem) {
+      showToast('No track selected');
+      return;
+    }
+    var beatId = trackItem.dataset.id;
+    var shareUrl = window.location.origin + window.location.pathname + '?beat_id=' + beatId;
+    navigator.clipboard.writeText(shareUrl).then(function() {
+      showToast('Link copied to clipboard! 📋');
+    }).catch(function(err) {
+      // Fallback
+      var tempInput = document.createElement('input');
+      tempInput.value = shareUrl;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      document.execCommand('copy');
+      document.body.removeChild(tempInput);
+      showToast('Link copied to clipboard! 📋');
+    });
   });
 }
 
@@ -1013,7 +1045,9 @@ function openLicenseModal(beatData, action) {
       if (tier === 'exclusive' && (tierData.price == 0 || tierData.price === '' || tierData.price === '0.0' || String(tierData.price).toLowerCase() === 'negotiable')) {
         priceEl.textContent = 'Negotiable';
       } else {
-        priceEl.textContent = '₹' + tierData.price;
+        var sym = window.CURRENCY_SYMBOL || '₹';
+        var p = parseFloat(tierData.price) || 0;
+        priceEl.textContent = sym + (window.IS_FOREIGN_USER ? p.toFixed(2) : p);
       }
     }
     if (filesEl) {
@@ -1172,27 +1206,31 @@ function init() {
         return item.dataset.id === beatIdParam;
     });
     if (targetIdx !== -1) {
-      currentTrackIndex = targetIdx;
-      updatePlayerUI(allTrackItems[targetIdx].dataset);
-      highlightTrackItem(targetIdx);
+      var actualIndex = parseInt(allTrackItems[targetIdx].dataset.index, 10);
+      currentTrackIndex = actualIndex;
       
-      // Auto-open license modal since they likely clicked "Add to Cart" externally
-      setTimeout(function() {
-          var ds = allTrackItems[targetIdx].dataset;
-          if (typeof openLicenseModal === 'function') {
-              // Reconstruct beat object for the modal
-              var beatObj = {
-                  id: ds.id, name: ds.name, bpm: ds.bpm, key: ds.key,
-                  beat_image: ds.beatImage, preview_audio: ds.preview,
-                  license_tiers: {
-                      basic: { price: ds.priceBasic, files: ds.filesBasic },
-                      premium: { price: ds.pricePremium, files: ds.filesPremium },
-                      exclusive: { price: ds.priceExclusive, files: ds.filesExclusive }
-                  }
-              };
-              openLicenseModal(beatObj);
-          }
-      }, 500);
+      // Actually load the track so it's ready to play (and attempt autoplay)
+      loadAndPlayTrack(actualIndex);
+      
+      // Auto-open license modal ONLY if they clicked "Add to Cart" externally (action=buy)
+      if (urlParams.get('action') === 'buy') {
+        setTimeout(function() {
+            var ds = allTrackItems[targetIdx].dataset;
+            if (typeof openLicenseModal === 'function') {
+                // Reconstruct beat object for the modal
+                var beatObj = {
+                    id: ds.id, name: ds.name, bpm: ds.bpm, key: ds.key,
+                    beat_image: ds.beatImage, preview_audio: ds.preview,
+                    license_tiers: {
+                        basic: { price: ds.priceBasic, files: ds.filesBasic },
+                        premium: { price: ds.pricePremium, files: ds.filesPremium },
+                        exclusive: { price: ds.priceExclusive, files: ds.filesExclusive }
+                    }
+                };
+                openLicenseModal(beatObj);
+            }
+        }, 500);
+      }
     }
   }
   

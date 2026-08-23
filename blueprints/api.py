@@ -106,6 +106,14 @@ def validate_coupon():
     code = (data.get('code') or '').strip().upper()
     subtotal_cents = int(float(data.get('subtotal', 0)) * 100)
 
+    from helpers.geo import get_geo_pricing
+    geo_info = get_geo_pricing()
+    if geo_info['is_foreign']:
+        rate = current_app.config.get('USD_INR_EXCHANGE_RATE', 85.0)
+        mult = geo_info['multiplier']
+        if mult > 0:
+            subtotal_cents = int((subtotal_cents * rate) / mult)
+
     if not code:
         return jsonify(valid=False, error='Please enter a coupon code'), 400
 
@@ -123,23 +131,41 @@ def validate_coupon():
     if coupon.max_uses > 0 and coupon.used_count >= coupon.max_uses:
         return jsonify(valid=False, error='This coupon has reached its usage limit'), 400
 
-    if coupon.min_order_cents > 0 and subtotal_cents < coupon.min_order_cents:
-        min_rupees = coupon.min_order_cents / 100
-        return jsonify(valid=False, error=f'Minimum order amount is ₹{min_rupees:.2f}'), 400
+    # Store original values
+    res_discount_value = float(coupon.discount_value)
+    res_max_discount = float(coupon.max_discount_cents / 100) if coupon.max_discount_cents > 0 else None
+    res_min_order = float(coupon.min_order_cents / 100) if coupon.min_order_cents > 0 else None
+    
+    if geo_info['is_foreign']:
+        rate = current_app.config.get('USD_INR_EXCHANGE_RATE', 85.0)
+        mult = geo_info['multiplier']
+        # For percentage, discount_value is the %, so it stays the same!
+        # Only transform if it's a fixed amount
+        if coupon.discount_type == 'fixed':
+            res_discount_value = round((res_discount_value * mult) / rate, 2)
+        if res_max_discount is not None:
+            res_max_discount = round((res_max_discount * mult) / rate, 2)
+        if res_min_order is not None:
+            res_min_order = round((res_min_order * mult) / rate, 2)
 
+    sym = geo_info['currency_symbol']
+
+    if coupon.min_order_cents > 0 and subtotal_cents < coupon.min_order_cents:
+        return jsonify(valid=False, error=f'Minimum order amount is {sym}{res_min_order:.2f}'), 400
     # Build description for frontend
     if coupon.discount_type == 'percentage':
         desc = f"{coupon.discount_value}% off"
-        if coupon.max_discount_cents > 0:
-            desc += f" (max ₹{coupon.max_discount_cents / 100:.0f})"
+        if res_max_discount:
+            desc += f" (max {sym}{res_max_discount})"
     else:
-        desc = f"₹{coupon.discount_value} off"
+        desc = f"{sym}{res_discount_value} off"
 
     return jsonify(
         valid=True,
         code=coupon.code,
         discount_type=coupon.discount_type,
-        discount_value=coupon.discount_value,
-        max_discount=coupon.max_discount_cents / 100 if coupon.max_discount_cents > 0 else None,
-        description=desc,
+        discount_value=res_discount_value,
+        max_discount=res_max_discount,
+        min_order=res_min_order,
+        description=desc
     )
