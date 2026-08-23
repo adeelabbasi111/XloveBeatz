@@ -1,0 +1,366 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-width=1.0">
+    <title>XLOVEBEATZ - Studio Session In Progress</title>
+    <!-- Use Montserrat for a modern look -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #d4af37; /* Metallic gold */
+            --primary-glow: rgba(212, 175, 55, 0.6);
+            --bg-dark: #050505;
+            --glass-bg: rgba(15, 15, 15, 0.45);
+            --glass-border: rgba(212, 175, 55, 0.15);
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--bg-dark);
+            color: #ffffff;
+            overflow: hidden;
+            display: grid;
+            place-items: center;
+        }
+
+        .bg-container {
+            position: absolute;
+            inset: -5%; /* Prevent white edges on zoom */
+            width: 110%;
+            height: 110%;
+            background-image: url('{{ url_for("static", filename="images/waiting_bg_new.jpg") }}');
+            background-size: cover;
+            background-position: center;
+            z-index: 1;
+            animation: slowPan 45s infinite alternate ease-in-out;
+            filter: contrast(1.1) brightness(0.7) saturate(0.8);
+        }
+
+        @keyframes slowPan {
+            0% { transform: scale(1) translate(0, 0); }
+            100% { transform: scale(1.1) translate(-2%, -1%); }
+        }
+
+        /* Overlay with a subtle vignette and noise */
+        .overlay {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.8) 100%),
+                        linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.8) 100%);
+            z-index: 2;
+        }
+
+        .main-content {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 800px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Entry Animation using modern @starting-style (for supporting browsers) */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(24px) saturate(1.2);
+            -webkit-backdrop-filter: blur(24px) saturate(1.2);
+            border: 1px solid var(--glass-border);
+            border-radius: 30px;
+            padding: 4rem 3rem;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            
+            /* Entry animation */
+            animation: panelEnter 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+            transform: translateY(40px) scale(0.95);
+        }
+
+        @keyframes panelEnter {
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Inner glow that moves */
+        .glass-panel::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(circle at center, rgba(212, 175, 55, 0.08) 0%, transparent 50%);
+            animation: rotateGlow 15s linear infinite;
+            z-index: -1;
+        }
+
+        @keyframes rotateGlow {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .logo-wrap {
+            margin-bottom: 0.5rem;
+        }
+
+        .logo {
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 8px;
+            font-weight: 500;
+            color: var(--primary);
+            opacity: 0.8;
+        }
+
+        h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 3.5rem;
+            line-height: 1.1;
+            margin: 0.5rem 0 2rem;
+            font-weight: 700;
+            letter-spacing: -1px;
+            background: linear-gradient(to right, #fff 20%, #888 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .countdown-wrapper {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .time-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        .time-val {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 4.5rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+            text-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+            font-variant-numeric: tabular-nums;
+            width: 100px;
+        }
+
+        .time-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 0.75rem;
+        }
+
+        .colon {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 4rem;
+            color: var(--primary);
+            line-height: 1;
+            margin: -0.25rem 0.5rem 0;
+            opacity: 0.6;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; text-shadow: 0 0 15px var(--primary); }
+        }
+
+        /* Decorative Visualizer at the bottom */
+        .visualizer {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 4px;
+            height: 40px;
+            margin-top: 3rem;
+            opacity: 0.7;
+        }
+
+        .bar {
+            width: 4px;
+            background-color: var(--primary);
+            border-radius: 2px;
+            animation: eq 1s ease-in-out infinite alternate;
+        }
+        
+        .bar:nth-child(1) { height: 20%; animation-duration: 0.6s; }
+        .bar:nth-child(2) { height: 40%; animation-duration: 0.8s; }
+        .bar:nth-child(3) { height: 80%; animation-duration: 0.5s; }
+        .bar:nth-child(4) { height: 60%; animation-duration: 0.7s; }
+        .bar:nth-child(5) { height: 100%; animation-duration: 0.4s; }
+        .bar:nth-child(6) { height: 50%; animation-duration: 0.65s; }
+        .bar:nth-child(7) { height: 75%; animation-duration: 0.55s; }
+        .bar:nth-child(8) { height: 30%; animation-duration: 0.75s; }
+
+        @keyframes eq {
+            0% { transform: scaleY(0.2); }
+            100% { transform: scaleY(1); }
+        }
+
+        /* Progress line */
+        .progress-container {
+            width: 100%;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.1);
+            margin-top: 3rem;
+            border-radius: 2px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar {
+            position: absolute;
+            top: 0; left: 0;
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, transparent, var(--primary));
+            box-shadow: 0 0 10px var(--primary);
+            transition: width 1s linear;
+        }
+
+        @media (max-width: 768px) {
+            .glass-panel {
+                padding: 3rem 1.5rem;
+                width: 90%;
+            }
+            h1 {
+                font-size: 2.2rem;
+            }
+            .time-val {
+                font-size: 2.8rem;
+                width: 60px;
+            }
+            .colon {
+                font-size: 2.5rem;
+                margin: 0 0.25rem;
+            }
+            .time-label {
+                font-size: 0.6rem;
+                letter-spacing: 2px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-container"></div>
+    <div class="overlay"></div>
+    
+    <div class="main-content">
+        <div class="glass-panel">
+            <div class="logo-wrap">
+                <div class="logo">XLOVEBEATZ</div>
+            </div>
+            <h1>STUDIO SESSION IN PROGRESS</h1>
+            
+            <div class="countdown-wrapper" id="countdown">
+                <div class="time-box">
+                    <span class="time-val" id="days">00</span>
+                    <span class="time-label">Days</span>
+                </div>
+                <div class="colon">:</div>
+                <div class="time-box">
+                    <span class="time-val" id="hours">00</span>
+                    <span class="time-label">Hours</span>
+                </div>
+                <div class="colon">:</div>
+                <div class="time-box">
+                    <span class="time-val" id="minutes">00</span>
+                    <span class="time-label">Minutes</span>
+                </div>
+                <div class="colon">:</div>
+                <div class="time-box">
+                    <span class="time-val" id="seconds">00</span>
+                    <span class="time-label">Seconds</span>
+                </div>
+            </div>
+
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+
+            <div class="visualizer">
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Set target date to August 27th of the current year
+        const now = new Date();
+        let targetYear = now.getFullYear();
+        
+        // Month is 0-indexed (7 = August)
+        let targetDate = new Date(targetYear, 7, 27, 0, 0, 0); 
+        
+        if (now > targetDate) {
+            targetDate.setFullYear(targetYear + 1);
+        }
+
+        // Start date for progress bar calculation (e.g. Aug 1st)
+        let startDate = new Date(targetYear, 7, 1, 0, 0, 0);
+        if (now > targetDate) {
+            startDate.setFullYear(targetYear + 1);
+        }
+        
+        const totalDuration = targetDate - startDate;
+
+        function updateCountdown() {
+            const currentTime = new Date();
+            const diff = targetDate - currentTime;
+
+            if (diff <= 0) {
+                document.getElementById('days').innerText = '00';
+                document.getElementById('hours').innerText = '00';
+                document.getElementById('minutes').innerText = '00';
+                document.getElementById('seconds').innerText = '00';
+                document.getElementById('progressBar').style.width = '100%';
+                return;
+            }
+
+            const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const s = Math.floor((diff % (1000 * 60)) / 1000);
+
+            document.getElementById('days').innerText = d.toString().padStart(2, '0');
+            document.getElementById('hours').innerText = h.toString().padStart(2, '0');
+            document.getElementById('minutes').innerText = m.toString().padStart(2, '0');
+            document.getElementById('seconds').innerText = s.toString().padStart(2, '0');
+
+            // Update Progress bar
+            let elapsed = currentTime - startDate;
+            if (elapsed < 0) elapsed = 0;
+            let progressPercent = (elapsed / totalDuration) * 100;
+            if (progressPercent > 100) progressPercent = 100;
+            document.getElementById('progressBar').style.width = progressPercent + '%';
+        }
+
+        setInterval(updateCountdown, 1000);
+        updateCountdown();
+    </script>
+</body>
+</html>
