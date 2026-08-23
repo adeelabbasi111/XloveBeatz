@@ -956,6 +956,5 @@
         // Initial state
         updateCouponUI();
         updateCartUI();
-        console.log('[CART] Ready. Items:', cart.length);
     }
 })();

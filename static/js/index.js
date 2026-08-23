@@ -184,6 +184,5 @@
         }
     });
 
-    console.log('XLOVEBEATS UI loaded');
 
 })();

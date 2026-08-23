@@ -35,17 +35,7 @@ def get_user_by_email(email):
 # PRODUCT (read)
 # =========================
 
-def get_homepage_products(limit=8):
-    beat_packs = Product.query.filter_by(product_type='pack', is_active=True).all()
-    beats = (
-        Product.query
-        .filter_by(product_type='beat', is_active=True)
-        .order_by(Product.sort_order.asc(), Product.created_at.desc())
-        .limit(limit)
-        .all()
-    )
-    vocal_presets = Product.query.filter_by(product_type='preset', is_active=True).all()
-    return beat_packs, beats, vocal_presets
+
 
 
 def get_player_beats(pack_id=None):

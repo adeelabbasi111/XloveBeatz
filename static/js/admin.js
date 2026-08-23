@@ -90,7 +90,6 @@ window.toggleTypeFields = function (type) {
         });
     }
 
-    console.log('Admin panel loaded');
 
     // ── Auto-dismiss flash messages ──
     var flashMessages = document.querySelectorAll('.flash');
@@ -156,5 +155,4 @@ window.toggleTypeFields = function (type) {
         });
     }
 
-    console.log('Admin panel loaded');
 });

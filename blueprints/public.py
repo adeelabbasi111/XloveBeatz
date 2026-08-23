@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, flash, redirect, url_for, current_app
 from helpers.models import Product, Genre
-from helpers.services import get_homepage_products, get_player_beats, build_beats_data, get_beat_with_details
+from helpers.services import get_player_beats, build_beats_data, get_beat_with_details
 from helpers.geo import get_geo_pricing, apply_geo_pricing_to_beats
 
 bp = Blueprint('public', __name__)
@@ -11,8 +11,6 @@ def home():
     if get_site_setting('waiting_page_enabled', 'false') == 'true':
         return redirect(url_for('public.waiting'))
 
-    limit = current_app.config['HOMEPAGE_BEAT_LIMIT']
-    beat_packs, beats, vocal_presets = get_homepage_products(limit)
     genres = Genre.query.filter_by(is_active=True).order_by(Genre.sort_order).all()
     
     from helpers.models import TrendingBeat
@@ -30,7 +28,6 @@ def home():
     
     return render_template(
         'index.html',
-        beat_packs=beat_packs, beats=beats, vocal_presets=vocal_presets,
         genres=genres,
         trending_beats_data=trending_beats_data,
         site_title="XLOVEBEATZ",

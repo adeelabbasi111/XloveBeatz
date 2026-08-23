@@ -9,7 +9,6 @@ from flask import Blueprint, request, jsonify, render_template, session, current
 from helpers.models import Product, License, BeatLicensePrice, Cart, db, Order, OrderItem, User, GeneratedLicense, BeatDetail
 from helpers.utils import get_current_user, login_required
 from helpers.services import create_order, add_order_item, mark_order_paid, clear_cart
-from helpers.license_generator import BeatLicenseGenerator
 from helpers.models import DiscountCode
 
 
@@ -24,81 +23,7 @@ TEST_MODE_PAYMENT = False
 #  LICENSE GENERATION
 # ═══════════════════════════════════════════════════════════════
 
-def _generate_licenses_for_order(order):
-    """DEPRECATED: Generate license PDFs for each beat item in the order."""
 
-    generator = BeatLicenseGenerator()
-    user = User.query.get(order.user_id) if order.user_id else None
-    effective_date = order.created_at.strftime('%d-%m-%Y') if order.created_at else datetime.now().strftime('%d-%m-%Y')
-
-    for item in order.items:
-        product = item.product
-        if not product or product.product_type != 'beat':
-            continue
-
-        if not item.license:
-            continue
-
-        license_type = item.license.name.lower()
-        if license_type not in ('basic', 'premium', 'exclusive'):
-            continue
-
-        licensee_name = user.username if user else (order.email or 'Customer')
-        beat_name = product.name
-        price_paid = item.price_paid_cents / 100 if item.price_paid_cents else 0
-
-        # Get beat details for specs
-        beat_detail = BeatDetail.query.filter_by(product_id=product.id).first()
-
-        license_data = {
-            'licensee_legal_name': licensee_name,
-            'artist_stage_name': '',
-            'beat_name': beat_name,
-            'effective_date': effective_date,
-            'beat_price': str(int(price_paid)),
-            'order_id': str(order.id),
-            'transaction_id': order.transaction_id or '',
-            'buyer_email': user.email if user else (order.email or ''),
-            'bpm': beat_detail.bpm if beat_detail else None,
-            'musical_key': beat_detail.musical_key if beat_detail else None,
-            'genre': beat_detail.genre if beat_detail else None,
-            'duration': beat_detail.duration if beat_detail else None,
-        }
-
-        try:
-            if license_type == 'basic':
-                story = generator.generate_basic_license(license_data)
-            elif license_type == 'premium':
-                story = generator.generate_premium_license(license_data)
-            elif license_type == 'exclusive':
-                story = generator.generate_exclusive_license(license_data)
-            else:
-                continue
-
-            output_dir = os.path.join(current_app.root_path, 'static', 'data', 'licenses')
-            os.makedirs(output_dir, exist_ok=True)
-
-            safe_name = licensee_name.replace(' ', '_').replace('/', '_')
-            safe_beat = beat_name.replace(' ', '_').replace('/', '_')
-            filename = f"{safe_name}_{item.license.name}_{safe_beat}"
-
-            generator.save_license(story, filename, output_dir)
-            db_path = f"data/licenses/{filename}.pdf"
-
-            gen_lic = GeneratedLicense(
-                order_item_id=item.id,
-                buyer_name=licensee_name,
-                beat_name=beat_name,
-                license_type=item.license.name,
-                pdf_path=db_path,
-            )
-            db.session.add(gen_lic)
-            logger.info("License generated: %s (%s) for order %s", filename, license_type, order.id)
-
-        except Exception as e:
-            logger.error("License generation failed for %s - %s: %s", licensee_name, beat_name, e)
-
-    db.session.commit()
 
 
 # ═══════════════════════════════════════════════════════════════
