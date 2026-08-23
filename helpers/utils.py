@@ -12,6 +12,7 @@ from flask import session, flash, redirect, url_for
 logger = logging.getLogger(__name__)
 
 import smtplib
+import threading
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
@@ -63,20 +64,24 @@ If you didn't request this, ignore this email.
     msg.attach(MIMEText(text_body, 'plain'))
     msg.attach(MIMEText(html_body, 'html'))
 
-    try:
-        if int(smtp_port) == 465:
-            server = smtplib.SMTP_SSL(smtp_host, smtp_port)
-        else:
-            server = smtplib.SMTP(smtp_host, smtp_port)
-            server.starttls()
-            
-        server.login(smtp_user, smtp_pass)
-        server.sendmail(smtp_user, to_email, msg.as_string())
-        server.quit()
-        return True
-    except Exception as e:
-        print(f"Email send failed: {e}")
-        return False
+    def send_async():
+        try:
+            if int(smtp_port) == 465:
+                server = smtplib.SMTP_SSL(smtp_host, smtp_port)
+            else:
+                server = smtplib.SMTP(smtp_host, smtp_port)
+                server.starttls()
+                
+            server.login(smtp_user, smtp_pass)
+            server.sendmail(smtp_user, to_email, msg.as_string())
+            server.quit()
+        except Exception as e:
+            print(f"Email send failed: {e}")
+
+    thread = threading.Thread(target=send_async)
+    thread.daemon = True
+    thread.start()
+    return True
 
 # =========================
 # SLUG GENERATION (single source of truth)

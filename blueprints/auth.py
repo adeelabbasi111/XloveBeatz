@@ -33,7 +33,7 @@ def forgot_password():
 
     return jsonify({
         'success': True,
-        'message': 'If an account with that email exists, a reset link has been sent.'
+        'message': 'If an account with that email exists, a reset link has been sent. Please note it may take a few minutes to arrive.'
     })
 
 
