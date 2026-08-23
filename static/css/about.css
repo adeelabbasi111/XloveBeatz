@@ -206,19 +206,17 @@
         .view-reveal {
             animation: block-reveal linear both;
             animation-timeline: view(block);
-            animation-range: entry 10% cover 40%;
+            animation-range: entry 10% entry 100%;
         }
 
         @keyframes block-reveal {
             from {
                 opacity: 0;
-                transform: translateY(100px) scale(0.9);
-                filter: blur(10px);
+                transform: translateY(80px) scale(0.95);
             }
             to {
                 opacity: 1;
                 transform: translateY(0) scale(1);
-                filter: blur(0);
             }
         }
     }
