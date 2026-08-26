@@ -1159,24 +1159,32 @@ function triggerPurchaseFlow(beatId, action) {
   if (!trackItem) return;
   var d = trackItem.dataset;
   var basePrice = parseFloat(d.price) || 0;
+  var hasStems = d.hasStems === 'true';
+  
   var beatData = {
     id: parseInt(d.id, 10),
     name: d.name,
+    has_stems: hasStems,
     license_tiers: {
       basic: {
         price: parseFloat(d.priceBasic) || basePrice,
         files: d.filesBasic || 'MP3 + WAV'
       },
       premium: {
-        price: parseFloat(d.pricePremium) || Math.round(basePrice * 1.7),
+        price: d.pricePremium ? parseFloat(d.pricePremium) : Math.round(basePrice * 1.7),
         files: d.filesPremium || 'MP3 + WAV + Stems'
       },
       exclusive: {
-        price: parseFloat(d.priceExclusive) || 0,
+        price: d.priceExclusive ? parseFloat(d.priceExclusive) : 0,
         files: d.filesExclusive || 'WAV + Stems + Project File'
       }
     }
   };
+  
+  if (!hasStems) {
+      delete beatData.license_tiers.premium;
+  }
+  
   openLicenseModal(beatData, action);
 }
 
