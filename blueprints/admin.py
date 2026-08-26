@@ -1797,13 +1797,13 @@ def api_trending_reorder():
 def admin_regenerate_previews():
     # Process just ONE beat to prevent server timeout!
     beat = BeatDetail.query.filter(
-        BeatDetail.file_wav.isnot(None),
-        BeatDetail.file_wav != '',
+        BeatDetail.wav_file.isnot(None),
+        BeatDetail.wav_file != '',
         (BeatDetail.preview_audio == None) | (BeatDetail.preview_audio == '') | (BeatDetail.preview_audio == 'failed')
     ).first()
     
     if beat:
-        abs_wav_path = os.path.join(current_app.static_folder, beat.file_wav)
+        abs_wav_path = os.path.join(current_app.static_folder, beat.wav_file)
         if os.path.exists(abs_wav_path):
             slug = beat.product.slug if beat.product else str(beat.product_id)
             preview_rel = convert_wav_to_full_preview(abs_wav_path, slug)
