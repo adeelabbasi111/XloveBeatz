@@ -1,4 +1,5 @@
-from flask import Blueprint, render_template, flash, redirect, url_for, current_app
+
+from flask import Blueprint, render_template, flash, redirect, url_for, current_app
 from helpers.models import Product, Genre
 from helpers.services import get_player_beats, build_beats_data, get_beat_with_details
 from helpers.geo import get_geo_pricing, apply_geo_pricing_to_beats
@@ -104,3 +105,34 @@ def waiting():
     
     target_date = get_site_setting('countdown_target_date', '')
     return render_template('waiting.html', target_date=target_date)
+
+@bp.route('/test-ffmpeg')
+def test_ffmpeg():
+    import os, sys, traceback
+    try:
+        from helpers.audio_utils import ffmpeg_path, ffprobe_path
+        
+        result = [f"Python version: {sys.version}"]
+        result.append(f"Expected ffmpeg path: {ffmpeg_path}")
+        result.append(f"Expected ffprobe path: {ffprobe_path}")
+        result.append(f"ffmpeg exists? {os.path.exists(ffmpeg_path)}")
+        
+        try:
+            from pydub import AudioSegment
+            result.append(f"Pydub imported successfully. Converter: {AudioSegment.converter}")
+            
+            # Create a 1-second silent audio segment to test ffmpeg export
+            silence = AudioSegment.silent(duration=1000)
+            test_out = os.path.join(os.path.dirname(ffmpeg_path), "test_silence.mp3")
+            silence.export(test_out, format="mp3", bitrate="64k")
+            result.append(f"Export successful! Created {test_out}")
+            if os.path.exists(test_out):
+                os.remove(test_out)
+                
+        except Exception as e:
+            result.append("PYDUB ERROR:")
+            result.append(traceback.format_exc())
+            
+        return "<pre>" + "\n".join(result) + "</pre>"
+    except Exception as e:
+        return f"<pre>FATAL ERROR:\n{traceback.format_exc()}</pre>"
