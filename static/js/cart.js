@@ -835,8 +835,8 @@
                     isProcessing = false;
                 });
                 
-                // Do NOT close the payment modal yet, so the user sees the loading spinner 
-                // on the button until the Razorpay iframe fully renders over top!
+                // We MUST close the dialog because <dialog> top-layer renders OVER Razorpay's z-index
+                if (els.paymentModal) els.paymentModal.close();
                 
                 rzp1.open();
 
