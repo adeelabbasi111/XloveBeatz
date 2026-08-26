@@ -113,6 +113,9 @@ def signup():
         if 'session_id' in session:
             merge_guest_cart(session['session_id'], user.id)
 
+        session.permanent = True
+
+
         session['user_id'] = user.id
         flash(f'Welcome to XLOVEBEATS, {username}!', 'success')
         return redirect(url_for('public.home'))
@@ -133,6 +136,8 @@ def login():
         user = get_user_by_email(email)
         if user and check_password_hash(user.password_hash, password):
             user.last_login = datetime.utcnow()
+            session.permanent = True
+
             session['user_id'] = user.id
             flash(f'Welcome back, {user.username}!', 'success')
             return redirect(url_for('public.home'))
