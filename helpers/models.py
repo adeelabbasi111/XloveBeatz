@@ -82,6 +82,7 @@ class BeatDetail(db.Model):
     # mp3_file REMOVED — auto-generated preview, no separate storage
     project_file = db.Column(db.String(500))
     beat_image = db.Column(db.String(500), nullable=True)  # NEW
+    has_stems = db.Column(db.Boolean, default=True)  # NEW
 
     pack_id = db.Column(db.Integer, db.ForeignKey("beat_packs.id"), nullable=True, index=True)
 

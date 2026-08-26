@@ -644,6 +644,7 @@ def admin_product_edit(product_id):
                     detail.musical_key = request.form.get('musical_key', '').strip()
                     detail.genre = genre
                     detail.pack_id = request.form.get('pack_id', type=int) or None
+                    detail.has_stems = 'has_stems' in request.form
 
                     _update_beat_files(product.slug, detail)
 
@@ -872,6 +873,7 @@ def _create_beat_details(product):
     pack_id = request.form.get('pack_id', type=int) or None
 
     genre = request.form.get('beat_genre', '').strip()
+    has_stems = 'has_stems' in request.form
     _sync_genre(genre)
 
     BeatDetail.query.filter_by(genre=genre).update({BeatDetail.genre_sort_order: BeatDetail.genre_sort_order + 1})
@@ -886,6 +888,7 @@ def _create_beat_details(product):
         preview_audio=preview_db_path,
         wav_file=wav_db_path or '',
         project_file=project_db_path or '',
+        has_stems=has_stems,
         beat_image=beat_image_path or None,
         pack_id=pack_id,
     )
@@ -995,10 +998,22 @@ def _create_preset_details(product, slug):
 def _update_beat_licenses(product_id):
     """Create or update Basic/Premium/Exclusive license prices for a beat."""
     licenses = {l.name: l for l in License.query.all()}
+    has_stems = 'has_stems' in request.form
     for tier in ('Basic', 'Premium', 'Exclusive'):
+        if tier == 'Premium' and not has_stems:
+            if 'Premium' in licenses:
+                BeatLicensePrice.query.filter_by(beat_id=product_id, license_id=licenses['Premium'].id).delete()
+            continue
         tier_price = request.form.get(f"{tier.lower()}_price", type=float)
         tier_files = request.form.get(f"{tier.lower()}_files", '')
         tier_tags = request.form.get(f"{tier.lower()}_tags", '')
+        
+        if tier == 'Exclusive' and not has_stems:
+            import re
+            # Remove Stems, Trackouts, Project File from files string (case insensitive)
+            tier_files = re.sub(r'(?i)(?:,\s*|\+\s*)?(?:stems?|trackouts?|project files?)', '', tier_files)
+            # Remove trailing/leading + or , if left over
+            tier_files = re.sub(r'^[+,]\s*|\s*[+,]$', '', tier_files)
         if tier_price is not None and tier in licenses:
             blp = BeatLicensePrice.query.filter_by(
                 beat_id=product_id, license_id=licenses[tier].id).first()

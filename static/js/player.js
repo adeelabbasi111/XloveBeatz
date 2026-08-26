@@ -1051,9 +1051,28 @@ function openLicenseModal(beatData, action) {
   if (modalBeatName) modalBeatName.textContent = beatData.name;
   var tiers = ['basic', 'premium', 'exclusive'];
   tiers.forEach(function (tier) {
+    var card = document.querySelector('.license-card[data-license="' + tier + '"]');
     var priceEl = document.getElementById('price-' + tier);
     var filesEl = document.getElementById('files-' + tier);
-    if (!beatData.license_tiers[tier]) return;
+    
+    // For Exclusive, it's always available (defaulting to Negotiable)
+    if (!beatData.license_tiers[tier]) {
+        if (tier === 'exclusive') {
+            if (card) card.style.display = 'flex';
+            if (filesEl) {
+                // If the beat has no stems, remove 'Project File' from default HTML
+                if (beatData.has_stems === false) {
+                    filesEl.innerHTML = '<li><i class="fas fa-check"></i> WAV</li><li><i class="fas fa-check"></i> Exclusivity</li>';
+                } else {
+                    filesEl.innerHTML = '<li><i class="fas fa-check"></i> WAV</li><li><i class="fas fa-check"></i> Project File</li><li><i class="fas fa-check"></i> Exclusivity</li>';
+                }
+            }
+        } else {
+            if (card) card.style.display = 'none';
+        }
+        return;
+    }
+    if (card) card.style.display = 'flex';
     var tierData = beatData.license_tiers[tier];
     if (priceEl) {
       if (tier === 'exclusive' && (tierData.price == 0 || tierData.price === '' || tierData.price === '0.0' || String(tierData.price).toLowerCase() === 'negotiable')) {
@@ -1072,6 +1091,12 @@ function openLicenseModal(beatData, action) {
         filesEl.innerHTML = parts.map(function(f) {
           return '<li><i class="fas fa-check"></i> ' + f.trim() + '</li>';
         }).join('');
+      } else if (tier === 'exclusive') {
+        if (beatData.has_stems === false) {
+            filesEl.innerHTML = '<li><i class="fas fa-check"></i> WAV</li><li><i class="fas fa-check"></i> Exclusivity</li>';
+        } else {
+            filesEl.innerHTML = '<li><i class="fas fa-check"></i> WAV</li><li><i class="fas fa-check"></i> Project File</li><li><i class="fas fa-check"></i> Exclusivity</li>';
+        }
       }
     }
   });

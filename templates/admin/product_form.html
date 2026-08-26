@@ -131,6 +131,15 @@
             {# ───────────────────────────────────────── #}
             <h4 style="margin-top:1.5rem;"><i class="fas fa-headphones"></i> Audio Files</h4>
             <p class="text-muted" style="margin-bottom:1rem;">
+                
+            <div class="form-group" style="background: rgba(124, 141, 240, 0.05); padding: 15px; border-radius: 8px; border: 1px solid rgba(124, 141, 240, 0.2); margin-bottom: 20px;">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin: 0;">
+                    <input type="checkbox" name="has_stems" id="has_stems" {% if not beat_detail or beat_detail.has_stems %}checked{% endif %} style="width: 20px; height: 20px; cursor: pointer;">
+                    <strong>Has Stems / FLP (Enable Premium License)</strong>
+                </label>
+                <p style="margin: 5px 0 0 30px; font-size: 0.85rem; color: var(--text-muted);">Uncheck this if the beat does not have stems. This will hide the project file upload and disable the Premium license for this beat.</p>
+            </div>
+
                 Upload your beat files below.
             </p>
 
@@ -146,7 +155,7 @@
             </div>
 
             {# Project File Upload #}
-            <div class="form-group">
+            <div class="form-group" id="projectFileWrapper">
                 <label for="project_file"><i class="fas fa-link"></i> Project File (Google Drive URL) {% if product %}(leave empty to keep current){% endif %}</label>
                 {% if beat_detail and beat_detail.project_file %}
                 <div class="current-file">
@@ -177,7 +186,7 @@
                 </div>
 
                 {# PREMIUM #}
-                <div class="license-tier-card tier-premium">
+                <div class="license-tier-card tier-premium" id="premiumLicenseCard">
                     <div class="tier-header"><i class="fas fa-layer-group"></i> Premium</div>
                     <div class="form-group">
                         <label for="premium_price">Price (₹)</label>
@@ -256,4 +265,26 @@
         </div>
     </form>
 </div>
+{% endblock %}
+
+{% block admin_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const hasStemsCheckbox = document.getElementById('has_stems');
+        const projectFileWrapper = document.getElementById('projectFileWrapper');
+        const premiumLicenseCard = document.getElementById('premiumLicenseCard');
+        
+        function toggleStemsFields() {
+            if (!hasStemsCheckbox) return;
+            const isChecked = hasStemsCheckbox.checked;
+            if (projectFileWrapper) projectFileWrapper.style.display = isChecked ? 'block' : 'none';
+            if (premiumLicenseCard) premiumLicenseCard.style.display = isChecked ? 'block' : 'none';
+        }
+        
+        if (hasStemsCheckbox) {
+            hasStemsCheckbox.addEventListener('change', toggleStemsFields);
+            toggleStemsFields();
+        }
+    });
+</script>
 {% endblock %}

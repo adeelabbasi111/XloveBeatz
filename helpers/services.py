@@ -123,6 +123,7 @@ def build_beats_data(beats):
                 'beat_image': detail.beat_image if detail else None,
                 'sort_order': beat.sort_order if hasattr(beat, 'sort_order') else 0,
                 'genre_sort_order': detail.genre_sort_order if detail and hasattr(detail, 'genre_sort_order') else 0,
+                'has_stems': getattr(detail, 'has_stems', True) if detail else True,
                 'created_at': beat.created_at.timestamp() if beat.created_at else 0,
             })
         except Exception as e:
