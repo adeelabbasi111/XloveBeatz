@@ -12,8 +12,9 @@ from flask_migrate import Migrate
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
+import os
 from dotenv import load_dotenv
-load_dotenv()  # Ensure env vars are loaded before importing config
+load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))  # Force absolute path for Passenger
 
 from helpers.config import Config
 from helpers.models import db, init_db
