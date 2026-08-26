@@ -1777,17 +1777,30 @@ def admin_regenerate_previews():
     from helpers.audio_utils import convert_wav_to_preview
     import os
     
-    count = 0
-    beats = BeatDetail.query.filter(BeatDetail.file_wav.isnot(None)).all()
-    for beat in beats:
-        if not beat.preview_audio or not os.path.exists(os.path.join(current_app.static_folder, beat.preview_audio)):
-            abs_wav_path = os.path.join(current_app.static_folder, beat.file_wav)
-            if os.path.exists(abs_wav_path):
-                preview_rel = convert_wav_to_preview(abs_wav_path, beat.product_id)
-                if preview_rel:
-                    beat.preview_audio = preview_rel
-                    count += 1
+    # Process just ONE beat to prevent server timeout!
+    beat = BeatDetail.query.filter(
+        BeatDetail.file_wav.isnot(None),
+        BeatDetail.file_wav != '',
+        (BeatDetail.preview_audio == None) | (BeatDetail.preview_audio == '')
+    ).first()
     
-    db.session.commit()
-    flash(f"Successfully generated {count} missing previews!", "success")
+    if beat:
+        abs_wav_path = os.path.join(current_app.static_folder, beat.file_wav)
+        if os.path.exists(abs_wav_path):
+            preview_rel = convert_wav_to_preview(abs_wav_path, beat.product_id)
+            if preview_rel:
+                beat.preview_audio = preview_rel
+                db.session.commit()
+                flash(f"Generated preview for '{beat.product.name}'. If you have more, visit the URL again!", "success")
+            else:
+                beat.preview_audio = 'failed' # mark as failed to avoid infinite loop
+                db.session.commit()
+                flash(f"Failed to generate preview for '{beat.product.name}' (maybe WAV is corrupt).", "danger")
+        else:
+            beat.preview_audio = 'missing'
+            db.session.commit()
+            flash(f"WAV file physically missing from server for '{beat.product.name}'.", "danger")
+    else:
+        flash("All missing previews have been successfully generated!", "success")
+        
     return redirect(url_for('admin.admin_products'))
