@@ -2,6 +2,14 @@
 import os
 from pydub import AudioSegment
 
+# If running on the cPanel server, point pydub to the local FFmpeg binaries
+ffmpeg_path = "/home/xlovebea/flaskapp/ffmpeg"
+ffprobe_path = "/home/xlovebea/flaskapp/ffprobe"
+
+if os.path.exists(ffmpeg_path):
+    AudioSegment.converter = ffmpeg_path
+    AudioSegment.ffprobe = ffprobe_path
+
 PREVIEW_DIR = os.path.join('static', 'data', 'previews')
 PREVIEW_BITRATE = '128k'
 PREVIEW_MAX_SECONDS = 90
