@@ -2,13 +2,21 @@
 import os
 from pydub import AudioSegment
 
-# If running on the cPanel server, point pydub to the local FFmpeg binaries
-ffmpeg_path = "/home/xlovebea/flaskapp/ffmpeg"
-ffprobe_path = "/home/xlovebea/flaskapp/ffprobe"
+# Dynamically find the app root to locate the local FFmpeg binaries
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ffmpeg_path = os.path.join(BASE_DIR, "ffmpeg")
+ffprobe_path = os.path.join(BASE_DIR, "ffprobe")
+
+# Add the app directory to PATH so pydub can always find ffmpeg/ffprobe
+import os
+if BASE_DIR not in os.environ.get("PATH", ""):
+    os.environ["PATH"] += os.pathsep + BASE_DIR
 
 if os.path.exists(ffmpeg_path):
     AudioSegment.converter = ffmpeg_path
-    AudioSegment.ffprobe = ffprobe_path
+if os.path.exists(ffprobe_path):
+    import pydub.utils
+    pydub.utils.get_prober_name = lambda: ffprobe_path
 
 PREVIEW_DIR = os.path.join('static', 'data', 'previews')
 PREVIEW_BITRATE = '128k'
