@@ -144,7 +144,8 @@
      data-files-premium="{{ beat.license_tiers.get('premium', {}).get('files', '') }}"
      data-price-premium="{{ beat.license_tiers.get('premium', {}).get('price', '') }}"
      data-files-exclusive="{{ beat.license_tiers.get('exclusive', {}).get('files', '') }}"
-     data-price-exclusive="{{ beat.license_tiers.get('exclusive', {}).get('price', '') }}">
+     data-price-exclusive="{{ beat.license_tiers.get('exclusive', {}).get('price', '') }}"
+     data-has-stems="{{ 'true' if beat.get('has_stems', True) else 'false' }}">
 
                 {# Thumbnail or Number #}
                 <div class="track-num">

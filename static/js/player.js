@@ -1056,7 +1056,8 @@ function openLicenseModal(beatData, action) {
     var filesEl = document.getElementById('files-' + tier);
     
     // For Exclusive, it's always available (defaulting to Negotiable)
-    if (!beatData.license_tiers[tier]) {
+    var isMissing = !beatData.license_tiers[tier] || beatData.license_tiers[tier].price === '';
+    if (isMissing) {
         if (tier === 'exclusive') {
             if (card) card.style.display = 'flex';
             if (filesEl) {
@@ -1261,6 +1262,7 @@ function init() {
                 var beatObj = {
                     id: ds.id, name: ds.name, bpm: ds.bpm, key: ds.key,
                     beat_image: ds.beatImage, preview_audio: ds.preview,
+                    has_stems: ds.hasStems === "true",
                     license_tiers: {
                         basic: { price: ds.priceBasic, files: ds.filesBasic },
                         premium: { price: ds.pricePremium, files: ds.filesPremium },
