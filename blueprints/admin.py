@@ -282,6 +282,27 @@ def delete_old_file(db_relative_path):
 #  AUDIO PREVIEW GENERATOR (WAV → MP3 preview via ffmpeg)
 # ═══════════════════════════════════════════════════════════════
 
+def _get_ffmpeg_path():
+    """Return the absolute path to ffmpeg binary.
+    On Hostinger the binary lives next to app.py (e.g. /home/xlovebea/flaskapp/ffmpeg).
+    Locally it may be on PATH already, so fall back to bare 'ffmpeg'.
+    """
+    base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    local_bin = os.path.join(base, 'ffmpeg')
+    if os.path.isfile(local_bin):
+        return local_bin
+    return 'ffmpeg'
+
+
+def _get_ffprobe_path():
+    """Return the absolute path to ffprobe binary (same logic as ffmpeg)."""
+    base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    local_bin = os.path.join(base, 'ffprobe')
+    if os.path.isfile(local_bin):
+        return local_bin
+    return 'ffprobe'
+
+
 def create_audio_preview(full_audio_abs_path, start_sec, end_sec, output_filename):
     """
     Create a trimmed MP3 preview from any audio file (WAV, MP3, etc.)
@@ -295,7 +316,7 @@ def create_audio_preview(full_audio_abs_path, start_sec, end_sec, output_filenam
     abs_output = os.path.join(preview_dir, output_filename)
 
     cmd = [
-        'ffmpeg', '-y',
+        _get_ffmpeg_path(), '-y',
         '-i', full_audio_abs_path,
         '-ss', str(start_sec),
         '-t', str(duration),
@@ -328,7 +349,7 @@ def convert_wav_to_full_preview(wav_abs_path, beat_slug, max_seconds=90):
 
         # Use ffmpeg to convert WAV → MP3 with optional trimming
         cmd = [
-            'ffmpeg', '-y',
+            _get_ffmpeg_path(), '-y',
             '-i', wav_abs_path,
             '-t', str(max_seconds),
             '-af', f'afade=t=out:st={max_seconds - 3}:d=3',
@@ -1774,9 +1795,6 @@ def api_trending_reorder():
 @bp.route('/admin/regenerate-previews')
 @admin_required
 def admin_regenerate_previews():
-    from helpers.audio_utils import convert_wav_to_preview
-    import os
-    
     # Process just ONE beat to prevent server timeout!
     beat = BeatDetail.query.filter(
         BeatDetail.file_wav.isnot(None),
@@ -1787,20 +1805,16 @@ def admin_regenerate_previews():
     if beat:
         abs_wav_path = os.path.join(current_app.static_folder, beat.file_wav)
         if os.path.exists(abs_wav_path):
-            preview_rel = convert_wav_to_preview(abs_wav_path, beat.product_id)
+            slug = beat.product.slug if beat.product else str(beat.product_id)
+            preview_rel = convert_wav_to_full_preview(abs_wav_path, slug)
             if preview_rel:
-                if preview_rel.startswith("ERROR:"):
-                    flash(f"FFmpeg Crash on '{beat.product.name}': {preview_rel}", "danger")
-                    beat.preview_audio = 'failed'
-                    db.session.commit()
-                else:
-                    beat.preview_audio = preview_rel
-                    db.session.commit()
-                    flash(f"Generated preview for '{beat.product.name}'. If you have more, visit the URL again!", "success")
+                beat.preview_audio = preview_rel
+                db.session.commit()
+                flash(f"Generated preview for '{beat.product.name}'. If you have more, visit the URL again!", "success")
             else:
                 beat.preview_audio = 'failed'
                 db.session.commit()
-                flash(f"Failed to generate preview for '{beat.product.name}' (Returned None).", "danger")
+                flash(f"Failed to generate preview for '{beat.product.name}'. Check server logs for ffmpeg errors.", "danger")
         else:
             beat.preview_audio = 'missing'
             db.session.commit()
