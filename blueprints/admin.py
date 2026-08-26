@@ -1770,3 +1770,24 @@ def api_trending_reorder():
             
     db.session.commit()
     return jsonify({'status': 'success'})
+
+@bp.route('/admin/regenerate-previews')
+@admin_required
+def admin_regenerate_previews():
+    from helpers.audio_utils import convert_wav_to_preview
+    import os
+    
+    count = 0
+    beats = BeatDetail.query.filter(BeatDetail.file_wav.isnot(None)).all()
+    for beat in beats:
+        if not beat.preview_audio or not os.path.exists(os.path.join(current_app.static_folder, beat.preview_audio)):
+            abs_wav_path = os.path.join(current_app.static_folder, beat.file_wav)
+            if os.path.exists(abs_wav_path):
+                preview_rel = convert_wav_to_preview(abs_wav_path, beat.product_id)
+                if preview_rel:
+                    beat.preview_audio = preview_rel
+                    count += 1
+    
+    db.session.commit()
+    flash(f"Successfully generated {count} missing previews!", "success")
+    return redirect(url_for('admin.admin_products'))
