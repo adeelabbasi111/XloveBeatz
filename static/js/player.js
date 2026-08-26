@@ -1059,7 +1059,7 @@ function openLicenseModal(beatData, action) {
     var isMissing = !beatData.license_tiers[tier] || beatData.license_tiers[tier].price === '';
     if (isMissing) {
         if (tier === 'exclusive') {
-            if (card) card.style.display = 'flex';
+            if (card) card.style.display = 'block';
             if (filesEl) {
                 // If the beat has no stems, remove 'Project File' from default HTML
                 if (beatData.has_stems === false) {
@@ -1073,7 +1073,7 @@ function openLicenseModal(beatData, action) {
         }
         return;
     }
-    if (card) card.style.display = 'flex';
+    if (card) card.style.display = 'block';
     var tierData = beatData.license_tiers[tier];
     if (priceEl) {
       if (tier === 'exclusive' && (tierData.price == 0 || tierData.price === '' || tierData.price === '0.0' || String(tierData.price).toLowerCase() === 'negotiable')) {
