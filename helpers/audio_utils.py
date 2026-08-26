@@ -33,7 +33,7 @@ def convert_wav_to_preview(wav_path, beat_id):
         return None
 
     try:
-        audio = AudioSegment.from_wav(wav_path)
+        audio = AudioSegment.from_file(wav_path)
 
         # Trim to preview length
         max_ms = PREVIEW_MAX_SECONDS * 1000

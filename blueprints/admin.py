@@ -1781,7 +1781,7 @@ def admin_regenerate_previews():
     beat = BeatDetail.query.filter(
         BeatDetail.file_wav.isnot(None),
         BeatDetail.file_wav != '',
-        (BeatDetail.preview_audio == None) | (BeatDetail.preview_audio == '')
+        (BeatDetail.preview_audio == None) | (BeatDetail.preview_audio == '') | (BeatDetail.preview_audio == 'failed')
     ).first()
     
     if beat:
@@ -1789,13 +1789,18 @@ def admin_regenerate_previews():
         if os.path.exists(abs_wav_path):
             preview_rel = convert_wav_to_preview(abs_wav_path, beat.product_id)
             if preview_rel:
-                beat.preview_audio = preview_rel
-                db.session.commit()
-                flash(f"Generated preview for '{beat.product.name}'. If you have more, visit the URL again!", "success")
+                if preview_rel.startswith("ERROR:"):
+                    flash(f"FFmpeg Crash on '{beat.product.name}': {preview_rel}", "danger")
+                    beat.preview_audio = 'failed'
+                    db.session.commit()
+                else:
+                    beat.preview_audio = preview_rel
+                    db.session.commit()
+                    flash(f"Generated preview for '{beat.product.name}'. If you have more, visit the URL again!", "success")
             else:
-                beat.preview_audio = 'failed' # mark as failed to avoid infinite loop
+                beat.preview_audio = 'failed'
                 db.session.commit()
-                flash(f"Failed to generate preview for '{beat.product.name}' (maybe WAV is corrupt).", "danger")
+                flash(f"Failed to generate preview for '{beat.product.name}' (Returned None).", "danger")
         else:
             beat.preview_audio = 'missing'
             db.session.commit()
