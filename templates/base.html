@@ -1,6 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-5LZWVV2L');</script>
+    <!-- End Google Tag Manager -->
+
+    <!-- Microsoft Clarity -->
+    <script type="text/javascript">
+        (function(c,l,a,r,i,t,y){
+            c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+            t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+            y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+        })(window, document, "clarity", "script", "x76b9w3kba");
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -27,7 +43,12 @@
 
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.png') }}">
 </head>
-<body class="{% block body_class %}{% endblock %}">{% include 'partials/preloader.html' %}<div id="floatingNotes"></div>{# ============ GLOBAL LOOPING ANNOUNCEMENT STRIP ============ #}
+<body class="{% block body_class %}{% endblock %}">
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5LZWVV2L"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+{% include 'partials/preloader.html' %}<div id="floatingNotes"></div>{# ============ GLOBAL LOOPING ANNOUNCEMENT STRIP ============ #}
 {% if strip_messages %}
 <div class="looping-strip-wrapper">
     <div class="looping-strip-track">
