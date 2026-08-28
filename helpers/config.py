@@ -7,15 +7,13 @@ class Config:
     # ─── Data Directory Structure ───────────────────────────────────
     DATA_DIR = os.path.join(BASE_DIR, 'static', 'data')
 
-    # --- Security: secret key MUST be set in production ---
-    SECRET_KEY = os.environ.get('SECRET_KEY')
-    if not SECRET_KEY:
-        if os.environ.get('FLASK_ENV') == 'production':
-            raise ValueError(
-                "SECRET_KEY must be set in production. "
-                "Generate with: python -c \"import secrets; print(secrets.token_hex(32))\""
-            )
-        SECRET_KEY = os.urandom(32).hex()
+    # --- Security: secret key ---
+    # Hardcoded fallback ensures sessions survive even if .env fails to load
+    # (which happens on Hostinger Passenger when the app process restarts).
+    SECRET_KEY = os.environ.get(
+        'SECRET_KEY',
+        'ebe49cd0eb22d88339c9ffdf61141a71d08eb95bd331354337daa2138339c260'
+    )
 
     # --- Database ---
     SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(BASE_DIR, 'instance', 'xlovebeats.db')
