@@ -260,7 +260,7 @@ a {
     border: 1px solid var(--border-light);
     border-radius: var(--element-radius);
     color: var(--text-primary);
-    font-size: 0.95rem;
+    font-size: 1rem;
     font-family: inherit;
     transition: var(--transition-smooth);
 }

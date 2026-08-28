@@ -1308,7 +1308,7 @@ window.addEventListener('resize', function () {
 })();
 
 /* ============================================================
-VOLUME POPOVER — hover with delay
+VOLUME POPOVER — hover with delay + touch toggle
 ============================================================ */
 (function () {
   var wrapper = document.getElementById('volumeWrapper');
@@ -1316,6 +1316,7 @@ VOLUME POPOVER — hover with delay
 
   var hideTimeout = null;
   var isDragging = false;
+  var isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
   function showPopover() {
     if (hideTimeout) {
@@ -1323,6 +1324,10 @@ VOLUME POPOVER — hover with delay
       hideTimeout = null;
     }
     wrapper.classList.add('popover-open');
+  }
+
+  function hidePopover() {
+    wrapper.classList.remove('popover-open');
   }
 
   function scheduleHide() {
@@ -1334,8 +1339,30 @@ VOLUME POPOVER — hover with delay
     }, 400);
   }
 
+  // Desktop: hover behavior
   wrapper.addEventListener('mouseenter', showPopover);
   wrapper.addEventListener('mouseleave', scheduleHide);
+
+  // Touch devices: override the volume icon click to toggle popover
+  if (isTouchDevice) {
+    var volIcon = document.getElementById('volumeIcon');
+    if (volIcon) {
+      volIcon.addEventListener('click', function (e) {
+        e.stopPropagation();
+        if (wrapper.classList.contains('popover-open')) {
+          hidePopover();
+        } else {
+          showPopover();
+        }
+      }, true); // useCapture to override the existing click→toggleMute handler
+    }
+    // Close popover when tapping outside
+    document.addEventListener('touchstart', function (e) {
+      if (!wrapper.contains(e.target)) {
+        hidePopover();
+      }
+    });
+  }
 
   // Track slider dragging so it doesn't close mid-drag
   var slider = document.getElementById('volumeSlider');

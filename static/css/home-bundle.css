@@ -554,8 +554,16 @@
 
 /* --- portals.css --- */
 
+.portals-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    padding: 2rem 1rem;
+}
+
 @media (min-width: 900px) {
     .portals-container {
+        display: grid;
         grid-auto-rows: 180px; /* Desktop overlap row height */
         gap: 1.5rem;
         padding: 4rem 3rem; /* desktop padding */

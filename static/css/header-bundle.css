@@ -663,11 +663,11 @@
     gap: 3px;
     color: var(--text-muted);
     text-decoration: none;
-    font-size: 0.6rem;
+    font-size: 0.68rem;
     font-weight: 700;
     letter-spacing: 0.02em;
     transition: var(--transition-smooth);
-    padding: 8px 4px 6px;
+    padding: 6px 2px 4px;
     border-radius: 14px;
     border: none;
     background: transparent;
@@ -683,8 +683,8 @@
 }
 
 .mobile-nav-icon-wrap {
-    width: 38px;
-    height: 38px;
+    width: 44px;
+    height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -787,7 +787,7 @@
     right: 2px;
     background: linear-gradient(135deg, var(--accent-soft), var(--accent-purple));
     color: #fff;
-    font-size: 0.55rem;
+    font-size: 0.62rem;
     font-weight: 800;
     min-width: 16px;
     height: 16px;

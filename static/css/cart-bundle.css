@@ -379,8 +379,8 @@
 }
 
 .remove-item {
-    width: 28px;
-    height: 28px;
+    width: 36px;
+    height: 36px;
     border-radius: 8px;
     background: rgba(239, 68, 68, 0.06);
     border: 1px solid rgba(239, 68, 68, 0.15);
@@ -751,7 +751,7 @@
     border-radius: 10px;
     padding: 10px 14px;
     color: var(--text-primary, #f0ece4);
-    font-size: 0.85rem;
+    font-size: 1rem;
     font-family: inherit;
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -976,7 +976,7 @@
    CART/RESPONSIVE.CSS — Mobile cart + reduced motion
    ============================================================ */
 
-@media (max-width: 480px) {
+@media (max-width: 700px) {
     .cart-drawer {
         width: 100%;
         border-left: none;
