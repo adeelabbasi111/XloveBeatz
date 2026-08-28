@@ -200,6 +200,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         };
     </script>
 
+    {% include 'partials/mobile_nav.html' %}
+
     {# ─── External scripts ─── #}
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script src="{{ url_for('static', filename='js/cart.js') }}"></script>
@@ -208,7 +210,5 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     {# Page-specific Scripts #}
     {% block page_scripts %}{% endblock %}
-
-    {% include 'partials/mobile_nav.html' %}
 </body>
 </html>
