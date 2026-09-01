@@ -21,6 +21,17 @@
     </div>
 </div>
 
+<form method="GET" action="{{ url_for('admin.admin_products') }}" class="admin-search-form" style="margin-bottom: 20px; display: flex; gap: 10px;">
+    {% if current_type %}
+    <input type="hidden" name="type" value="{{ current_type }}">
+    {% endif %}
+    <input type="text" name="search" placeholder="Search products by name..." value="{{ search }}" class="form-control" style="max-width: 300px; padding: 10px; background: var(--bg-surface); border: 1px solid var(--border-mid); color: #fff; border-radius: 6px;">
+    <button type="submit" class="btn btn-primary" style="padding: 10px 16px;"><i class="fas fa-search"></i> Search</button>
+    {% if search %}
+    <a href="{{ url_for('admin.admin_products', type=current_type) }}" class="btn btn-secondary" style="padding: 10px 16px;">Clear</a>
+    {% endif %}
+</form>
+
 <div class="data-table-wrapper">
     <table class="data-table">
         <thead>
@@ -52,6 +63,13 @@
                 <i class="fas fa-music" style="color:var(--admin-accent);"></i> {{ product.beat_pack.total_beats }} beats
             </div>
             {% endif %}
+            
+            {# Quick Photo Upload #}
+            <form method="POST" action="{{ url_for('admin.admin_product_quick_cover', product_id=product.id) }}" enctype="multipart/form-data" style="margin-top: 8px; display: flex; gap: 5px; align-items: center;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="file" name="cover_image" accept="image/*" required style="font-size: 0.75rem; max-width: 180px; padding: 2px;">
+                <button type="submit" class="btn btn-secondary" style="font-size: 0.7rem; padding: 4px 8px;">Upload</button>
+            </form>
         </div>
                     </div>
                 </td>

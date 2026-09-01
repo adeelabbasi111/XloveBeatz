@@ -531,16 +531,39 @@ def admin_products():
     page = request.args.get('page', 1, type=int)
     per_page = current_app.config['PRODUCTS_PER_PAGE']
 
+    search = request.args.get('search', '').strip()
+
     query = Product.query
     if product_type:
         query = query.filter_by(product_type=product_type)
+    if search:
+        query = query.filter(Product.name.ilike(f'%{search}%'))
 
     pagination = query.order_by(Product.created_at.desc()).paginate(
         page=page, per_page=per_page, error_out=False,
     )
     return render_template('admin/products.html',
                            products=pagination.items, pagination=pagination,
-                           current_type=product_type)
+                           current_type=product_type, search=search)
+
+@bp.route('/admin/product/<int:product_id>/quick-cover', methods=['POST'])
+@admin_required
+def admin_product_quick_cover(product_id):
+    product = Product.query.get_or_404(product_id)
+    if 'cover_image' in request.files:
+        file = request.files['cover_image']
+        if file and file.filename != '':
+            ext = os.path.splitext(file.filename)[1]
+            safe_name = secure_filename(product.slug)
+            filename = f"{safe_name}{ext}"
+            upload_folder = os.path.join(current_app.static_folder, 'uploads')
+            os.makedirs(upload_folder, exist_ok=True)
+            save_path = os.path.join(upload_folder, filename)
+            file.save(save_path)
+            product.cover_image = filename
+            db.session.commit()
+            flash(f'Cover image updated for {product.name}', 'success')
+    return redirect(request.referrer or url_for('admin.admin_products'))
 
 
 # ═══════════════════════════════════════════════════════════════
