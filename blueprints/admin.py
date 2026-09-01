@@ -529,7 +529,7 @@ def admin_dashboard():
 def admin_products():
     product_type = request.args.get('type')
     page = request.args.get('page', 1, type=int)
-    per_page = current_app.config['PRODUCTS_PER_PAGE']
+    per_page = 500  # Load all for instant JS search
 
     search = request.args.get('search', '').strip()
 

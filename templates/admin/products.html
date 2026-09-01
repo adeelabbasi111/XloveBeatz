@@ -21,16 +21,34 @@
     </div>
 </div>
 
-<form method="GET" action="{{ url_for('admin.admin_products') }}" class="admin-search-form" style="margin-bottom: 20px; display: flex; gap: 10px;">
-    {% if current_type %}
-    <input type="hidden" name="type" value="{{ current_type }}">
-    {% endif %}
-    <input type="text" name="search" placeholder="Search products by name..." value="{{ search }}" class="form-control" style="max-width: 300px; padding: 10px; background: var(--bg-surface); border: 1px solid var(--border-mid); color: #fff; border-radius: 6px;">
-    <button type="submit" class="btn btn-primary" style="padding: 10px 16px;"><i class="fas fa-search"></i> Search</button>
-    {% if search %}
-    <a href="{{ url_for('admin.admin_products', type=current_type) }}" class="btn btn-secondary" style="padding: 10px 16px;">Clear</a>
-    {% endif %}
-</form>
+<div class="admin-search-form" style="margin-bottom: 20px; display: flex; gap: 10px;">
+    <input type="text" id="adminInstantSearch" placeholder="Search products by name instantly..." class="form-control" style="max-width: 300px; padding: 10px; background: var(--bg-surface); border: 1px solid var(--border-mid); color: #fff; border-radius: 6px;">
+    <span style="display:flex; align-items:center; color: var(--text-muted); font-size: 0.85rem;"><i class="fas fa-search" style="margin-right:5px;"></i> Live Search</span>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('adminInstantSearch');
+    const tableRows = document.querySelectorAll('tbody tr');
+    
+    if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+            const term = e.target.value.toLowerCase().trim();
+            tableRows.forEach(row => {
+                const productName = row.querySelector('strong');
+                if (productName) {
+                    const nameText = productName.textContent.toLowerCase();
+                    if (nameText.includes(term)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                }
+            });
+        });
+    }
+});
+</script>
 
 <div class="data-table-wrapper">
     <table class="data-table">
