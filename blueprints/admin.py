@@ -569,24 +569,7 @@ def admin_fix_urls():
     flash(f'Fixed {count} corrupted URLs in the database!', 'success')
     return redirect(url_for('admin.admin_products'))
 
-@bp.route('/admin/product/<int:product_id>/quick-cover', methods=['POST'])
-@admin_required
-def admin_product_quick_cover(product_id):
-    product = Product.query.get_or_404(product_id)
-    if 'cover_image' in request.files:
-        file = request.files['cover_image']
-        if file and file.filename != '':
-            ext = os.path.splitext(file.filename)[1]
-            safe_name = secure_filename(product.slug)
-            filename = f"{safe_name}{ext}"
-            upload_folder = os.path.join(current_app.static_folder, 'uploads')
-            os.makedirs(upload_folder, exist_ok=True)
-            save_path = os.path.join(upload_folder, filename)
-            file.save(save_path)
-            product.cover_image = filename
-            db.session.commit()
-            flash(f'Cover image updated for {product.name}', 'success')
-    return redirect(request.referrer or url_for('admin.admin_products'))
+
 
 
 # ═══════════════════════════════════════════════════════════════
