@@ -528,9 +528,6 @@ def admin_dashboard():
 @admin_required
 def admin_products():
     product_type = request.args.get('type')
-    page = request.args.get('page', 1, type=int)
-    per_page = 500  # Load all for instant JS search
-
     search = request.args.get('search', '').strip()
 
     query = Product.query
@@ -539,11 +536,10 @@ def admin_products():
     if search:
         query = query.filter(Product.name.ilike(f'%{search}%'))
 
-    pagination = query.order_by(Product.created_at.desc()).paginate(
-        page=page, per_page=per_page, error_out=False,
-    )
+    products = query.order_by(Product.created_at.desc()).all()
+    
     return render_template('admin/products.html',
-                           products=pagination.items, pagination=pagination,
+                           products=products,
                            current_type=product_type, search=search)
 
 @bp.route('/admin/fix-urls')
