@@ -546,6 +546,29 @@ def admin_products():
                            products=pagination.items, pagination=pagination,
                            current_type=product_type, search=search)
 
+@bp.route('/admin/fix-urls')
+@admin_required
+def admin_fix_urls():
+    import re
+    count = 0
+    # Fix Beats
+    for d in BeatDetail.query.all():
+        if d.project_file and '[Link](' in d.project_file:
+            m = re.search(r'\[Link\]\((.*?)\)', d.project_file)
+            if m:
+                d.project_file = m.group(1)
+                count += 1
+    # Fix Presets
+    for p in VocalPreset.query.all():
+        if p.preset_zip and '[Link](' in p.preset_zip:
+            m = re.search(r'\[Link\]\((.*?)\)', p.preset_zip)
+            if m:
+                p.preset_zip = m.group(1)
+                count += 1
+    db.session.commit()
+    flash(f'Fixed {count} corrupted URLs in the database!', 'success')
+    return redirect(url_for('admin.admin_products'))
+
 @bp.route('/admin/product/<int:product_id>/quick-cover', methods=['POST'])
 @admin_required
 def admin_product_quick_cover(product_id):
