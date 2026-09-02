@@ -20,11 +20,18 @@ document.addEventListener('DOMContentLoaded', function() {
             const res = await fetch('/api/fomo-events');
             if (res.ok) {
                 events = await res.json();
+                
+                if (window.PACK_FOMO_MSG) {
+                    events = [{
+                        type: 'purchase',
+                        message: window.PACK_FOMO_MSG,
+                        time_ago: 'Limited Offer'
+                    }];
+                }
+                
                 if (events.length > 0) {
                     // Start the loop after a short initial delay
-                    if (!window.DISABLE_FOMO) {
-                        setTimeout(showNextEvent, 2000);
-                    }
+                    setTimeout(showNextEvent, 2000);
                 }
             }
         } catch (e) {

@@ -13,14 +13,9 @@
 <audio id="globalAudioPlayer" preload="none"></audio>
 
 {% if pack_info %}
-<div id="packFomoBanner" style="position: relative; width: 100%; background: linear-gradient(90deg, #FFD700, #ff9100); color: #000; text-align: center; padding: 12px 20px; font-weight: 700; font-size: 1rem; z-index: 10000; box-shadow: 0 4px 15px rgba(0,0,0,0.3); text-transform: uppercase; letter-spacing: 0.5px;">
-    <i class="fas fa-fire" style="margin-right: 8px;"></i> Buy the "{{ pack_info.product.name }}" to get all {{ pack_info.total_beats }} beats instantly.
-</div>
-<script>window.DISABLE_FOMO = true;</script>
-<style>
-    body.player-page { height: 100vh; overflow: hidden; }
-    .player-page { height: calc(100vh - 48px); }
-</style>
+<script>
+    window.PACK_FOMO_MSG = 'Buy the "{{ pack_info.product.name | replace("\'", "\\\'") | replace("\"", "\\\"") }}" to get all {{ pack_info.total_beats }} beats instantly.';
+</script>
 {% endif %}
 
 <main class="player-page">
@@ -98,8 +93,8 @@
                     </button>
                 </div>
                 {% if pack_info %}
-                <button class="btn btn-buy-pack" id="buyPackBtn" style="margin-top: 15px; background: linear-gradient(135deg, #FFD700, #ff9100); color: #000; width: 100%; font-weight: 800; border: none; padding: 14px; border-radius: 8px; font-size: 1.1rem; box-shadow: 0 4px 20px rgba(255, 215, 0, 0.4); transition: all 0.3s; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px;">
-                    <i class="fas fa-box-open" style="margin-right: 8px;"></i> Buy Pack - {{ pack_info.product.price_cents | rupees }}
+                <button class="btn btn-buy-pack" id="buyPackBtn" style="margin-top: 15px; background: rgba(124, 141, 240, 0.05); color: var(--text-primary); width: 100%; font-weight: 600; border: 1px solid var(--accent-soft, #7c8df0); padding: 14px; border-radius: 8px; font-size: 1.05rem; box-shadow: 0 4px 15px rgba(124, 141, 240, 0.15); transition: all 0.3s ease; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: inherit;">
+                    <i class="fas fa-layer-group"></i> Buy Full Pack - {{ pack_info.product.price_cents | rupees }}
                 </button>
                 <script>
                     document.addEventListener('DOMContentLoaded', function() {
