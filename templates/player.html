@@ -12,13 +12,18 @@
 {% block content %}
 <audio id="globalAudioPlayer" preload="none"></audio>
 
+{% if pack_info %}
+<div id="packFomoBanner" style="position: relative; width: 100%; background: linear-gradient(90deg, #FFD700, #ff9100); color: #000; text-align: center; padding: 12px 20px; font-weight: 700; font-size: 1rem; z-index: 10000; box-shadow: 0 4px 15px rgba(0,0,0,0.3); text-transform: uppercase; letter-spacing: 0.5px;">
+    <i class="fas fa-fire" style="margin-right: 8px;"></i> Buy the "{{ pack_info.product.name }}" to get all {{ pack_info.total_beats }} beats instantly.
+</div>
+<script>window.DISABLE_FOMO = true;</script>
+<style>
+    body.player-page { height: 100vh; overflow: hidden; }
+    .player-page { height: calc(100vh - 48px); }
+</style>
+{% endif %}
+
 <main class="player-page">
-    {% if pack_info %}
-    <div style="width: 100%; background: linear-gradient(90deg, #FFD700, #ff9100); color: #000; text-align: center; padding: 12px 20px; font-weight: 700; font-size: 1rem; position: sticky; top: 70px; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.3); text-transform: uppercase; letter-spacing: 0.5px;">
-        <i class="fas fa-fire" style="margin-right: 8px;"></i> Buy the "{{ pack_info.product.name }}" to get all {{ pack_info.total_beats }} beats instantly.
-    </div>
-    <script>window.DISABLE_FOMO = true;</script>
-    {% endif %}
 
     {# ============ PLAYER + VISUALIZER ============ #}
     <section class="player-section">
