@@ -162,6 +162,7 @@
     function updateAuthUI(user) {
         currentUser = user;
         var isLoggedIn = !!user;
+        window.IS_LOGGED_IN = isLoggedIn;
 
         if (guestAuthBtns) guestAuthBtns.style.display = isLoggedIn ? 'none' : 'flex';
         if (userMenuBtns) userMenuBtns.style.display = isLoggedIn ? 'flex' : 'none';
@@ -288,6 +289,11 @@
                 showToast(result.message, 'success');
                 closeModal(signupModal);
                 updateAuthUI(result.user);
+                if (window.resumeCheckoutAfterLogin) {
+                    window.resumeCheckoutAfterLogin();
+                } else if (window.redirectAfterLogin) {
+                    window.location.href = window.redirectAfterLogin;
+                }
             } else {
                 if (signupError) {
                     signupError.textContent = result.error || 'Signup failed';
@@ -524,8 +530,10 @@ document.addEventListener('keydown', function(e) {
         }
     }
 
-    window.setUserLoggedIn = function(userData) { updateAuthUI(userData); };
-    window.setUserLoggedOut = function() { updateAuthUI(null); };
+    window.setUserLoggedIn = function(userData) { window.IS_LOGGED_IN = true; updateAuthUI(userData); };
+    window.setUserLoggedOut = function() { window.IS_LOGGED_IN = false; updateAuthUI(null); };
+    window.getCurrentUser = function() { return currentUser; };
+    window.openLoginModal = function() { openModal(loginModal); };
 
     document.addEventListener('DOMContentLoaded', function() {
         checkAuthStatus();

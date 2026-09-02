@@ -182,6 +182,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         window.CSRF_TOKEN = '{{ csrf_token() }}';
         window.PAYPAL_CLIENT_ID = '{{ PAYPAL_CLIENT_ID|default("") }}';
         window.USD_INR_EXCHANGE_RATE = {{ USD_INR_EXCHANGE_RATE|default(85.0) }};
+        window.IS_LOGGED_IN = {{ 'true' if session.get('user_id') else 'false' }};
         window.IS_FOREIGN_USER = {{ is_foreign_user|default(false)|tojson }};
         window.CURRENCY_SYMBOL = '{{ currency_symbol|default("₹") }}';
 

@@ -905,6 +905,16 @@
 
         if (els.checkoutBtn) {
             els.checkoutBtn.addEventListener('click', function() {
+                if (!window.IS_LOGGED_IN) {
+                    if (typeof window.openLoginModal === 'function') {
+                        window.resumeCheckoutAfterLogin = function() {
+                            if (els.paymentModal) els.paymentModal.showModal();
+                        };
+                        closeCart();
+                        window.openLoginModal();
+                        return;
+                    }
+                }
                 if (els.paymentModal) els.paymentModal.showModal();
             });
         }
