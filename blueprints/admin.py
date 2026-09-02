@@ -506,6 +506,41 @@ def cleanup_temp():
 #  DASHBOARD
 # ═══════════════════════════════════════════════════════════════
 
+@bp.route('/admin/normalize-genres', methods=['POST'])
+@admin_required
+def admin_normalize_genres():
+    try:
+        from helpers.models import BeatDetail, BeatPack, Genre
+        
+        # 1. Normalize BeatDetail genres
+        for bd in BeatDetail.query.filter(BeatDetail.genre != None).all():
+            if bd.genre:
+                bd.genre = bd.genre.title()
+        
+        # 2. Normalize BeatPack genres
+        for bp in BeatPack.query.filter(BeatPack.genre != None).all():
+            if bp.genre:
+                bp.genre = bp.genre.title()
+                
+        # 3. Clean up Genres table to remove duplicates
+        genres = Genre.query.all()
+        for g in genres:
+            title_name = g.name.title()
+            if g.name != title_name:
+                existing = Genre.query.filter_by(name=title_name).first()
+                if existing:
+                    db.session.delete(g)
+                else:
+                    g.name = title_name
+                    
+        db.session.commit()
+        flash('Successfully normalized all genres in the database to Title Case!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error normalizing genres: {str(e)}', 'error')
+    
+    return redirect(url_for('admin.admin_products'))
+
 @bp.route('/admin')
 @admin_required
 def admin_dashboard():
@@ -530,13 +565,47 @@ def admin_products():
     product_type = request.args.get('type')
     search = request.args.get('search', '').strip()
 
-    query = Product.query
-    if product_type:
-        query = query.filter_by(product_type=product_type)
-    if search:
-        query = query.filter(Product.name.ilike(f'%{search}%'))
+    def is_unfinished(p):
+        if not p.price_cents or p.price_cents <= 0:
+            return True
+        if not p.cover_image:
+            # For beats, they can use beat_image instead
+            if p.product_type == 'beat' and p.beat_detail and p.beat_detail.beat_image:
+                pass
+            else:
+                return True
+        
+        if p.product_type == 'beat':
+            d = p.beat_detail
+            if not d: return True
+            if not d.genre or not d.preview_audio or not d.wav_file or not d.project_file:
+                return True
+        elif p.product_type == 'pack':
+            pk = p.beat_pack
+            if not pk or not pk.zip_path:
+                return True
+        elif p.product_type == 'preset':
+            pr = p.vocal_preset
+            if not pr or not pr.file_path:
+                return True
+        return False
 
-    products = query.order_by(Product.created_at.desc()).all()
+    if product_type == 'unfinished':
+        query = Product.query
+        if search:
+            query = query.filter(Product.name.ilike(f'%{search}%'))
+        all_prods = query.order_by(Product.created_at.desc()).all()
+        products = [p for p in all_prods if is_unfinished(p)]
+    else:
+        query = Product.query
+        if product_type:
+            query = query.filter_by(product_type=product_type)
+        if search:
+            query = query.filter(Product.name.ilike(f'%{search}%'))
+        products = query.order_by(Product.created_at.desc()).all()
+        
+    for p in products:
+        p.is_unfinished_flag = is_unfinished(p)
     
     return render_template('admin/products.html',
                            products=products,

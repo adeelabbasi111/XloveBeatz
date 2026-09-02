@@ -10,11 +10,18 @@
         <a href="{{ url_for('admin.admin_products', type='beat') }}" class="filter-tab {% if current_type == 'beat' %}active{% endif %}">Beats</a>
         <a href="{{ url_for('admin.admin_products', type='pack') }}" class="filter-tab {% if current_type == 'pack' %}active{% endif %}">Packs</a>
         <a href="{{ url_for('admin.admin_products', type='preset') }}" class="filter-tab {% if current_type == 'preset' %}active{% endif %}">Presets</a>
+        <a href="{{ url_for('admin.admin_products', type='unfinished') }}" class="filter-tab {% if current_type == 'unfinished' %}active{% endif %}" style="color: #ffaa00;"><i class="fas fa-exclamation-circle"></i> Unfinished</a>
     </div>
     <div style="display: flex; gap: 10px;">
         <a href="{{ url_for('admin.admin_beats_sort') }}" class="btn btn-secondary">
             <i class="fas fa-sort-amount-down"></i> Sort Beats
         </a>
+        <form method="POST" action="{{ url_for('admin.admin_normalize_genres') }}" style="display:inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-secondary" onclick="return confirm('Normalize all genres to Title Case and merge duplicates?');">
+                <i class="fas fa-magic"></i> Normalize Genres
+            </button>
+        </form>
         <a href="{{ url_for('admin.admin_product_add') }}" class="btn btn-primary">
             <i class="fas fa-plus"></i> Add Product
         </a>
@@ -75,7 +82,10 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="table-img-placeholder"><i class="fas fa-{% if product.product_type == 'beat' %}music{% elif product.product_type == 'pack' %}layer-group{% else %}sliders-h{% endif %}"></i></div>
         {% endif %}
         <div>
-            <strong>{{ product.name }}</strong>
+            <strong>{{ product.name }}</strong> 
+            {% if product.is_unfinished_flag %}
+            <span style="color: #ffaa00; font-size: 0.8rem; margin-left: 5px; font-weight: normal;" title="Missing required info (price, audio, cover, genre, etc)"><i class="fas fa-exclamation-triangle"></i></span>
+            {% endif %}
             <div class="text-muted">{{ product.slug }}</div>
             {# Show beat count for packs #}
             {% if product.product_type == 'pack' and product.beat_pack %}

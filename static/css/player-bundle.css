@@ -641,7 +641,9 @@ TRACKLIST PANEL
   position: sticky;
   top: 0;
   z-index: 20;
-  background: rgba(12, 14, 19, 0.95);
+  background: var(--bg-card);
+  overflow: hidden;
+  background-color: rgba(12, 14, 19, 0.95);
   backdrop-filter: blur(10px);
 }
 
@@ -788,16 +790,22 @@ TRACKLIST PANEL
   overflow-x: auto;
   padding-bottom: 5px;
   -webkit-overflow-scrolling: touch;
+  width: 100%;
+  max-width: 100%;
 }
 .category-tabs::-webkit-scrollbar {
-  height: 4px;
+  height: 6px;
 }
 .category-tabs::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
 }
 .category-tabs::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
+  background: rgba(124, 141, 240, 0.35);
+  border-radius: 10px;
+}
+.category-tabs::-webkit-scrollbar-thumb:hover {
+  background: rgba(124, 141, 240, 0.55);
 }
 
 .cat-tab {
