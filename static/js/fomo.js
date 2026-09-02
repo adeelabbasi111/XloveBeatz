@@ -22,7 +22,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 events = await res.json();
                 if (events.length > 0) {
                     // Start the loop after a short initial delay
-                    setTimeout(showNextEvent, 2000);
+                    if (!window.DISABLE_FOMO) {
+                        setTimeout(showNextEvent, 2000);
+                    }
                 }
             }
         } catch (e) {
