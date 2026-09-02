@@ -1002,8 +1002,13 @@ function applyFilter(category) {
 function buildCategoryTabs() {
   var genres = {};
   allTrackItems.forEach(function (t) {
-    var g = (t.dataset.genre || '').trim();
-    if (g) genres[g] = true;
+    var raw = (t.dataset.genre || '').trim();
+    if (raw) {
+        var normalized = raw.split(' ').map(function(w) { 
+            return w ? w.charAt(0).toUpperCase() + w.slice(1).toLowerCase() : '';
+        }).join(' ');
+        genres[normalized] = true;
+    }
   });
   Object.keys(genres).sort().forEach(function (genre) {
     var tab = document.createElement('button');
@@ -1011,7 +1016,7 @@ function buildCategoryTabs() {
     tab.dataset.category = genre.toLowerCase();
     tab.textContent = genre;
     tab.addEventListener('click', function () {
-      applyFilter(genre);
+      applyFilter(genre.toLowerCase());
     });
     if (categoryTabs) categoryTabs.appendChild(tab);
   });

@@ -683,7 +683,7 @@ def admin_product_edit(product_id):
                 if detail:
                     old_pack_id = detail.pack_id
 
-                    genre = request.form.get('beat_genre', '').strip()
+                    genre = request.form.get('beat_genre', '').strip().title()
                     _sync_genre(genre)
 
                     detail.bpm = request.form.get('bpm', type=int)
@@ -715,7 +715,7 @@ def admin_product_edit(product_id):
             elif product.product_type == 'pack':
                 pack = BeatPack.query.filter_by(product_id=product.id).first()
                 if pack:
-                    pack.genre = request.form.get('pack_genre', '').strip()
+                    pack.genre = request.form.get('pack_genre', '').strip().title()
 
             elif product.product_type == 'preset':
                 preset = VocalPreset.query.filter_by(product_id=product.id).first()
@@ -918,7 +918,7 @@ def _create_beat_details(product):
     # ── 6. Pack assignment ──
     pack_id = request.form.get('pack_id', type=int) or None
 
-    genre = request.form.get('beat_genre', '').strip()
+    genre = request.form.get('beat_genre', '').strip().title()
     has_stems = 'has_stems' in request.form
     _sync_genre(genre)
 
