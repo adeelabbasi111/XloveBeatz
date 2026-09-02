@@ -26,7 +26,14 @@
             <canvas id="vizCanvas"></canvas>
         </div>
 
-        <div class="player-card-wrapper">
+        <style>
+            @media (min-width: 901px) {
+                .player-card-wrapper.pack-mode {
+                    transform: translateY(-50px);
+                }
+            }
+        </style>
+        <div class="player-card-wrapper {% if pack_info %}pack-mode{% endif %}">
             <div class="player-glow-bg" id="playerGlow"></div>
 
             <div class="player-card">
@@ -93,7 +100,18 @@
                     </button>
                 </div>
                 {% if pack_info %}
-                <button class="btn btn-buy-pack" id="buyPackBtn" style="margin-top: 15px; background: rgba(124, 141, 240, 0.05); color: var(--text-primary); width: 100%; font-weight: 600; border: 1px solid var(--accent-soft, #7c8df0); padding: 14px; border-radius: 8px; font-size: 1.05rem; box-shadow: 0 4px 15px rgba(124, 141, 240, 0.15); transition: all 0.3s ease; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: inherit;">
+                <style>
+                    #buyPackBtn {
+                        grid-column: 1 / -1;
+                    }
+                    #buyPackBtn:hover {
+                        background: var(--accent-gold, #C9AE74) !important;
+                        color: #000 !important;
+                        box-shadow: 0 6px 20px rgba(201, 174, 116, 0.4) !important;
+                        transform: translateY(-2px);
+                    }
+                </style>
+                <button class="btn btn-buy-pack" id="buyPackBtn" style="margin-top: 10px; background: rgba(201, 174, 116, 0.08); color: var(--accent-gold, #C9AE74); width: 100%; font-weight: 600; border: 1px solid var(--accent-gold, #C9AE74); padding: 10px; border-radius: 8px; font-size: 0.95rem; box-shadow: 0 4px 15px rgba(201, 174, 116, 0.1); transition: all 0.3s ease; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: inherit;">
                     <i class="fas fa-layer-group"></i> Buy Full Pack - {{ pack_info.product.price_cents | rupees }}
                 </button>
                 <script>
