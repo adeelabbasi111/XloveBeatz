@@ -788,7 +788,7 @@ TRACKLIST PANEL
   gap: 8px;
   margin-bottom: 12px;
   overflow-x: auto;
-  padding-bottom: 5px;
+  padding-bottom: 12px;
   -webkit-overflow-scrolling: touch;
   width: 100%;
   max-width: 100%;
@@ -797,15 +797,16 @@ TRACKLIST PANEL
   height: 6px;
 }
 .category-tabs::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
+  background: transparent;
   border-radius: 10px;
 }
 .category-tabs::-webkit-scrollbar-thumb {
-  background: rgba(124, 141, 240, 0.35);
+  background: rgba(124, 141, 240, 0.25);
   border-radius: 10px;
+  border: 1px solid rgba(124, 141, 240, 0.15);
 }
 .category-tabs::-webkit-scrollbar-thumb:hover {
-  background: rgba(124, 141, 240, 0.55);
+  background: rgba(124, 141, 240, 0.45);
 }
 
 .cat-tab {
