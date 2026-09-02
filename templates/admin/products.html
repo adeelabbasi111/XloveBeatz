@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', function() {
         {% if product.product_type == 'beat' and product.beat_detail and product.beat_detail.beat_image %}
         <img src="{{ url_for('static', filename=product.beat_detail.beat_image) }}" class="table-img" alt="{{ product.name }}" onerror="this.style.display='none'">
         {% elif product.cover_image %}
-        <img src="{{ url_for('static', filename='uploads/' + product.cover_image) }}" class="table-img" alt="{{ product.name }}" onerror="this.style.display='none'">
+        <img src="{{ url_for('static', filename=product.cover_image) }}" class="table-img" alt="{{ product.name }}" onerror="this.style.display='none'">
         {% else %}
         <div class="table-img-placeholder"><i class="fas fa-{% if product.product_type == 'beat' %}music{% elif product.product_type == 'pack' %}layer-group{% else %}sliders-h{% endif %}"></i></div>
         {% endif %}

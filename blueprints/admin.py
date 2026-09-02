@@ -566,10 +566,10 @@ def admin_products():
     search = request.args.get('search', '').strip()
 
     def is_unfinished(p):
-        if not p.price_cents or p.price_cents <= 0:
+        if p.product_type != 'beat' and (not p.price_cents or p.price_cents <= 0):
             return True
+            
         if not p.cover_image:
-            # For beats, they can use beat_image instead
             if p.product_type == 'beat' and p.beat_detail and p.beat_detail.beat_image:
                 pass
             else:
@@ -578,8 +578,27 @@ def admin_products():
         if p.product_type == 'beat':
             d = p.beat_detail
             if not d: return True
-            if not d.genre or not d.preview_audio or not d.wav_file or not d.project_file:
+            if not d.genre or not d.preview_audio or not d.wav_file:
                 return True
+            if d.has_stems and not d.project_file:
+                return True
+                
+            # Check license prices
+            licenses = BeatLicensePrice.query.filter_by(beat_id=p.id).all()
+            if not licenses: return True
+            for lic in licenses:
+                # If they disabled premium, it might not exist in db, but if it exists and is 0, it's missing.
+                # Actually wait, if has_stems is false, maybe premium license is 0?
+                pass
+            # Just check if basic exists and > 0
+            basic_lic = BeatLicensePrice.query.join(License).filter(BeatLicensePrice.beat_id==p.id, License.name.ilike('%basic%')).first()
+            if not basic_lic or basic_lic.price_cents <= 0:
+                return True
+                
+            if d.has_stems:
+                prem_lic = BeatLicensePrice.query.join(License).filter(BeatLicensePrice.beat_id==p.id, License.name.ilike('%premium%')).first()
+                if not prem_lic or prem_lic.price_cents <= 0:
+                    return True
         elif p.product_type == 'pack':
             pk = p.beat_pack
             if not pk or not pk.zip_path:

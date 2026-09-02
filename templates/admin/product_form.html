@@ -50,23 +50,18 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="price">Price (₹)</label>
+                    <label for="price">Price (₹) {% if product and (not product.price_cents or product.price_cents <= 0) %}<i class="fas fa-exclamation-triangle" style="color: orange; margin-left: 5px;" title="Required for completion"></i>{% endif %}</label>
                     <input type="number" name="price" id="price" step="0.01" min="0"
                            value="{{ '%.2f' % (product.price_cents / 100) if product else '' }}"
-                           placeholder="e.g. 299.00">
-                    <small style="color:var(--text-muted); font-size:0.75rem;">Enter price in rupees.</small>
+                           placeholder="0.00" style="width:100%; max-width:200px;">
                 </div>
-
-                {% if product and product.cover_image %}
                 <div class="form-group">
                     <label>Current Cover</label>
-                    <img src="{{ url_for('static', filename='uploads/' + product.cover_image) }}"
+                    <img src="{{ url_for('static', filename=product.cover_image) if product and product.cover_image else url_for('static', filename='uploads/default_cover.jpg') }}"
                          alt="Cover" style="max-width:120px; border-radius:6px; margin-bottom:0.5rem;">
                 </div>
-                {% endif %}
-
                 <div class="form-group">
-                    <label for="cover_image">Cover Image {% if product %}(leave empty to keep current){% endif %}</label>
+                    <label for="cover_image">Cover Image {% if product %}(leave empty to keep current){% endif %} {% if product and product.product_type != 'beat' and not product.cover_image %}<i class="fas fa-exclamation-triangle" style="color: orange; margin-left: 5px;" title="Required for completion"></i>{% endif %}</label>
                     <input type="file" name="cover_image" id="cover_image" accept="image/*">
                 </div>
             </div>
@@ -94,7 +89,7 @@
             </div>
 
             <div class="form-group">
-                <label for="genre">Genre</label>
+                <label for="genre">Genre {% if product and product.product_type == 'beat' and (not beat_detail or not beat_detail.genre) %}<i class="fas fa-exclamation-triangle" style="color: orange; margin-left: 5px;" title="Required for completion"></i>{% endif %}</label>
                 <input type="text" name="beat_genre" id="genre"
                        value="{{ beat_detail.genre if beat_detail else '' }}" placeholder="e.g. Trap, Drill, Lo-Fi">
             </div>
@@ -112,9 +107,8 @@
                 </select>
             </div>
 
-            {# Beat Cover Image #}
-            <div class="form-group">
-                <label for="beat_image">Beat Cover Image</label>
+            <div class="form-group" style="margin-bottom: 25px;">
+                <label for="beat_image">Beat Cover Image {% if product and product.product_type == 'beat' and (not beat_detail or not beat_detail.beat_image) %}<i class="fas fa-exclamation-triangle" style="color: orange; margin-left: 5px;" title="Required for completion"></i>{% endif %}</label>
                 <input type="file" name="beat_image" id="beat_image" accept="image/*">
                 {% if beat_detail and beat_detail.beat_image %}
                 <div class="current-image" style="margin-top:0.5rem;">
@@ -130,8 +124,7 @@
             {#  AUDIO FILES — WAV and Project             #}
             {# ───────────────────────────────────────── #}
             <h4 style="margin-top:1.5rem;"><i class="fas fa-headphones"></i> Audio Files</h4>
-            <p class="text-muted" style="margin-bottom:1rem;">
-                
+            
             <div class="form-group" style="background: rgba(124, 141, 240, 0.05); padding: 15px; border-radius: 8px; border: 1px solid rgba(124, 141, 240, 0.2); margin-bottom: 20px;">
                 <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin: 0;">
                     <input type="checkbox" name="has_stems" id="has_stems" {% if not beat_detail or beat_detail.has_stems %}checked{% endif %} style="width: 20px; height: 20px; cursor: pointer;">
@@ -140,12 +133,9 @@
                 <p style="margin: 5px 0 0 30px; font-size: 0.85rem; color: var(--text-muted);">Uncheck this if the beat does not have stems. This will hide the project file upload and disable the Premium license for this beat.</p>
             </div>
 
-                Upload your beat files below.
-            </p>
-
             {# WAV Upload #}
             <div class="form-group">
-                <label for="wav_file"><i class="fas fa-file-audio"></i> WAV File (Downloadable)</label>
+                <label for="wav_file"><i class="fas fa-file-audio"></i> WAV File (Downloadable) {% if product and product.product_type == 'beat' and (not beat_detail or not beat_detail.wav_file) %}<i class="fas fa-exclamation-triangle" style="color: orange; margin-left: 5px;" title="Required for completion"></i>{% endif %}</label>
                 {% if beat_detail and beat_detail.wav_file %}
                 <div class="current-file-badge">
                     <i class="fas fa-check-circle"></i> {{ beat_detail.wav_file }}
@@ -156,7 +146,7 @@
 
             {# Project File Upload #}
             <div class="form-group" id="projectFileWrapper">
-                <label for="project_file"><i class="fas fa-link"></i> Project File (Google Drive URL) {% if product %}(leave empty to keep current){% endif %}</label>
+                <label for="project_file"><i class="fas fa-link"></i> Project File (Google Drive URL) {% if product %}(leave empty to keep current){% endif %} {% if product and product.product_type == 'beat' and beat_detail and beat_detail.has_stems and not beat_detail.project_file %}<i class="fas fa-exclamation-triangle" style="color: orange; margin-left: 5px;" title="Required for completion"></i>{% endif %}</label>
                 {% if beat_detail and beat_detail.project_file %}
                 <div class="current-file">
                     <i class="fas fa-check-circle"></i> <a href="{{ beat_detail.project_file }}" target="_blank">View Current Link</a>
@@ -178,7 +168,7 @@
                 <div class="license-tier-card tier-basic">
                     <div class="tier-header"><i class="fas fa-music"></i> Basic</div>
                     <div class="form-group">
-                        <label for="basic_price">Price (₹)</label>
+                        <label for="basic_price">Price (₹) {% if product and product.product_type == 'beat' and (not license_prices.get('basic') or license_prices.get('basic') <= 0) %}<i class="fas fa-exclamation-triangle" style="color: orange; margin-left: 5px;" title="Required for completion"></i>{% endif %}</label>
                         <input type="number" name="basic_price" id="basic_price" step="0.01" min="0"
                                value="{{ '%.2f' % license_prices.basic if license_prices.get('basic') else '' }}"
                                placeholder="e.g. 299">
@@ -189,7 +179,7 @@
                 <div class="license-tier-card tier-premium" id="premiumLicenseCard">
                     <div class="tier-header"><i class="fas fa-layer-group"></i> Premium</div>
                     <div class="form-group">
-                        <label for="premium_price">Price (₹)</label>
+                        <label for="premium_price">Price (₹) {% if product and product.product_type == 'beat' and beat_detail and beat_detail.has_stems and (not license_prices.get('premium') or license_prices.get('premium') <= 0) %}<i class="fas fa-exclamation-triangle" style="color: orange; margin-left: 5px;" title="Required for completion"></i>{% endif %}</label>
                         <input type="number" name="premium_price" id="premium_price" step="0.01" min="0"
                                value="{{ '%.2f' % license_prices.premium if license_prices.get('premium') else '' }}"
                                placeholder="e.g. 499">
@@ -209,7 +199,7 @@
                 <input type="text" name="pack_genre" id="pack_genre"
                        value="{{ beat_pack.genre if beat_pack else '' }}" placeholder="e.g. Indian Fusion, R&B">
             </div>
-            <p class="text-muted">Total beats count is updated automatically when beats are assigned to this pack.</p>
+            <p class="text-muted">Total beats count is updated automatically when beats are assigned to this pack. {% if product and product.product_type == 'pack' and (not beat_pack or not beat_pack.zip_path) %}<span style="color: orange; font-weight: bold;"><i class="fas fa-exclamation-triangle"></i> Needs beats assigned!</span>{% endif %}</p>
         </div>
 
         {# ═══════════════════════════════════════════ #}
@@ -224,7 +214,7 @@
                        value="{{ vocal_preset.supported_daw if vocal_preset else '' }}" placeholder="e.g. FL Studio • Logic Pro">
             </div>
             <div class="form-group">
-                <label for="preset_zip"><i class="fas fa-link"></i> Preset ZIP File (Google Drive URL) {% if product %}(leave empty to keep current){% endif %}</label>
+                <label for="preset_zip"><i class="fas fa-link"></i> Preset ZIP File (Google Drive URL) {% if product %}(leave empty to keep current){% endif %} {% if product and product.product_type == 'preset' and (not vocal_preset or not vocal_preset.preset_zip) %}<i class="fas fa-exclamation-triangle" style="color: orange; margin-left: 5px;" title="Required for completion"></i>{% endif %}</label>
                 {% if vocal_preset and vocal_preset.preset_zip %}
                 <div class="current-file">
                     <i class="fas fa-check-circle"></i> <a href="{{ vocal_preset.preset_zip }}" target="_blank">View Current Link</a>
