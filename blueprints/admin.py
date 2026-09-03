@@ -605,7 +605,7 @@ def admin_products():
                 return True
         elif p.product_type == 'preset':
             pr = p.vocal_preset
-            if not pr or not pr.file_path:
+            if not pr or not pr.preset_zip:
                 return True
         return False
 
