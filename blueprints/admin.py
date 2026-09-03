@@ -591,12 +591,12 @@ def admin_products():
                 # Actually wait, if has_stems is false, maybe premium license is 0?
                 pass
             # Just check if basic exists and > 0
-            basic_lic = BeatLicensePrice.query.join(License).filter(BeatLicensePrice.beat_id==p.id, License.name.ilike('%basic%')).first()
+            basic_lic = BeatLicensePrice.query.join(License).filter(BeatLicensePrice.beat_id==p.id, License.name.like('%Basic%')).first()
             if not basic_lic or basic_lic.price_cents <= 0:
                 return True
                 
             if d.has_stems:
-                prem_lic = BeatLicensePrice.query.join(License).filter(BeatLicensePrice.beat_id==p.id, License.name.ilike('%premium%')).first()
+                prem_lic = BeatLicensePrice.query.join(License).filter(BeatLicensePrice.beat_id==p.id, License.name.like('%Premium%')).first()
                 if not prem_lic or prem_lic.price_cents <= 0:
                     return True
         elif p.product_type == 'pack':
@@ -612,7 +612,7 @@ def admin_products():
     if product_type == 'unfinished':
         query = Product.query
         if search:
-            query = query.filter(Product.name.ilike(f'%{search}%'))
+            query = query.filter(Product.name.like(f'%{search}%'))
         all_prods = query.order_by(Product.created_at.desc()).all()
         products = [p for p in all_prods if is_unfinished(p)]
     else:
@@ -620,7 +620,7 @@ def admin_products():
         if product_type:
             query = query.filter_by(product_type=product_type)
         if search:
-            query = query.filter(Product.name.ilike(f'%{search}%'))
+            query = query.filter(Product.name.like(f'%{search}%'))
         products = query.order_by(Product.created_at.desc()).all()
         
     for p in products:
@@ -1847,7 +1847,7 @@ def api_trending_search():
     
     beats = Product.query.filter(
         Product.product_type == 'beat',
-        Product.name.ilike(f"%{query}%"),
+        Product.name.like(f"%{query}%"),
         Product.is_active == True
     ).limit(10).all()
     
