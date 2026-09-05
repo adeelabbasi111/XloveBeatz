@@ -277,4 +277,49 @@
         }
     });
 </script>
+<script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.1/dist/browser-image-compression.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('productForm');
+    if(form) {
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if(submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            }
+            
+            const imageInputs = [document.getElementById('cover_image'), document.getElementById('beat_image')];
+            
+            for (let input of imageInputs) {
+                if (input && input.files && input.files.length > 0) {
+                    const file = input.files[0];
+                    if (file.type.startsWith('image/')) {
+                        const options = {
+                            maxSizeMB: 1,
+                            maxWidthOrHeight: 1200,
+                            useWebWorker: true
+                        };
+                        try {
+                            if(submitBtn) submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Compressing Image...';
+                            const compressedFile = await imageCompression(file, options);
+                            
+                            const dt = new DataTransfer();
+                            dt.items.add(new File([compressedFile], file.name, { type: compressedFile.type }));
+                            input.files = dt.files;
+                        } catch (error) {
+                            console.error('Error compressing image:', error);
+                        }
+                    }
+                }
+            }
+            
+            if(submitBtn) submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+            form.submit();
+        });
+    }
+});
+</script>
 {% endblock %}
