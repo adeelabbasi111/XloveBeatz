@@ -28,10 +28,20 @@ def home():
     geo_info = get_geo_pricing()
     trending_beats_data = apply_geo_pricing_to_beats(trending_beats_data, geo_info)
     
+    # Get all available covers to make the hero marquee non-repetitive
+    all_products = Product.query.filter(Product.cover_image != None).all()
+    all_covers = [url_for('static', filename=p.cover_image) for p in all_products if p.cover_image]
+    
+    # Let's shuffle them in Python so it's a nice mix every time
+    import random
+    random.shuffle(all_covers)
+    all_covers = all_covers[:14] # Limit to 14 to prevent DOM overload in marquee
+
     return render_template(
         'index.html',
         genres=genres,
         trending_beats_data=trending_beats_data,
+        all_covers=all_covers,
         site_title="XLOVEBEATZ",
         slogan="Crafted for artists who move the world",
     )

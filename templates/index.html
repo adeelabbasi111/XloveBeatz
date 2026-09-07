@@ -33,11 +33,66 @@
             </div>
         </div>
         
-        <div class="hero-visual-full">
-            <img src="{{ url_for('static', filename='images/hero2.jpg') }}"
-                 alt="Hero Art" class="hero-image-full"
-                 onerror="this.style.display='none'"
-                 fetchpriority="high">
+        {# --- GATHER IMAGES FOR MARQUEE --- #}
+        {% set hero_images = [
+            url_for('static', filename='images/beat_packs_bg.jpg'),
+            url_for('static', filename='images/presets_bg.jpg'),
+            url_for('static', filename='images/singles_bg.jpg')
+        ] %}
+        {% for cover in all_covers %}
+            {% set _ = hero_images.append(cover) %}
+        {% endfor %}
+        {% for genre in genres %}
+            {% if genre.image_path %}
+                {% set _ = hero_images.append(url_for('static', filename=genre.image_path)) %}
+            {% endif %}
+        {% endfor %}
+        
+        {# We split the images into two lists for the two columns to look organic #}
+        {% set col1_images = hero_images[0::2] %}
+        {% set col2_images = hero_images[1::2] %}
+        
+        <div class="hero-visual-full hero-strips-wrapper">
+            <!-- Adding a perspective container for that high-end 3D tilt -->
+            <div class="hero-strips-perspective">
+                
+                <!-- Strip 1: Moves Down -->
+                <div class="hero-strip strip-down">
+                    <div class="strip-track track-down">
+                        {% for img in col1_images %}
+                        <img src="{{ img }}" alt="Studio Visual" class="strip-img" loading="eager" fetchpriority="high">
+                        {% endfor %}
+                        {# Duplicate for infinite loop #}
+                        {% for img in col1_images %}
+                        <img src="{{ img }}" alt="Studio Visual" class="strip-img" loading="lazy">
+                        {% endfor %}
+                        {# Triple just in case of tall screens #}
+                        {% for img in col1_images %}
+                        <img src="{{ img }}" alt="Studio Visual" class="strip-img" loading="lazy">
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Strip 2: Moves Up -->
+                <div class="hero-strip strip-up">
+                    <div class="strip-track track-up">
+                        {% for img in col2_images %}
+                        <img src="{{ img }}" alt="Studio Visual" class="strip-img" loading="eager" fetchpriority="high">
+                        {% endfor %}
+                        {# Duplicate for infinite loop #}
+                        {% for img in col2_images %}
+                        <img src="{{ img }}" alt="Studio Visual" class="strip-img" loading="lazy">
+                        {% endfor %}
+                        {# Triple #}
+                        {% for img in col2_images %}
+                        <img src="{{ img }}" alt="Studio Visual" class="strip-img" loading="lazy">
+                        {% endfor %}
+                    </div>
+                </div>
+
+            </div>
+            <!-- Overlay to fade out top/bottom and left blend -->
+            <div class="hero-strips-overlay"></div>
         </div>
 
         <!-- Trusted By Strip -->
