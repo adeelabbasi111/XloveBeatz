@@ -1,5 +1,5 @@
 
-from flask import Blueprint, render_template, flash, redirect, url_for, current_app
+from flask import Blueprint, render_template, flash, redirect, url_for, current_app, request
 from helpers.models import Product, Genre
 from helpers.services import get_player_beats, build_beats_data, get_beat_with_details
 from helpers.geo import get_geo_pricing, apply_geo_pricing_to_beats
