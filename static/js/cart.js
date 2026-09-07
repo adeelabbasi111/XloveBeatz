@@ -215,6 +215,22 @@
                 return Math.min(raw, max);
             } else if (appliedCoupon.discount_type === 'fixed') {
                 return Math.min(appliedCoupon.discount_value, subtotal);
+            } else if (appliedCoupon.discount_type === 'bogo') {
+                var buyQty = appliedCoupon.min_order || 1;
+                var getQty = appliedCoupon.discount_value || 1;
+                var eligible = cart.slice().sort(function(a, b) {
+                    return parseFloat(b.price) - parseFloat(a.price);
+                });
+                var d = 0;
+                var i = 0;
+                while (i < eligible.length) {
+                    i += buyQty;
+                    for (var j = 0; j < getQty && i < eligible.length; j++) {
+                        d += parseFloat(eligible[i].price);
+                        i++;
+                    }
+                }
+                return d;
             }
             return 0;
         }

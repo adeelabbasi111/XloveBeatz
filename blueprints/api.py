@@ -60,6 +60,12 @@ def api_signup():
 
     user = create_user(username, email, generate_password_hash(password))
 
+    try:
+        from helpers.utils import send_promo_email
+        send_promo_email(user.email)
+    except Exception as e:
+        print("Failed to send promo email:", e)
+
     if 'session_id' in session:
         merge_guest_cart(session['session_id'], user.id)
 
@@ -136,27 +142,34 @@ def validate_coupon():
     res_max_discount = float(coupon.max_discount_cents / 100) if coupon.max_discount_cents > 0 else None
     res_min_order = float(coupon.min_order_cents / 100) if coupon.min_order_cents > 0 else None
     
-    if geo_info['is_foreign']:
-        rate = current_app.config.get('USD_INR_EXCHANGE_RATE', 85.0)
-        mult = geo_info['multiplier']
-        # For percentage, discount_value is the %, so it stays the same!
-        # Only transform if it's a fixed amount
-        if coupon.discount_type == 'fixed':
+    if coupon.discount_type == 'percentage':
+        pass
+    elif coupon.discount_type == 'bogo':
+        pass
+    else:
+        if geo_info['is_foreign']:
+            rate = current_app.config.get('USD_INR_EXCHANGE_RATE', 85.0)
+            mult = geo_info['multiplier']
             res_discount_value = round((res_discount_value * mult) / rate, 2)
-        if res_max_discount is not None:
-            res_max_discount = round((res_max_discount * mult) / rate, 2)
-        if res_min_order is not None:
-            res_min_order = round((res_min_order * mult) / rate, 2)
+            if res_max_discount is not None:
+                res_max_discount = round((res_max_discount * mult) / rate, 2)
+            if res_min_order is not None:
+                res_min_order = round((res_min_order * mult) / rate, 2)
 
     sym = geo_info['currency_symbol']
 
-    if coupon.min_order_cents > 0 and subtotal_cents < coupon.min_order_cents:
+    if coupon.discount_type != 'bogo' and coupon.min_order_cents > 0 and subtotal_cents < coupon.min_order_cents:
         return jsonify(valid=False, error=f'Minimum order amount is {sym}{res_min_order:.2f}'), 400
+
     # Build description for frontend
     if coupon.discount_type == 'percentage':
         desc = f"{coupon.discount_value}% off"
         if res_max_discount:
             desc += f" (max {sym}{res_max_discount})"
+    elif coupon.discount_type == 'bogo':
+        res_min_order = coupon.min_order_cents
+        res_discount_value = coupon.discount_value
+        desc = f"Buy {res_min_order} Get {res_discount_value} Free"
     else:
         desc = f"{sym}{res_discount_value} off"
 

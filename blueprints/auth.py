@@ -113,11 +113,16 @@ def signup():
         if 'session_id' in session:
             merge_guest_cart(session['session_id'], user.id)
 
-        session.permanent = True
-
-
+        # Login the new user automatically
         session['user_id'] = user.id
-        flash(f'Welcome to XLOVEBEATS, {username}!', 'success')
+
+        try:
+            from helpers.utils import send_promo_email
+            send_promo_email(user.email)
+        except Exception as e:
+            print("Failed to send promo email:", e)
+
+        flash('Registration successful! Check your email for a special offer.', 'success')
         return redirect(url_for('public.home'))
 
     return redirect(url_for('public.home'))

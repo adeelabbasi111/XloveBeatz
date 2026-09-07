@@ -99,6 +99,19 @@ def create_razorpay_order():
                     discount_cents = min(raw_discount, cap)
                 elif coupon.discount_type == 'fixed':
                     discount_cents = min(coupon.discount_value * 100, total_cents)
+                elif coupon.discount_type == 'bogo':
+                    buy_qty = coupon.min_order_cents or 1
+                    get_qty = coupon.discount_value or 1
+                    sorted_items = sorted(line_items, key=lambda x: x['price_cents'], reverse=True)
+                    d = 0
+                    idx = 0
+                    while idx < len(sorted_items):
+                        idx += buy_qty
+                        for j in range(get_qty):
+                            if idx < len(sorted_items):
+                                d += sorted_items[idx]['price_cents']
+                                idx += 1
+                    discount_cents = min(d, total_cents)
                 applied_coupon = coupon
 
     final_cents = max(100, total_cents - discount_cents)
@@ -273,6 +286,19 @@ def create_paypal_order():
                     discount_cents = min(raw_discount, cap)
                 elif coupon.discount_type == 'fixed':
                     discount_cents = min(coupon.discount_value * 100, total_cents)
+                elif coupon.discount_type == 'bogo':
+                    buy_qty = coupon.min_order_cents or 1
+                    get_qty = coupon.discount_value or 1
+                    sorted_items = sorted(line_items, key=lambda x: x['price_cents'], reverse=True)
+                    d = 0
+                    idx = 0
+                    while idx < len(sorted_items):
+                        idx += buy_qty
+                        for j in range(get_qty):
+                            if idx < len(sorted_items):
+                                d += sorted_items[idx]['price_cents']
+                                idx += 1
+                    discount_cents = min(d, total_cents)
                 applied_coupon = coupon
 
     final_cents = max(100, total_cents - discount_cents)

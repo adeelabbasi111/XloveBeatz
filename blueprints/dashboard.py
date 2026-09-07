@@ -610,6 +610,8 @@ def fomo_events():
     for coupon in active_coupons:
         if coupon.discount_type == 'percentage':
             offer = f"{coupon.discount_value}% OFF"
+        elif coupon.discount_type == 'bogo':
+            offer = f"Buy {coupon.min_order_cents} Get {coupon.discount_value} Free"
         else:
             offer = f"₹{coupon.discount_value} OFF"
             

@@ -1315,11 +1315,17 @@ def admin_discount_add():
             except ValueError:
                 continue
 
+    min_order_val = request.form.get('min_order', 0, type=float)
+    if discount_type == 'bogo':
+        min_order_cents = int(min_order_val)
+    else:
+        min_order_cents = int(min_order_val * 100)
+
     discount = DiscountCode(
         code=code,
         discount_type=discount_type,
         discount_value=discount_value,
-        min_order_cents=int(request.form.get('min_order', 0, type=float) * 100),
+        min_order_cents=min_order_cents,
         max_discount_cents=int(max_discount * 100),
         max_uses=request.form.get('max_uses', 0, type=int),
         expires_at=expires_at,

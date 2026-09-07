@@ -242,3 +242,72 @@ def register_template_filters(app):
     @app.template_filter('geo_price_val')
     def geo_price_val_filter(cents):
         return cents_to_geo_val(cents)
+
+def send_promo_email(to_email, promo_code="BOGO-SEP"):
+    """Send a promotional welcome email using SMTP."""
+    import os
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+
+    smtp_host = os.environ.get('SMTP_HOST', '')
+    smtp_port = int(os.environ.get('SMTP_PORT', 587))
+    smtp_user = os.environ.get('SMTP_USER', '')
+    smtp_pass = os.environ.get('SMTP_PASS', '')
+    from_name = os.environ.get('SMTP_FROM_NAME', 'XLoveBeats')
+
+    if not all([smtp_host, smtp_user, smtp_pass]):
+        print("SMTP not fully configured. Skipping promo email.")
+        return
+
+    msg = MIMEMultipart('alternative')
+    msg['Subject'] = "Your Exclusive Welcome Offer - Buy 1 Get 2 Free!"
+    msg['From'] = f'{from_name} <{smtp_user}>'
+    msg['To'] = to_email
+
+    text_body = f"""Hi there,
+
+Welcome to XLoveBeats! 
+
+As a special welcome gift, we are offering a 'Buy 1 Get 2 Free' coupon!
+Use this code at checkout to claim your offer:
+{promo_code}
+
+This offer is valid until September 15th.
+
+Cheers,
+XLoveBeats Team
+"""
+
+    html_body = f"""
+    <html>
+    <head></head>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+        <h2 style="color: #111;">Welcome to XLoveBeats!</h2>
+        <p>As a special welcome gift, we are offering an exclusive <strong>Buy 1 Get 2 Free</strong> deal!</p>
+        <p>Use the code below at checkout to claim your free beats:</p>
+        <div style="background: #f4f4f4; border: 1px dashed #ccc; padding: 15px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 2px; margin: 20px 0;">
+            {promo_code}
+        </div>
+        <p style="color: #666; font-size: 0.9em;"><em>Note: This offer is valid until September 15th.</em></p>
+        <br>
+        <p>Cheers,<br><strong>XLoveBeats Team</strong></p>
+    </body>
+    </html>
+    """
+
+    msg.attach(MIMEText(text_body, 'plain'))
+    msg.attach(MIMEText(html_body, 'html'))
+
+    try:
+        if smtp_port == 465:
+            server = smtplib.SMTP_SSL(smtp_host, smtp_port)
+        else:
+            server = smtplib.SMTP(smtp_host, smtp_port)
+            server.starttls()
+        server.login(smtp_user, smtp_pass)
+        server.sendmail(smtp_user, to_email, msg.as_string())
+        server.quit()
+        print(f"Sent promo email to {to_email}")
+    except Exception as e:
+        print(f"Failed to send promo email: {e}")
