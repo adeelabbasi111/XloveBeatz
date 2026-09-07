@@ -56,15 +56,15 @@
                 <div class="hero-strip strip-down">
                     <div class="strip-track track-down">
                         {% for img in col1_images %}
-                        <img src="{{ img }}" alt="Studio Visual" class="strip-img" loading="eager" fetchpriority="high">
+                        <img src="{{ img }}" alt="Studio Visual" class="strip-img" loading="eager" fetchpriority="high" onerror="this.style.display='none'">
                         {% endfor %}
                         {# Duplicate for infinite loop #}
                         {% for img in col1_images %}
-                        <img src="{{ img }}" alt="Studio Visual" class="strip-img" loading="lazy">
+                        <img src="{{ img }}" alt="Studio Visual" class="strip-img" loading="lazy" onerror="this.style.display='none'">
                         {% endfor %}
                         {# Triple just in case of tall screens #}
                         {% for img in col1_images %}
-                        <img src="{{ img }}" alt="Studio Visual" class="strip-img" loading="lazy">
+                        <img src="{{ img }}" alt="Studio Visual" class="strip-img" loading="lazy" onerror="this.style.display='none'">
                         {% endfor %}
                     </div>
                 </div>
@@ -73,15 +73,15 @@
                 <div class="hero-strip strip-up">
                     <div class="strip-track track-up">
                         {% for img in col2_images %}
-                        <img src="{{ img }}" alt="Studio Visual" class="strip-img" loading="eager" fetchpriority="high">
+                        <img src="{{ img }}" alt="Studio Visual" class="strip-img" loading="eager" fetchpriority="high" onerror="this.style.display='none'">
                         {% endfor %}
                         {# Duplicate for infinite loop #}
                         {% for img in col2_images %}
-                        <img src="{{ img }}" alt="Studio Visual" class="strip-img" loading="lazy">
+                        <img src="{{ img }}" alt="Studio Visual" class="strip-img" loading="lazy" onerror="this.style.display='none'">
                         {% endfor %}
                         {# Triple #}
                         {% for img in col2_images %}
-                        <img src="{{ img }}" alt="Studio Visual" class="strip-img" loading="lazy">
+                        <img src="{{ img }}" alt="Studio Visual" class="strip-img" loading="lazy" onerror="this.style.display='none'">
                         {% endfor %}
                     </div>
                 </div>

@@ -28,16 +28,27 @@ def home():
     geo_info = get_geo_pricing()
     trending_beats_data = apply_geo_pricing_to_beats(trending_beats_data, geo_info)
     
+    import os
+    from flask import current_app
+
     # Get all available covers to make the hero marquee non-repetitive
     all_products = Product.query.filter(Product.cover_image != None).all()
-    all_covers = [url_for('static', filename=p.cover_image) for p in all_products if p.cover_image]
+    all_covers = []
+    
+    for p in all_products:
+        if p.cover_image:
+            file_path = os.path.join(current_app.root_path, 'static', p.cover_image)
+            if os.path.exists(file_path):
+                all_covers.append(url_for('static', filename=p.cover_image))
     
     # Get beat covers as well (they are stored in BeatDetail)
     from helpers.models import BeatDetail
     all_beat_details = BeatDetail.query.filter(BeatDetail.beat_image != None).all()
     for bd in all_beat_details:
         if bd.beat_image:
-            all_covers.append(url_for('static', filename=bd.beat_image))
+            file_path = os.path.join(current_app.root_path, 'static', bd.beat_image)
+            if os.path.exists(file_path):
+                all_covers.append(url_for('static', filename=bd.beat_image))
             
     # Let's shuffle them in Python so it's a nice mix every time
     import random
