@@ -20,13 +20,14 @@
                 </div>
                 <div class="form-group">
                     <label for="discount_type">Discount Type</label>
-                    <select name="discount_type" id="discount_type">
+                    <select name="discount_type" id="discount_type" onchange="updateLabels()">
                         <option value="percentage">Percentage (%)</option>
                         <option value="fixed">Fixed Amount (₹)</option>
+                        <option value="bogo">Buy X Get Y Free</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="discount_value">Value</label>
+                    <label for="discount_value" id="lbl_discount_value">Value</label>
                     <input type="number" name="discount_value" id="discount_value"
                            required min="1" placeholder="e.g. 30">
                 </div>
@@ -39,7 +40,7 @@
                            step="0.01" min="0" value="0">
                 </div>
                 <div class="form-group">
-                    <label for="min_order">Min Order (₹)</label>
+                    <label for="min_order" id="lbl_min_order">Min Order (₹)</label>
                     <input type="number" name="min_order" id="min_order"
                            step="0.01" min="0" value="0">
                 </div>
@@ -106,6 +107,8 @@
                 <td>
                     {% if code.discount_type == 'percentage' %}
                         {{ code.discount_value }}%
+                    {% elif code.discount_type == 'bogo' %}
+                        Get {{ code.discount_value }} Free
                     {% else %}
                         {{ code.discount_value | rupees }}
                     {% endif %}
@@ -178,12 +181,37 @@
 </div>
 
 <script>
+function updateLabels() {
+    var type = document.getElementById('discount_type').value;
+    var lblVal = document.getElementById('lbl_discount_value');
+    var lblMin = document.getElementById('lbl_min_order');
+    var divMax = document.getElementById('max_discount').parentElement;
+    var inputVal = document.getElementById('discount_value');
+    var inputMin = document.getElementById('min_order');
+
+    if (type === 'bogo') {
+        lblVal.innerText = 'Get Quantity';
+        lblMin.innerText = 'Buy Quantity';
+        divMax.style.display = 'none';
+        inputVal.placeholder = 'e.g. 2';
+        inputMin.placeholder = 'e.g. 1';
+        inputMin.step = '1';
+    } else {
+        lblVal.innerText = 'Value';
+        lblMin.innerText = 'Min Order (₹)';
+        divMax.style.display = 'block';
+        inputVal.placeholder = 'e.g. 30';
+        inputMin.step = '0.01';
+    }
+}
+
 function editDiscount(id, data) {
     const form = document.querySelector('.admin-form');
     form.action = `/admin/discount/${id}/edit`;
     
     document.getElementById('code').value = data.code;
     document.getElementById('discount_type').value = data.discount_type;
+    updateLabels();
     document.getElementById('discount_value').value = data.discount_value;
     document.getElementById('max_discount').value = (data.max_discount_cents || 0) / 100;
     document.getElementById('min_order').value = (data.min_order_cents || 0) / 100;

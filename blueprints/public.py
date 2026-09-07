@@ -7,6 +7,7 @@ from helpers.geo import get_geo_pricing, apply_geo_pricing_to_beats
 bp = Blueprint('public', __name__)
 
 @bp.route('/')
+@bp.route('/home')
 def home():
     from helpers.services import get_site_setting
     if get_site_setting('waiting_page_enabled', 'false') == 'true':
