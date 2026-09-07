@@ -943,6 +943,31 @@
             els.razorpayBtn.addEventListener('click', function() { initiateRazorpayCheckout(); });
         }
 
+        const adminBypassBtn = document.getElementById('adminBypassBtn');
+        if (adminBypassBtn) {
+            adminBypassBtn.addEventListener('click', async function() {
+                const origHTML = adminBypassBtn.innerHTML;
+                adminBypassBtn.innerHTML = '<span class="checkout-btn-content"><i class="fas fa-spinner fa-spin"></i> Processing...</span>';
+                adminBypassBtn.disabled = true;
+
+                try {
+                    const response = await fetch('/api/admin-bypass-checkout', { method: 'POST' });
+                    const data = await response.json();
+                    if (data.success) {
+                        window.location.href = data.redirect_url;
+                    } else {
+                        showToast(data.error || 'Admin Bypass Failed', 'error');
+                        adminBypassBtn.innerHTML = origHTML;
+                        adminBypassBtn.disabled = false;
+                    }
+                } catch(e) {
+                    showToast('Network error', 'error');
+                    adminBypassBtn.innerHTML = origHTML;
+                    adminBypassBtn.disabled = false;
+                }
+            });
+        }
+
         // Coupon events
         if (els.couponToggle) {
             els.couponToggle.addEventListener('click', function() {

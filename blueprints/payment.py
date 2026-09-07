@@ -549,3 +549,28 @@ def download_order_files(order_id):
         download_name=f'XLoveBeats_Order_{order.id}.zip',
         mimetype='application/zip'
     )
+
+@bp.route('/api/admin-bypass-checkout', methods=['POST'])
+def admin_bypass_checkout():
+    user = get_current_user()
+    if not user or not user.is_admin:
+        return jsonify(success=False, error="Unauthorized"), 403
+
+    cart_id = session.get('session_id')
+    cart_items = Cart.query.filter_by(session_id=cart_id).all()
+    if not cart_items:
+        return jsonify(success=False, error="Cart is empty"), 400
+
+    order = create_order(user.id, 0, "ADMIN_BYPASS", cart_id)
+    if not order:
+        return jsonify(success=False, error="Failed to create order"), 500
+
+    from datetime import datetime
+    order.status = 'completed'
+    order.paid_at = datetime.utcnow()
+    db.session.commit()
+
+    mark_order_paid(order.id, "ADMIN_BYPASS")
+    clear_cart(cart_id)
+
+    return jsonify(success=True, order_id=order.id, redirect_url=url_for('payment.payment_success', order_id=order.id))
