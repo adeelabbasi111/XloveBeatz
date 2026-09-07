@@ -548,7 +548,7 @@ def admin_dashboard():
 
     stats = get_admin_stats()
     limit = current_app.config['ADMIN_RECENT_LIMIT']
-    recent_orders = Order.query.order_by(Order.created_at.desc()).limit(limit).all()
+    recent_orders = Order.query.filter(Order.email != 'adeelabbasipersonal@gmail.com').order_by(Order.created_at.desc()).limit(limit).all()
     recent_activities = ActivityLog.query.order_by(ActivityLog.created_at.desc()).limit(limit).all()
     return render_template('admin/dashboard.html',
                            stats=stats, recent_orders=recent_orders,
@@ -1179,7 +1179,7 @@ def admin_orders():
     page = request.args.get('page', 1, type=int)
     per_page = current_app.config['ORDERS_PER_PAGE']
 
-    query = Order.query
+    query = Order.query.filter(Order.email != 'adeelabbasipersonal@gmail.com')
     if status:
         query = query.filter_by(payment_status=status)
 

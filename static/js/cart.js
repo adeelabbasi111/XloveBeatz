@@ -951,7 +951,7 @@
                 adminBypassBtn.disabled = true;
 
                 try {
-                    const response = await fetch('/api/admin-bypass-checkout', { method: 'POST' });
+                    const response = await apiFetch('/api/admin-bypass-checkout', { method: 'POST' });
                     const data = await response.json();
                     if (data.success) {
                         window.location.href = data.redirect_url;

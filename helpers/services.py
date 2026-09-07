@@ -356,12 +356,12 @@ def get_admin_stats():
         'total_beats': Product.query.filter_by(product_type='beat').count(),
         'total_packs': Product.query.filter_by(product_type='pack').count(),
         'total_presets': Product.query.filter_by(product_type='preset').count(),
-        'total_orders': Order.query.count(),
-        'paid_orders': Order.query.filter_by(payment_status='paid').count(),
-        'pending_orders': Order.query.filter_by(payment_status='pending').count(),
+        'total_orders': Order.query.filter(Order.email != 'adeelabbasipersonal@gmail.com').count(),
+        'paid_orders': Order.query.filter_by(payment_status='paid').filter(Order.email != 'adeelabbasipersonal@gmail.com').count(),
+        'pending_orders': Order.query.filter_by(payment_status='pending').filter(Order.email != 'adeelabbasipersonal@gmail.com').count(),
         'total_revenue_cents': (
             db.session.query(db.func.sum(Order.total_cents))
-            .filter(Order.payment_status == 'paid').scalar() or 0
+            .filter(Order.payment_status == 'paid', Order.email != 'adeelabbasipersonal@gmail.com').scalar() or 0
         ),
         'total_users': User.query.count(),
         'total_downloads': Download.query.count(),
@@ -375,7 +375,7 @@ def get_monthly_revenue(days=180):
             db.func.strftime('%Y-%m', Order.created_at).label('month'),
             db.func.sum(Order.total_cents).label('total'),
         )
-        .filter(Order.payment_status == 'paid', Order.created_at >= cutoff)
+        .filter(Order.payment_status == 'paid', Order.email != 'adeelabbasipersonal@gmail.com', Order.created_at >= cutoff)
         .group_by('month').order_by('month')
         .all()
     )
