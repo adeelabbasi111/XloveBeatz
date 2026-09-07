@@ -137,3 +137,7 @@ def test_ffmpeg():
         return "<pre>" + "\n".join(result) + "</pre>"
     except Exception as e:
         return f"<pre>FATAL ERROR:\n{traceback.format_exc()}</pre>"
+
+@bp.route('/500-test')
+def test_500():
+    return render_template('500.html')
