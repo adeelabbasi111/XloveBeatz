@@ -304,7 +304,9 @@ function closeBogoPopup() {
 
 function claimBogo() {
     closeBogoPopup();
-    if(typeof showLoginModal === 'function') {
+    if(typeof window.openSignupModal === 'function') {
+        window.openSignupModal();
+    } else if(typeof showLoginModal === 'function') {
         showLoginModal();
     } else {
         window.location.href = '/login';

@@ -534,6 +534,7 @@ document.addEventListener('keydown', function(e) {
     window.setUserLoggedOut = function() { window.IS_LOGGED_IN = false; updateAuthUI(null); };
     window.getCurrentUser = function() { return currentUser; };
     window.openLoginModal = function() { openModal(loginModal); };
+    window.openSignupModal = function() { openModal(signupModal); };
 
     document.addEventListener('DOMContentLoaded', function() {
         checkAuthStatus();
