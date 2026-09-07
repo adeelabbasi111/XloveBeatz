@@ -556,21 +556,28 @@ def admin_bypass_checkout():
     if not user or not user.is_admin:
         return jsonify(success=False, error="Unauthorized"), 403
 
-    from helpers.utils import get_current_cart
-    cart = get_current_cart()
-    if not cart or not cart.items:
+    data = request.json or {}
+    cart_items = data.get('items', [])
+    if not cart_items:
         return jsonify(success=False, error="Cart is empty"), 400
 
     order = create_order(user.id, 0, "ADMIN_BYPASS", user.email)
     if not order:
         return jsonify(success=False, error="Failed to create order"), 500
 
-    for item in cart.items:
-        add_order_item(order.id, item.product_id, 0, item.license_id)
+    for item in cart_items:
+        product = Product.query.get(item.get('id'))
+        if not product:
+            continue
+        lic_id = None
+        if item.get('type') == 'beat':
+            lic = License.query.filter_by(name=item.get('license', '').capitalize()).first()
+            if lic:
+                lic_id = lic.id
+        add_order_item(order.id, product.id, 0, lic_id)
 
     db.session.commit()
 
     mark_order_paid(order.id, "ADMIN_BYPASS")
-    _clear_user_cart()
-
+    # Tell frontend to clear cart via JS since we don't track it on backend
     return jsonify(success=True, order_id=order.id, redirect_url=url_for('payment.payment_success', order_id=order.id))

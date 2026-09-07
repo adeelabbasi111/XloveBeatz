@@ -951,9 +951,15 @@
                 adminBypassBtn.disabled = true;
 
                 try {
-                    const response = await apiFetch('/api/admin-bypass-checkout', { method: 'POST' });
+                    const response = await apiFetch('/api/admin-bypass-checkout', { 
+                        method: 'POST',
+                        body: { items: cart }
+                    });
                     const data = await response.json();
                     if (data.success) {
+                        cart = [];
+                        saveCart();
+                        updateCartUI();
                         window.location.href = data.redirect_url;
                     } else {
                         showToast(data.error || 'Admin Bypass Failed', 'error');
