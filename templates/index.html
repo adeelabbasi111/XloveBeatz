@@ -34,11 +34,7 @@
         </div>
         
         {# --- GATHER IMAGES FOR MARQUEE --- #}
-        {% set hero_images = [
-            url_for('static', filename='images/beat_packs_bg.jpg'),
-            url_for('static', filename='images/presets_bg.jpg'),
-            url_for('static', filename='images/singles_bg.jpg')
-        ] %}
+        {% set hero_images = [] %}
         {% for cover in all_covers %}
             {% set _ = hero_images.append(cover) %}
         {% endfor %}

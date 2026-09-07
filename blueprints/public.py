@@ -32,6 +32,13 @@ def home():
     all_products = Product.query.filter(Product.cover_image != None).all()
     all_covers = [url_for('static', filename=p.cover_image) for p in all_products if p.cover_image]
     
+    # Get beat covers as well (they are stored in BeatDetail)
+    from helpers.models import BeatDetail
+    all_beat_details = BeatDetail.query.filter(BeatDetail.beat_image != None).all()
+    for bd in all_beat_details:
+        if bd.beat_image:
+            all_covers.append(url_for('static', filename=bd.beat_image))
+            
     # Let's shuffle them in Python so it's a nice mix every time
     import random
     random.shuffle(all_covers)
