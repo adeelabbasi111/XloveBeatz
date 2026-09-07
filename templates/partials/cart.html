@@ -154,14 +154,14 @@
                     
                     <div id="paypal-button-container" class="paypal-btn-wrapper"></div>
 
-                    {% if current_user.is_authenticated and current_user.is_admin %}
-                    <div class="payment-modal-divider"><span>ADMIN</span></div>
-                    <button class="checkout-btn-premium" id="adminBypassBtn" style="background: #e74c3c; color: white;">
-                        <span class="checkout-btn-content">
-                            <i class="fas fa-unlock"></i> Bypass Checkout
-                        </span>
-                    </button>
-                    {% endif %}
+                    <div id="adminBypassWrapper" style="display: none;">
+                        <div class="payment-modal-divider"><span>ADMIN</span></div>
+                        <button class="checkout-btn-premium" id="adminBypassBtn" style="background: #e74c3c; color: white;">
+                            <span class="checkout-btn-content">
+                                <i class="fas fa-bolt"></i> Bypass Checkout (Free)
+                            </span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </dialog>

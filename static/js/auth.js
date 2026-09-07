@@ -186,6 +186,11 @@
             }
             if (authPrompt) authPrompt.style.display = 'none';
             if (loggedIn) loggedIn.style.display = 'block';
+            
+            const adminBypassWrapper = document.getElementById('adminBypassWrapper');
+            if (adminBypassWrapper) {
+                adminBypassWrapper.style.display = user.is_admin ? 'block' : 'none';
+            }
         } else {
             if (modalUsername) modalUsername.textContent = 'Guest';
             if (modalEmail) modalEmail.textContent = 'Sign in to access your account';
