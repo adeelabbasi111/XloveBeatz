@@ -556,21 +556,21 @@ def admin_bypass_checkout():
     if not user or not user.is_admin:
         return jsonify(success=False, error="Unauthorized"), 403
 
-    cart_id = session.get('session_id')
-    cart_items = Cart.query.filter_by(session_id=cart_id).all()
-    if not cart_items:
+    from helpers.utils import get_current_cart
+    cart = get_current_cart()
+    if not cart or not cart.items:
         return jsonify(success=False, error="Cart is empty"), 400
 
-    order = create_order(user.id, 0, "ADMIN_BYPASS", cart_id)
+    order = create_order(user.id, 0, "ADMIN_BYPASS", user.email)
     if not order:
         return jsonify(success=False, error="Failed to create order"), 500
 
-    from datetime import datetime
-    order.status = 'completed'
-    order.paid_at = datetime.utcnow()
+    for item in cart.items:
+        add_order_item(order.id, item.product_id, 0, item.license_id)
+
     db.session.commit()
 
     mark_order_paid(order.id, "ADMIN_BYPASS")
-    clear_cart(cart_id)
+    _clear_user_cart()
 
     return jsonify(success=True, order_id=order.id, redirect_url=url_for('payment.payment_success', order_id=order.id))
