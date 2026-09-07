@@ -69,6 +69,7 @@ def api_signup():
     if 'session_id' in session:
         merge_guest_cart(session['session_id'], user.id)
 
+    session.permanent = True
     session['user_id'] = user.id
     return jsonify(success=True, message=f'Welcome to XLOVEBEATS, {username}!',
                    user={'id': user.id, 'username': user.username, 'email': user.email})
@@ -84,6 +85,7 @@ def api_login():
 
     user = get_user_by_email(email)
     if user and check_password_hash(user.password_hash, password):
+        session.permanent = True
         session['user_id'] = user.id
         return jsonify(success=True, message=f'Welcome back, {user.username}!',
                        user={'id': user.id, 'username': user.username,

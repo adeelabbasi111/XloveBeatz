@@ -107,12 +107,25 @@ def get_geo_pricing():
             'geo_pricing_enabled': bool
         }
     """
+    from helpers.utils import get_current_user
+    user = get_current_user()
+    
     enabled = get_site_setting('geo_pricing_enabled', 'false').lower() == 'true'
     multiplier = 1.0
     try:
         multiplier = float(get_site_setting('geo_pricing_multiplier', '3'))
     except (ValueError, TypeError):
         multiplier = 3.0
+
+    # Admins (or Adeel) bypass geo pricing and see local prices (INR)
+    if user and (user.is_admin or user.email == 'adeelabbasipersonal@gmail.com'):
+        return {
+            'is_foreign': False,
+            'multiplier': 1.0,
+            'currency_symbol': '₹',
+            'currency_code': 'INR',
+            'geo_pricing_enabled': enabled
+        }
 
     if not enabled:
         return {
