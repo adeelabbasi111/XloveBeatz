@@ -311,3 +311,113 @@ XLoveBeats Team
         print(f"Sent promo email to {to_email}")
     except Exception as e:
         print(f"Failed to send promo email: {e}")
+
+def send_discount_emails(discount, user_emails):
+    """Send an email to a list of users about a new discount."""
+    import os
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+    import threading
+
+    smtp_host = os.environ.get('SMTP_HOST', '')
+    smtp_port = int(os.environ.get('SMTP_PORT', 587))
+    smtp_user = os.environ.get('SMTP_USER', '')
+    smtp_pass = os.environ.get('SMTP_PASS', '')
+    from_name = os.environ.get('SMTP_FROM_NAME', 'XLoveBeats')
+
+    if not all([smtp_host, smtp_user, smtp_pass]):
+        print("SMTP not fully configured. Skipping discount emails.")
+        return
+
+    # Prepare message details based on discount type
+    if discount.discount_type == 'percentage':
+        offer_desc = f"{discount.discount_value}% OFF"
+    elif discount.discount_type == 'bogo':
+        offer_desc = f"Buy {int(discount.min_order_cents / 100)} Get {discount.discount_value} Free"
+    else:
+        offer_desc = f"₹{discount.discount_value} OFF"
+
+    subject = f"Exclusive Offer: {offer_desc} at XLoveBeats!"
+    
+    html_body = f"""
+    <html>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #ff4444; margin-bottom: 5px;">Special Offer Unlocked!</h1>
+            <p style="font-size: 1.2em; color: #555;">Grab your favorite beats with this exclusive deal.</p>
+        </div>
+        
+        <div style="background: #1a1a1a; color: white; padding: 30px; border-radius: 12px; text-align: center; margin-bottom: 30px;">
+            <h2 style="margin-top: 0; color: #ffaa00; font-size: 1.8em;">{offer_desc}</h2>
+            <p style="font-size: 1.1em; margin-bottom: 25px;">Use this code at checkout:</p>
+            <div style="background: #333; display: inline-block; padding: 15px 30px; font-size: 28px; font-weight: bold; letter-spacing: 3px; border: 2px dashed #ffaa00; border-radius: 8px; color: #fff;">
+                {discount.code}
+            </div>
+        </div>
+        
+        <div style="background: #f9f9f9; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+            <h3 style="margin-top: 0; border-bottom: 2px solid #ddd; padding-bottom: 10px;">Offer Details:</h3>
+            <ul style="padding-left: 20px;">
+                {'<li>Expires on: ' + discount.expires_at.strftime('%B %d, %Y') + '</li>' if discount.expires_at else '<li>Never expires!</li>'}
+                {'<li>Minimum Order: ₹' + str(int(discount.min_order_cents / 100)) + '</li>' if discount.min_order_cents > 0 and discount.discount_type != 'bogo' else ''}
+                {'<li>Hurry, limited uses available!</li>' if discount.max_uses > 0 else ''}
+            </ul>
+        </div>
+        
+        <div style="text-align: center; margin-top: 40px;">
+            <a href="https://xlovebeatz.com" style="background: #ff4444; color: white; text-decoration: none; padding: 15px 35px; font-size: 1.2em; font-weight: bold; border-radius: 30px; display: inline-block;">Visit XLoveBeats</a>
+        </div>
+        
+        <p style="text-align: center; margin-top: 50px; font-size: 0.9em; color: #888;">
+            Thank you for being a valued part of the XLoveBeats community!<br>
+            If you have any questions, feel free to reply to this email.
+        </p>
+    </body>
+    </html>
+    """
+
+    text_body = f"""Special Offer Unlocked!
+Grab your favorite beats with this exclusive deal: {offer_desc}
+
+Use this code at checkout: {discount.code}
+
+Offer Details:
+- {'Expires on: ' + discount.expires_at.strftime('%B %d, %Y') if discount.expires_at else 'Never expires!'}
+- {'Minimum Order: ₹' + str(int(discount.min_order_cents / 100)) if discount.min_order_cents > 0 and discount.discount_type != 'bogo' else ''}
+
+Visit https://xlovebeatz.com to claim your offer!
+
+Thank you for being part of XLoveBeats!
+"""
+
+    def send_async():
+        try:
+            if smtp_port == 465:
+                server = smtplib.SMTP_SSL(smtp_host, smtp_port)
+            else:
+                server = smtplib.SMTP(smtp_host, smtp_port)
+                server.starttls()
+            server.login(smtp_user, smtp_pass)
+            
+            # Send individual emails to avoid exposing all emails in BCC and avoid spam flags
+            for to_email in user_emails:
+                try:
+                    msg = MIMEMultipart('alternative')
+                    msg['Subject'] = subject
+                    msg['From'] = f'{from_name} <{smtp_user}>'
+                    msg['To'] = to_email
+                    msg.attach(MIMEText(text_body, 'plain'))
+                    msg.attach(MIMEText(html_body, 'html'))
+                    server.sendmail(smtp_user, to_email, msg.as_string())
+                except Exception as e:
+                    print(f"Failed to send to {to_email}: {e}")
+                    
+            server.quit()
+            print(f"Sent discount email to {len(user_emails)} users.")
+        except Exception as e:
+            print(f"Failed to send bulk discount emails: {e}")
+
+    thread = threading.Thread(target=send_async)
+    thread.daemon = True
+    thread.start()
