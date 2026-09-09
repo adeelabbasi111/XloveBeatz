@@ -1717,8 +1717,8 @@ def admin_genres_rename(genre_id):
     existing = Genre.query.filter(db.func.lower(Genre.name) == new_name.lower()).first()
     if existing and existing.id != g.id:
         # Merge scenario: Update all beats/packs to the existing genre's EXACT casing
-        BeatDetail.query.filter_by(genre=old_name).update({BeatDetail.genre: existing.name})
-        BeatPack.query.filter_by(genre=old_name).update({BeatPack.genre: existing.name})
+        BeatDetail.query.filter(db.func.lower(BeatDetail.genre) == old_name.lower()).update({BeatDetail.genre: existing.name}, synchronize_session=False)
+        BeatPack.query.filter(db.func.lower(BeatPack.genre) == old_name.lower()).update({BeatPack.genre: existing.name}, synchronize_session=False)
         
         # Delete the old duplicate genre
         db.session.delete(g)
@@ -1729,10 +1729,10 @@ def admin_genres_rename(genre_id):
     g.name = new_name
 
     # Cascade to BeatDetail
-    BeatDetail.query.filter_by(genre=old_name).update({BeatDetail.genre: new_name})
+    BeatDetail.query.filter(db.func.lower(BeatDetail.genre) == old_name.lower()).update({BeatDetail.genre: new_name}, synchronize_session=False)
     
     # Cascade to BeatPack
-    BeatPack.query.filter_by(genre=old_name).update({BeatPack.genre: new_name})
+    BeatPack.query.filter(db.func.lower(BeatPack.genre) == old_name.lower()).update({BeatPack.genre: new_name}, synchronize_session=False)
 
     db.session.commit()
     return jsonify({"status": "success", "new_name": new_name})
