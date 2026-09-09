@@ -506,59 +506,7 @@ def cleanup_temp():
 #  DASHBOARD
 # ═══════════════════════════════════════════════════════════════
 
-@bp.route('/admin/normalize-genres', methods=['POST'])
-@admin_required
-def admin_normalize_genres():
-    try:
-        from helpers.models import BeatDetail, BeatPack, Genre
-        
-        # 1. Normalize BeatDetail genres
-        for bd in BeatDetail.query.filter(BeatDetail.genre != None).all():
-            if bd.genre:
-                bd.genre = bd.genre.title()
-        
-        # 2. Normalize BeatPack genres
-        for bp in BeatPack.query.filter(BeatPack.genre != None).all():
-            if bp.genre:
-                bp.genre = bp.genre.title()
-                
-        # 3. Clean up Genres table to remove duplicates
-        genres = Genre.query.all()
-        for g in genres:
-            title_name = g.name.title()
-            if g.name != title_name:
-                existing = Genre.query.filter_by(name=title_name).first()
-                if existing:
-                    db.session.delete(g)
-                else:
-                    g.name = title_name
-                    
-        db.session.commit()
-        flash('Successfully normalized all genres in the database to Title Case!', 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Error normalizing genres: {str(e)}', 'error')
-    
-    return redirect(url_for('admin.admin_products'))
 
-@bp.route('/admin/migrate-presets', methods=['POST'])
-@admin_required
-def admin_migrate_presets():
-    try:
-        from helpers.models import VocalPreset, VocalPresetDemo
-        presets = VocalPreset.query.all()
-        count = 0
-        for p in presets:
-            if (p.demo_before or p.demo_after) and p.demos.count() == 0:
-                demo = VocalPresetDemo(preset_id=p.id, name='Main Demo', demo_before=p.demo_before, demo_after=p.demo_after)
-                db.session.add(demo)
-                count += 1
-        db.session.commit()
-        flash(f'Successfully migrated {count} presets to the new multi-demo system!', 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Error migrating presets: {str(e)}', 'error')
-    return redirect(url_for('admin.admin_products'))
 
 @bp.route('/admin')
 @admin_required
@@ -1764,46 +1712,24 @@ def admin_settings():
 @bp.route('/admin/genres')
 @admin_required
 def admin_genres():
-    # --- Auto-normalize genre names to Title Case ---
+    # Only delete genres with 0 beats/packs (clean up ghost genres)
     changed = False
     for g in Genre.query.all():
-        title_name = g.name.strip().title()
-        if g.name != title_name:
-            # Check if a title-cased version already exists
-            existing = Genre.query.filter(Genre.id != g.id, db.func.lower(Genre.name) == title_name.lower()).first()
-            if existing:
-                # Merge: move beats/packs to the existing one, delete this duplicate
-                BeatDetail.query.filter(db.func.lower(BeatDetail.genre) == g.name.lower()).update({BeatDetail.genre: existing.name}, synchronize_session=False)
-                BeatPack.query.filter(db.func.lower(BeatPack.genre) == g.name.lower()).update({BeatPack.genre: existing.name}, synchronize_session=False)
-                db.session.delete(g)
-            else:
-                # Just fix the casing
-                BeatDetail.query.filter(db.func.lower(BeatDetail.genre) == g.name.lower()).update({BeatDetail.genre: title_name}, synchronize_session=False)
-                BeatPack.query.filter(db.func.lower(BeatPack.genre) == g.name.lower()).update({BeatPack.genre: title_name}, synchronize_session=False)
-                g.name = title_name
+        beat_count = BeatDetail.query.filter(db.func.lower(BeatDetail.genre) == g.name.lower()).count()
+        pack_count = BeatPack.query.filter(db.func.lower(BeatPack.genre) == g.name.lower()).count()
+        if beat_count == 0 and pack_count == 0:
+            db.session.delete(g)
             changed = True
     if changed:
         db.session.commit()
 
-    # --- Count beats per genre ---
-    from sqlalchemy import func as sa_func
-    beat_counts_raw = (
-        db.session.query(db.func.lower(BeatDetail.genre), sa_func.count(BeatDetail.id))
-        .filter(BeatDetail.genre != None, BeatDetail.genre != '')
-        .group_by(db.func.lower(BeatDetail.genre))
-        .all()
-    )
-    beat_counts_map = {name.lower(): count for name, count in beat_counts_raw}
-
-    # --- Auto-delete genres with 0 beats ---
-    for g in Genre.query.all():
-        if beat_counts_map.get(g.name.lower(), 0) == 0:
-            db.session.delete(g)
-    db.session.commit()
-
-    # --- Final query ---
-    genres = Genre.query.order_by(Genre.sort_order).all()
-    beat_counts = {g.id: beat_counts_map.get(g.name.lower(), 0) for g in genres}
+    genres = Genre.query.order_by(Genre.sort_order.asc()).all()
+    # attach counts for template
+    beat_counts = {}
+    for g in genres:
+        beat_count = BeatDetail.query.filter(db.func.lower(BeatDetail.genre) == g.name.lower()).count()
+        pack_count = BeatPack.query.filter(db.func.lower(BeatPack.genre) == g.name.lower()).count()
+        beat_counts[g.id] = beat_count + pack_count
     return render_template('admin/genres.html', genres=genres, beat_counts=beat_counts)
 
 @bp.route('/admin/api/genres/reorder', methods=['POST'])
