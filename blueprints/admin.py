@@ -1713,12 +1713,19 @@ def admin_genres_rename(genre_id):
     if old_name == new_name:
         return jsonify({"status": "success", "new_name": new_name})
 
-    # Check for collisions
+    # Check for collisions to perform a merge
     existing = Genre.query.filter(db.func.lower(Genre.name) == new_name.lower()).first()
     if existing and existing.id != g.id:
-        return jsonify({"error": "A genre with this name already exists"}), 400
+        # Merge scenario: Update all beats/packs to the existing genre's EXACT casing
+        BeatDetail.query.filter_by(genre=old_name).update({BeatDetail.genre: existing.name})
+        BeatPack.query.filter_by(genre=old_name).update({BeatPack.genre: existing.name})
+        
+        # Delete the old duplicate genre
+        db.session.delete(g)
+        db.session.commit()
+        return jsonify({"status": "merged", "new_name": existing.name})
 
-    # Update genre
+    # Standard rename (no collision)
     g.name = new_name
 
     # Cascade to BeatDetail

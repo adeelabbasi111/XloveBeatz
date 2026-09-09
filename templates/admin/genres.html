@@ -236,6 +236,9 @@ function renameGenre(id, currentName) {
             if (btn) {
                 btn.setAttribute('onclick', `renameGenre(${id}, ${JSON.stringify(data.new_name)})`);
             }
+        } else if (data.status === 'merged') {
+            showToast('Genre merged successfully! Reloading...', 'success');
+            setTimeout(() => window.location.reload(), 1000);
         } else {
             showToast(data.error || 'Failed to rename genre', 'error');
         }
