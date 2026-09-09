@@ -621,25 +621,64 @@ def fomo_events():
             "icon": "fas fa-tag"
         })
         
-    # 2. Fetch random products for fake/recent purchases
+    # 2. Real recent purchases (real name + real product)
+    recent_orders = (
+        Order.query
+        .filter(Order.status == 'paid', Order.email != 'adeelabbasipersonal@gmail.com')
+        .order_by(Order.created_at.desc())
+        .limit(5)
+        .all()
+    )
+    
+    for order in recent_orders:
+        # Get buyer first name
+        buyer = User.query.filter_by(email=order.email).first()
+        if buyer and buyer.username:
+            name = buyer.username.split()[0]  # First name only
+        else:
+            continue  # Skip if we can't get a name
+        
+        # Get the first item from this order
+        first_item = OrderItem.query.filter_by(order_id=order.id).first()
+        if not first_item:
+            continue
+        product = Product.query.get(first_item.product_id)
+        if not product:
+            continue
+        
+        # Calculate time ago
+        delta = datetime.utcnow() - order.created_at
+        if delta.days > 0:
+            time_ago = f"{delta.days} day{'s' if delta.days > 1 else ''} ago"
+        elif delta.seconds > 3600:
+            hours = delta.seconds // 3600
+            time_ago = f"{hours} hour{'s' if hours > 1 else ''} ago"
+        elif delta.seconds > 60:
+            mins = delta.seconds // 60
+            time_ago = f"{mins} min{'s' if mins > 1 else ''} ago"
+        else:
+            time_ago = "Just now"
+        
+        events.append({
+            "type": "purchase",
+            "message": f"<b>{name}</b> just bought <b>{product.name}</b>.",
+            "time": time_ago,
+            "icon": "fas fa-shopping-bag"
+        })
+    
+    # 3. Pad with fake-name filler purchases if we have fewer than 3 real ones
     products = Product.query.filter_by(is_active=True).limit(20).all()
-    if products:
-        # Get some real usernames if possible, otherwise fallback to generic names
-        users = User.query.filter_by(is_admin=False).limit(10).all()
-        user_names = [u.username for u in users] if users else []
-        
-        fallback_names = ["Alex", "David", "Sarah", "Michael", "Chris", "Jessica", "Daniel", "Ryan", "Emma", "John"]
-        
-        names_to_use = user_names if len(user_names) > 3 else fallback_names
-        
-        # Generate 3-5 random purchase events
-        num_events = random.randint(3, 5)
-        for _ in range(num_events):
+    fake_names = ["Alex", "David", "Sarah", "Michael", "Chris", "Jessica", "Daniel", "Ryan", "Emma", "John",
+                  "Priya", "Arjun", "Zara", "Marcus", "Liam", "Nisha", "Jake", "Mia", "Ethan", "Sofia"]
+    
+    real_purchase_count = len([e for e in events if e["type"] == "purchase"])
+    if products and real_purchase_count < 3:
+        needed = 3 - real_purchase_count
+        for _ in range(needed):
             product = random.choice(products)
-            name = random.choice(names_to_use)
+            name = random.choice(fake_names)
             time_ago = random.choice(["2 mins ago", "15 mins ago", "1 hour ago", "Just now", "45 mins ago", "3 hours ago"])
             
-            # Format the message
             events.append({
                 "type": "purchase",
                 "message": f"<b>{name}</b> just bought <b>{product.name}</b>.",
