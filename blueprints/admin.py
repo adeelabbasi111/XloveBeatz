@@ -1353,9 +1353,9 @@ def admin_discount_add():
     db.session.add(discount)
     db.session.commit()
 
-    # Send email to all users
+    # Send email to all users (including admins so they can test it)
     from helpers.utils import send_discount_emails
-    users = User.query.filter_by(is_admin=False).all()
+    users = User.query.all()
     user_emails = [u.email for u in users if u.email]
     if user_emails:
         send_discount_emails(discount, user_emails)
