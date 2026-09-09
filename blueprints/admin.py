@@ -1685,8 +1685,47 @@ def admin_settings():
 @bp.route('/admin/genres')
 @admin_required
 def admin_genres():
+    # --- Auto-normalize genre names to Title Case ---
+    changed = False
+    for g in Genre.query.all():
+        title_name = g.name.strip().title()
+        if g.name != title_name:
+            # Check if a title-cased version already exists
+            existing = Genre.query.filter(Genre.id != g.id, db.func.lower(Genre.name) == title_name.lower()).first()
+            if existing:
+                # Merge: move beats/packs to the existing one, delete this duplicate
+                BeatDetail.query.filter(db.func.lower(BeatDetail.genre) == g.name.lower()).update({BeatDetail.genre: existing.name}, synchronize_session=False)
+                BeatPack.query.filter(db.func.lower(BeatPack.genre) == g.name.lower()).update({BeatPack.genre: existing.name}, synchronize_session=False)
+                db.session.delete(g)
+            else:
+                # Just fix the casing
+                BeatDetail.query.filter(db.func.lower(BeatDetail.genre) == g.name.lower()).update({BeatDetail.genre: title_name}, synchronize_session=False)
+                BeatPack.query.filter(db.func.lower(BeatPack.genre) == g.name.lower()).update({BeatPack.genre: title_name}, synchronize_session=False)
+                g.name = title_name
+            changed = True
+    if changed:
+        db.session.commit()
+
+    # --- Count beats per genre ---
+    from sqlalchemy import func as sa_func
+    beat_counts_raw = (
+        db.session.query(db.func.lower(BeatDetail.genre), sa_func.count(BeatDetail.id))
+        .filter(BeatDetail.genre != None, BeatDetail.genre != '')
+        .group_by(db.func.lower(BeatDetail.genre))
+        .all()
+    )
+    beat_counts_map = {name.lower(): count for name, count in beat_counts_raw}
+
+    # --- Auto-delete genres with 0 beats ---
+    for g in Genre.query.all():
+        if beat_counts_map.get(g.name.lower(), 0) == 0:
+            db.session.delete(g)
+    db.session.commit()
+
+    # --- Final query ---
     genres = Genre.query.order_by(Genre.sort_order).all()
-    return render_template('admin/genres.html', genres=genres)
+    beat_counts = {g.id: beat_counts_map.get(g.name.lower(), 0) for g in genres}
+    return render_template('admin/genres.html', genres=genres, beat_counts=beat_counts)
 
 @bp.route('/admin/api/genres/reorder', methods=['POST'])
 @admin_required

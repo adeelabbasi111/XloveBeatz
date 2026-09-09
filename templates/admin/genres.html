@@ -38,6 +38,7 @@
 
                 <div class="genre-info" style="display: flex; align-items: center; gap: 0.5rem;">
                     <h3 id="genreName_{{ g.id }}">{{ g.name }}</h3>
+                    <span class="badge" style="background: var(--admin-accent); color: #fff; padding: 0.15rem 0.5rem; border-radius: 10px; font-size: 0.75rem; font-weight: bold;">{{ beat_counts.get(g.id, 0) }} beats</span>
                     <button class="btn btn-sm btn-outline" style="padding: 0.2rem 0.5rem;" onclick='renameGenre({{ g.id }}, {{ g.name|tojson }})' title="Rename Genre">
                         <i class="fas fa-edit"></i>
                     </button>
@@ -230,24 +231,20 @@ function renameGenre(id, currentName) {
             'X-CSRFToken': window.CSRF_TOKEN || ''
         },
         body: JSON.stringify({ new_name: newName })
-    }).then(res => res.json())
+    }).then(res => {
+        if (!res.ok) throw new Error('Server error ' + res.status);
+        return res.json();
+    })
     .then(data => {
-        if (data.status === 'success') {
-            showToast('Genre renamed successfully', 'success');
-            document.getElementById('genreName_' + id).innerText = data.new_name;
-            var btn = document.querySelector(`button[onclick*="renameGenre(${id}"]`);
-            if (btn) {
-                btn.setAttribute('onclick', `renameGenre(${id}, ${JSON.stringify(data.new_name)})`);
-            }
-        } else if (data.status === 'merged') {
-            showToast('Genre merged successfully! Reloading...', 'success');
-            setTimeout(() => window.location.reload(), 1000);
+        if (data.status === 'success' || data.status === 'merged') {
+            showToast(data.status === 'merged' ? 'Genre merged successfully!' : 'Genre renamed successfully!', 'success');
+            setTimeout(() => window.location.reload(), 500);
         } else {
             showToast(data.error || 'Failed to rename genre', 'error');
         }
     }).catch(err => {
         console.error(err);
-        showToast('Network error', 'error');
+        showToast('Error: ' + err.message, 'error');
     });
 }
 
