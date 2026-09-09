@@ -255,11 +255,11 @@ def send_promo_email(to_email):
     
     if discount:
         print(f"Sending latest active discount ({discount.code}) as welcome email to {to_email}")
-        send_discount_emails(discount, [to_email])
+        send_discount_emails(discount, [to_email], sync=True)
     else:
         print(f"No active discounts to send to new user: {to_email}")
 
-def send_discount_emails(discount, user_emails):
+def send_discount_emails(discount, user_emails, sync=False):
     """Send an email to a list of users about a new discount."""
     import os
     import smtplib
@@ -338,7 +338,7 @@ Visit https://xlovebeatz.com to claim your offer!
 Thank you for being part of XLoveBeats!
 """
 
-    def send_async():
+    def send_execution():
         try:
             if smtp_port == 465:
                 server = smtplib.SMTP_SSL(smtp_host, smtp_port)
@@ -365,6 +365,10 @@ Thank you for being part of XLoveBeats!
         except Exception as e:
             print(f"Failed to send bulk discount emails: {e}")
 
-    thread = threading.Thread(target=send_async)
-    thread.daemon = True
-    thread.start()
+    if sync:
+        send_execution()
+    else:
+        thread = threading.Thread(target=send_execution)
+        thread.daemon = True
+        thread.start()
+        return True
