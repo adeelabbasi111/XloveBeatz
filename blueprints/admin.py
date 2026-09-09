@@ -1737,6 +1737,18 @@ def admin_genres_rename(genre_id):
     db.session.commit()
     return jsonify({"status": "success", "new_name": new_name})
 
+@bp.route('/admin/api/genres/<int:genre_id>/delete', methods=['POST'])
+@admin_required
+def admin_genres_delete(genre_id):
+    g = Genre.query.get_or_404(genre_id)
+    # Also update any beats/packs to have no genre, or keep the string but just delete from the list.
+    # The user is deleting the genre from the admin list, the string on the beat might remain but it won't show up in the player filters.
+    # Actually, it's safer to just delete the genre and let the beats keep their string in case they want it back later, 
+    # but to completely clean it, we could nullify it. Let's just delete the Genre object.
+    db.session.delete(g)
+    db.session.commit()
+    return jsonify({"status": "success"})
+
 @bp.route('/admin/api/genres/<int:genre_id>/toggle', methods=['POST'])
 @admin_required
 def admin_genres_toggle(genre_id):

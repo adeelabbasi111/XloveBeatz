@@ -43,10 +43,13 @@
                     </button>
                 </div>
 
-                <div class="genre-actions">
+                <div class="genre-actions" style="display: flex; gap: 0.5rem;">
                     <button class="btn btn-sm {% if g.is_active %}btn-success{% else %}btn-outline{% endif %}" 
                             onclick="toggleGenre({{ g.id }}, this)">
                         {% if g.is_active %}<i class="fas fa-eye"></i> Visible{% else %}<i class="fas fa-eye-slash"></i> Hidden{% endif %}
+                    </button>
+                    <button class="btn btn-sm btn-outline" style="color: #ff4444; border-color: #ff4444;" onclick='deleteGenre({{ g.id }}, {{ g.name|tojson }}, this)'>
+                        <i class="fas fa-trash"></i>
                     </button>
                 </div>
             </li>
@@ -243,6 +246,33 @@ function renameGenre(id, currentName) {
             showToast(data.error || 'Failed to rename genre', 'error');
         }
     }).catch(err => {
+        console.error(err);
+        showToast('Network error', 'error');
+    });
+}
+
+function deleteGenre(id, genreName, btn) {
+    if (!confirm(`Are you sure you want to completely delete the "${genreName}" genre from this list? (This won't delete any beats, it just removes the category)`)) return;
+    
+    btn.disabled = true;
+    fetch(`/admin/api/genres/${id}/delete`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': window.CSRF_TOKEN || ''
+        }
+    }).then(res => res.json())
+    .then(data => {
+        if (data.status === 'success') {
+            showToast('Genre deleted successfully', 'success');
+            // Remove the row from the DOM
+            var row = btn.closest('.genre-item');
+            if (row) row.remove();
+        } else {
+            btn.disabled = false;
+            showToast(data.error || 'Failed to delete genre', 'error');
+        }
+    }).catch(err => {
+        btn.disabled = false;
         console.error(err);
         showToast('Network error', 'error');
     });
