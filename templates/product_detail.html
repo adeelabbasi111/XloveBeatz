@@ -58,44 +58,49 @@
             </div>
         </div>
 
-        {% if product.product_type == 'preset' and product.vocal_preset and product.vocal_preset.demo_before and product.vocal_preset.demo_after %}
+        {% if product.product_type == 'preset' and product.vocal_preset and product.vocal_preset.demos.count() > 0 %}
         <div class="pd-before-after-section">
             <div class="ba-section-header">
                 <h2><i class="fas fa-wand-magic-sparkles"></i> Experience the Difference</h2>
                 <p class="ba-subtitle">Hear exactly what this preset does to your vocals</p>
             </div>
-            <div class="ba-player-container">
+            
+            {% for demo in product.vocal_preset.demos %}
+            <div class="ba-player-container {% if loop.index > 1 %}mt-4{% endif %}">
+                {% if product.vocal_preset.demos.count() > 1 and demo.name %}
+                <h3 class="ba-demo-title" style="color: #fff; font-size: 1.2rem; margin-bottom: 15px; text-align: center;">{{ demo.name }}</h3>
+                {% endif %}
                 
                 <!-- Audio Elements -->
-                <audio id="baAudioBefore" preload="auto">
-                    <source src="{{ url_for('static', filename=product.vocal_preset.demo_before) }}" type="audio/mpeg">
+                <audio class="baAudioBefore" preload="auto">
+                    <source src="{{ url_for('static', filename=demo.demo_before) }}" type="audio/mpeg">
                 </audio>
-                <audio id="baAudioAfter" preload="auto">
-                    <source src="{{ url_for('static', filename=product.vocal_preset.demo_after) }}" type="audio/mpeg">
+                <audio class="baAudioAfter" preload="auto">
+                    <source src="{{ url_for('static', filename=demo.demo_after) }}" type="audio/mpeg">
                 </audio>
 
                 <!-- Main Player Row -->
                 <div class="ba-controls">
-                    <button class="ba-play-btn" id="baPlayBtn">
+                    <button class="ba-play-btn baPlayBtn">
                         <i class="fas fa-play"></i>
                     </button>
                     <div class="ba-wave-wrapper">
-                        <div class="ba-waveform-container" id="baWaveformContainer">
-                            <div class="ba-waveform-visual" id="baWaveformVisual"></div>
+                        <div class="ba-waveform-container baWaveformContainer">
+                            <div class="ba-waveform-visual baWaveformVisual"></div>
                         </div>
                         <div class="ba-label-row">
-                            <span class="ba-time-current" id="baTimeCurrent">0:00</span>
-                            <span class="ba-state-label" id="baWaveformText">BEFORE</span>
-                            <span class="ba-time-total" id="baTimeTotal">0:00</span>
+                            <span class="ba-time-current baTimeCurrent">0:00</span>
+                            <span class="ba-state-label baWaveformText">BEFORE</span>
+                            <span class="ba-time-total baTimeTotal">0:00</span>
                         </div>
                     </div>
-                    <button class="ba-toggle-btn" id="baToggleBtn">
+                    <button class="ba-toggle-btn baToggleBtn">
                         <i class="fas fa-arrow-right-arrow-left"></i>
                         <span>After</span>
                     </button>
                 </div>
-                
             </div>
+            {% endfor %}
         </div>
         {% endif %}
 

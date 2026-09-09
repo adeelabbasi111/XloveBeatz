@@ -18,7 +18,7 @@ from PIL import Image
 from helpers.license_generator import BeatLicenseGenerator
 
 from helpers.models import (
-    db, Product, BeatDetail, BeatPack, VocalPreset,
+    db, Product, BeatDetail, BeatPack, VocalPreset, VocalPresetDemo,
     License, BeatLicensePrice, Order, OrderItem, User,
     Download, DiscountCode, ActivityLog, GeneratedLicense, Offer,
     Genre,
@@ -541,6 +541,25 @@ def admin_normalize_genres():
     
     return redirect(url_for('admin.admin_products'))
 
+@bp.route('/admin/migrate-presets', methods=['POST'])
+@admin_required
+def admin_migrate_presets():
+    try:
+        from helpers.models import VocalPreset, VocalPresetDemo
+        presets = VocalPreset.query.all()
+        count = 0
+        for p in presets:
+            if (p.demo_before or p.demo_after) and p.demos.count() == 0:
+                demo = VocalPresetDemo(preset_id=p.id, name='Main Demo', demo_before=p.demo_before, demo_after=p.demo_after)
+                db.session.add(demo)
+                count += 1
+        db.session.commit()
+        flash(f'Successfully migrated {count} presets to the new multi-demo system!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error migrating presets: {str(e)}', 'error')
+    return redirect(url_for('admin.admin_products'))
+
 @bp.route('/admin')
 @admin_required
 def admin_dashboard():
@@ -814,15 +833,56 @@ def admin_product_edit(product_id):
                     if new_zip and new_zip != preset.preset_zip:
                         preset.preset_zip = new_zip
 
-                    new_before = move_temp_file(request.form, 'demo_before', FOLDER_BEFORE_AFTER, current_app)
-                    if new_before:
-                        delete_old_file(preset.demo_before)
-                        preset.demo_before = new_before
-
-                    new_after = move_temp_file(request.form, 'demo_after', FOLDER_BEFORE_AFTER, current_app)
-                    if new_after:
-                        delete_old_file(preset.demo_after)
-                        preset.demo_after = new_after
+                    # Process dynamic demos
+                    demo_ids = request.form.getlist('demo_id[]')
+                    demo_names = request.form.getlist('demo_name[]')
+                    
+                    # Keep track of updated IDs to delete removed ones
+                    updated_demo_ids = []
+                    
+                    for i, demo_id in enumerate(demo_ids):
+                        demo_name = demo_names[i] if i < len(demo_names) else ''
+                        
+                        demo_before_file = request.files.get(f'demo_before_{demo_id}')
+                        demo_after_file = request.files.get(f'demo_after_{demo_id}')
+                        
+                        if str(demo_id).startswith('new_'):
+                            # Create new demo
+                            # We use move_temp_file logic? Wait, move_temp_file expects string of the temp filename from chunk upload
+                            # For direct file upload we might need to handle it properly, but wait, how is before/after handled in the frontend? 
+                            # If it uses chunk upload, we check request.form!
+                            demo_before = move_temp_file(request.form, f'demo_before_{demo_id}', FOLDER_BEFORE_AFTER, current_app)
+                            demo_after = move_temp_file(request.form, f'demo_after_{demo_id}', FOLDER_BEFORE_AFTER, current_app)
+                            if demo_before or demo_after:
+                                new_demo = VocalPresetDemo(preset_id=preset.id, name=demo_name, demo_before=demo_before, demo_after=demo_after, sort_order=i)
+                                db.session.add(new_demo)
+                                db.session.flush() # get id
+                                updated_demo_ids.append(new_demo.id)
+                        else:
+                            # Update existing
+                            demo = VocalPresetDemo.query.get(demo_id)
+                            if demo and demo.preset_id == preset.id:
+                                demo.name = demo_name
+                                demo.sort_order = i
+                                
+                                new_before = move_temp_file(request.form, f'demo_before_{demo_id}', FOLDER_BEFORE_AFTER, current_app)
+                                if new_before:
+                                    delete_old_file(demo.demo_before)
+                                    demo.demo_before = new_before
+                                    
+                                new_after = move_temp_file(request.form, f'demo_after_{demo_id}', FOLDER_BEFORE_AFTER, current_app)
+                                if new_after:
+                                    delete_old_file(demo.demo_after)
+                                    demo.demo_after = new_after
+                                    
+                                updated_demo_ids.append(demo.id)
+                    
+                    # Delete removed demos
+                    for demo in preset.demos:
+                        if demo.id not in updated_demo_ids:
+                            delete_old_file(demo.demo_before)
+                            delete_old_file(demo.demo_after)
+                            db.session.delete(demo)
 
             db.session.commit()
             log_activity(get_current_user().id, 'update', 'product',
@@ -905,6 +965,9 @@ def admin_product_delete(product_id):
             preset = VocalPreset.query.filter_by(product_id=product.id).first()
             if preset:
                 delete_old_file(preset.preset_zip)
+                for demo in preset.demos:
+                    delete_old_file(demo.demo_before)
+                    delete_old_file(demo.demo_after)
             delete_old_file(product.cover_image)
             VocalPreset.query.filter_by(product_id=product.id).delete()
 
@@ -1117,16 +1180,25 @@ def _create_preset_details(product, slug):
 
     preset_zip_path = request.form.get('preset_zip', '').strip()
 
-    demo_before = move_temp_file(request.form, 'demo_before', FOLDER_BEFORE_AFTER, current_app)
-    demo_after = move_temp_file(request.form, 'demo_after', FOLDER_BEFORE_AFTER, current_app)
-
-    db.session.add(VocalPreset(
+    preset = VocalPreset(
         product_id=product.id,
         supported_daw=supported_daw,
-        preset_zip=preset_zip_path,
-        demo_before=demo_before,
-        demo_after=demo_after
-    ))
+        preset_zip=preset_zip_path
+    )
+    db.session.add(preset)
+    db.session.flush() # To get preset.id
+    
+    # Process dynamic demos
+    demo_ids = request.form.getlist('demo_id[]')
+    demo_names = request.form.getlist('demo_name[]')
+    for i, demo_id in enumerate(demo_ids):
+        demo_name = demo_names[i] if i < len(demo_names) else ''
+        demo_before = move_temp_file(request.form, f'demo_before_{demo_id}', FOLDER_BEFORE_AFTER, current_app)
+        demo_after = move_temp_file(request.form, f'demo_after_{demo_id}', FOLDER_BEFORE_AFTER, current_app)
+        
+        if demo_before or demo_after:
+            new_demo = VocalPresetDemo(preset_id=preset.id, name=demo_name, demo_before=demo_before, demo_after=demo_after, sort_order=i)
+            db.session.add(new_demo)
 
 
 def _update_beat_licenses(product_id):

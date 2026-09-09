@@ -95,11 +95,23 @@ class VocalPreset(db.Model):
     product_id = db.Column(db.Integer, db.ForeignKey("products.id"), unique=True)
     supported_daw = db.Column(db.String(255))
     preset_zip = db.Column(db.String(500))
+    # Legacy fields
     demo_before = db.Column(db.String(500))
     demo_after = db.Column(db.String(500))
 
     product = db.relationship("Product", backref=db.backref("vocal_preset", uselist=False))
 
+class VocalPresetDemo(db.Model):
+    __tablename__ = "vocal_preset_demos"
+
+    id = db.Column(db.Integer, primary_key=True)
+    preset_id = db.Column(db.Integer, db.ForeignKey("vocal_presets.id", ondelete="CASCADE"))
+    name = db.Column(db.String(255))
+    demo_before = db.Column(db.String(500))
+    demo_after = db.Column(db.String(500))
+    sort_order = db.Column(db.Integer, default=0)
+
+    preset = db.relationship("VocalPreset", backref=db.backref("demos", lazy="dynamic", cascade="all, delete-orphan", order_by="VocalPresetDemo.sort_order"))
 
 class License(db.Model):
     __tablename__ = "licenses"

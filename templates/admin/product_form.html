@@ -223,24 +223,73 @@
                 <input type="url" name="preset_zip" id="preset_zip" class="form-input" placeholder="https://drive.google.com/file/d/..." value="{{ vocal_preset.preset_zip if vocal_preset and vocal_preset.preset_zip else '' }}">
             </div>
             
-            <div class="form-group">
-                <label for="demo_before">Demo Before Audio (Raw)</label>
-                {% if vocal_preset and vocal_preset.demo_before %}
-                <div class="current-file">
-                    <i class="fas fa-check-circle"></i> Current: {{ vocal_preset.demo_before.split('/')[-1] }}
+            <div class="form-group preset-demos-container">
+                <label>Vocal Demos (Before/After Audio) <i class="fas fa-info-circle text-muted" title="Add multiple scenarios, e.g. Lead Vocals, Ad-libs"></i></label>
+                
+                <div id="presetDemosList">
+                    {% if vocal_preset and vocal_preset.demos.count() > 0 %}
+                        {% for demo in vocal_preset.demos %}
+                        <div class="preset-demo-item card p-3 mb-3">
+                            <input type="hidden" name="demo_id[]" value="{{ demo.id }}">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <strong>Scenario {{ loop.index }}</strong>
+                                <button type="button" class="btn btn-sm btn-outline text-danger" onclick="this.closest('.preset-demo-item').remove()"><i class="fas fa-trash"></i></button>
+                            </div>
+                            <div class="form-group mb-2">
+                                <label>Heading / Scenario Name</label>
+                                <input type="text" name="demo_name[]" class="form-input" value="{{ demo.name or '' }}" placeholder="e.g. Dry Vocals vs Mixed">
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 form-group">
+                                    <label>Before Audio (Raw)</label>
+                                    {% if demo.demo_before %}
+                                    <div class="current-file mb-1 text-success small">
+                                        <i class="fas fa-check-circle"></i> Current: {{ demo.demo_before.split('/')[-1] }}
+                                    </div>
+                                    {% endif %}
+                                    <input type="file" name="demo_before_{{ demo.id }}" accept="audio/*">
+                                </div>
+                                <div class="col-md-6 form-group">
+                                    <label>After Audio (Mixed)</label>
+                                    {% if demo.demo_after %}
+                                    <div class="current-file mb-1 text-success small">
+                                        <i class="fas fa-check-circle"></i> Current: {{ demo.demo_after.split('/')[-1] }}
+                                    </div>
+                                    {% endif %}
+                                    <input type="file" name="demo_after_{{ demo.id }}" accept="audio/*">
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <!-- Default empty item for new product -->
+                        <div class="preset-demo-item card p-3 mb-3">
+                            <input type="hidden" name="demo_id[]" value="new_0">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <strong>Scenario 1</strong>
+                                <button type="button" class="btn btn-sm btn-outline text-danger" onclick="this.closest('.preset-demo-item').remove()"><i class="fas fa-trash"></i></button>
+                            </div>
+                            <div class="form-group mb-2">
+                                <label>Heading / Scenario Name</label>
+                                <input type="text" name="demo_name[]" class="form-input" placeholder="e.g. Lead Vocals">
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 form-group">
+                                    <label>Before Audio (Raw)</label>
+                                    <input type="file" name="demo_before_new_0" accept="audio/*">
+                                </div>
+                                <div class="col-md-6 form-group">
+                                    <label>After Audio (Mixed)</label>
+                                    <input type="file" name="demo_after_new_0" accept="audio/*">
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
                 </div>
-                {% endif %}
-                <input type="file" name="demo_before" id="demo_before" accept="audio/*">
-            </div>
-
-            <div class="form-group">
-                <label for="demo_after">Demo After Audio (Mixed)</label>
-                {% if vocal_preset and vocal_preset.demo_after %}
-                <div class="current-file">
-                    <i class="fas fa-check-circle"></i> Current: {{ vocal_preset.demo_after.split('/')[-1] }}
-                </div>
-                {% endif %}
-                <input type="file" name="demo_after" id="demo_after" accept="audio/*">
+                
+                <button type="button" class="btn btn-secondary btn-sm mt-2" id="addPresetDemoBtn">
+                    <i class="fas fa-plus"></i> Add Another Scenario
+                </button>
             </div>
         </div>
 
@@ -318,6 +367,39 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if(submitBtn) submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
             form.submit();
+        });
+    }
+
+    // Dynamic preset demos
+    let newDemoCounter = 1;
+    const addPresetDemoBtn = document.getElementById('addPresetDemoBtn');
+    if (addPresetDemoBtn) {
+        addPresetDemoBtn.addEventListener('click', function() {
+            const list = document.getElementById('presetDemosList');
+            const newId = 'new_' + newDemoCounter++;
+            const itemHtml = `
+            <div class="preset-demo-item card p-3 mb-3">
+                <input type="hidden" name="demo_id[]" value="${newId}">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <strong>New Scenario</strong>
+                    <button type="button" class="btn btn-sm btn-outline text-danger" onclick="this.closest('.preset-demo-item').remove()"><i class="fas fa-trash"></i></button>
+                </div>
+                <div class="form-group mb-2">
+                    <label>Heading / Scenario Name</label>
+                    <input type="text" name="demo_name[]" class="form-input" placeholder="e.g. Ad-libs">
+                </div>
+                <div class="row">
+                    <div class="col-md-6 form-group">
+                        <label>Before Audio (Raw)</label>
+                        <input type="file" name="demo_before_${newId}" accept="audio/*">
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label>After Audio (Mixed)</label>
+                        <input type="file" name="demo_after_${newId}" accept="audio/*">
+                    </div>
+                </div>
+            </div>`;
+            list.insertAdjacentHTML('beforeend', itemHtml);
         });
     }
 });
