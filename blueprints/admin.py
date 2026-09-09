@@ -1700,6 +1700,36 @@ def admin_genres_reorder():
     db.session.commit()
     return jsonify({"status": "success"})
 
+@bp.route('/admin/api/genres/<int:genre_id>/rename', methods=['POST'])
+@admin_required
+def admin_genres_rename(genre_id):
+    g = Genre.query.get_or_404(genre_id)
+    data = request.get_json() or {}
+    new_name = data.get('new_name', '').strip()
+    if not new_name:
+        return jsonify({"error": "Name cannot be empty"}), 400
+
+    old_name = g.name
+    if old_name == new_name:
+        return jsonify({"status": "success", "new_name": new_name})
+
+    # Check for collisions
+    existing = Genre.query.filter(db.func.lower(Genre.name) == new_name.lower()).first()
+    if existing and existing.id != g.id:
+        return jsonify({"error": "A genre with this name already exists"}), 400
+
+    # Update genre
+    g.name = new_name
+
+    # Cascade to BeatDetail
+    BeatDetail.query.filter_by(genre=old_name).update({BeatDetail.genre: new_name})
+    
+    # Cascade to BeatPack
+    BeatPack.query.filter_by(genre=old_name).update({BeatPack.genre: new_name})
+
+    db.session.commit()
+    return jsonify({"status": "success", "new_name": new_name})
+
 @bp.route('/admin/api/genres/<int:genre_id>/toggle', methods=['POST'])
 @admin_required
 def admin_genres_toggle(genre_id):
