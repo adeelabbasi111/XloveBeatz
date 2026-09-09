@@ -501,64 +501,9 @@ def cleanup_temp():
 
     return jsonify({'success': True})
 
-
 # ═══════════════════════════════════════════════════════════════
 #  DASHBOARD
 # ═══════════════════════════════════════════════════════════════
-
-@bp.route('/admin/normalize-genres', methods=['POST'])
-@admin_required
-def admin_normalize_genres():
-    try:
-        from helpers.models import BeatDetail, BeatPack, Genre
-        
-        # 1. Normalize BeatDetail genres
-        for bd in BeatDetail.query.filter(BeatDetail.genre != None).all():
-            if bd.genre:
-                bd.genre = bd.genre.title()
-        
-        # 2. Normalize BeatPack genres
-        for bp in BeatPack.query.filter(BeatPack.genre != None).all():
-            if bp.genre:
-                bp.genre = bp.genre.title()
-                
-        # 3. Clean up Genres table to remove duplicates
-        genres = Genre.query.all()
-        for g in genres:
-            title_name = g.name.title()
-            if g.name != title_name:
-                existing = Genre.query.filter_by(name=title_name).first()
-                if existing:
-                    db.session.delete(g)
-                else:
-                    g.name = title_name
-                    
-        db.session.commit()
-        flash('Successfully normalized all genres in the database to Title Case!', 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Error normalizing genres: {str(e)}', 'error')
-    
-    return redirect(url_for('admin.admin_products'))
-
-@bp.route('/admin/migrate-presets', methods=['POST'])
-@admin_required
-def admin_migrate_presets():
-    try:
-        from helpers.models import VocalPreset, VocalPresetDemo
-        presets = VocalPreset.query.all()
-        count = 0
-        for p in presets:
-            if (p.demo_before or p.demo_after) and p.demos.count() == 0:
-                demo = VocalPresetDemo(preset_id=p.id, name='Main Demo', demo_before=p.demo_before, demo_after=p.demo_after)
-                db.session.add(demo)
-                count += 1
-        db.session.commit()
-        flash(f'Successfully migrated {count} presets to the new multi-demo system!', 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Error migrating presets: {str(e)}', 'error')
-    return redirect(url_for('admin.admin_products'))
 
 @bp.route('/admin')
 @admin_required

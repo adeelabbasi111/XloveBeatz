@@ -16,18 +16,6 @@
         <a href="{{ url_for('admin.admin_beats_sort') }}" class="btn btn-secondary">
             <i class="fas fa-sort-amount-down"></i> Sort Beats
         </a>
-        <form method="POST" action="{{ url_for('admin.admin_normalize_genres') }}" style="display:inline;">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button type="submit" class="btn btn-secondary" onclick="return confirm('Normalize all genres to Title Case and merge duplicates?');">
-                <i class="fas fa-magic"></i> Normalize Genres
-            </button>
-        </form>
-        <form method="POST" action="{{ url_for('admin.admin_migrate_presets') }}" style="display:inline;">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button type="submit" class="btn btn-secondary" onclick="return confirm('Migrate legacy vocal presets to the new multiple-demo system? Run this once after pulling the new update!');">
-                <i class="fas fa-database"></i> Migrate Presets
-            </button>
-        </form>
         <a href="{{ url_for('admin.admin_product_add') }}" class="btn btn-primary">
             <i class="fas fa-plus"></i> Add Product
         </a>

@@ -60,13 +60,13 @@
 
         {% if product.product_type == 'preset' and product.vocal_preset and product.vocal_preset.demos.count() > 0 %}
         <div class="pd-before-after-section">
-            <div class="ba-section-header">
+            <div class="ba-section-header" style="margin-bottom: 2rem;">
                 <h2><i class="fas fa-wand-magic-sparkles"></i> Experience the Difference</h2>
                 <p class="ba-subtitle">Hear exactly what this preset does to your vocals</p>
             </div>
             
             {% for demo in product.vocal_preset.demos %}
-            <div class="ba-player-container {% if loop.index > 1 %}mt-4{% endif %}">
+            <div class="ba-player-container" style="margin-bottom: 3rem;">
                 {% if product.vocal_preset.demos.count() > 1 and demo.name %}
                 <h3 class="ba-demo-title" style="color: #fff; font-size: 1.2rem; margin-bottom: 15px; text-align: center;">{{ demo.name }}</h3>
                 {% endif %}
