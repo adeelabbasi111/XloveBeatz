@@ -48,11 +48,10 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
 
-        // Set initial volumes
-        audioBefore.volume = 1;
-        audioAfter.volume = 0;
+        // iOS FIX: We don't set volume to 0 anymore because iOS ignores HTML audio volume controls.
+        // Instead, we will only call .play() on the active track and .pause() on the inactive one.
 
-        // ─── Loading State & Server Range Fix ───
+        // 💎💎💎 Loading State & Server Range Fix 💎💎💎
         let loadedCount = 0;
         bothLoaded = false;
         if (playBtn) playBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
@@ -99,24 +98,13 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // ─── Play / Pause ───
+        // 💎💎💎 Play / Pause 💎💎💎
         if (playBtn) {
             playBtn.addEventListener('click', () => {
                 // Pause all other players
                 containers.forEach(other => {
                     if (other !== container) {
-                        const otherBefore = other.querySelector('.baAudioBefore');
-                        const otherAfter = other.querySelector('.baAudioAfter');
-                        const otherPlayBtn = other.querySelector('.baPlayBtn');
-                        if (otherBefore && !otherBefore.paused) {
-                            otherBefore.pause();
-                            if (otherAfter) otherAfter.pause();
-                            if (otherPlayBtn) otherPlayBtn.innerHTML = '<i class="fas fa-play"></i>';
-                            // We don't reset their 'isPlaying' variable directly since it's scoped, but their UI resets.
-                            // Actually wait, their isPlaying variable won't sync. It's fine for simple use cases.
-                            // Let's just dispatch a custom event to pause others properly.
-                            other.dispatchEvent(new Event('stopAudio'));
-                        }
+                        other.dispatchEvent(new Event('stopAudio'));
                     }
                 });
 
@@ -128,14 +116,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     playBtn.innerHTML = '<i class="fas fa-play"></i>';
                     isPlaying = false;
                 } else {
+                    // Only play the active track
                     if (isAfter) {
-                        audioBefore.currentTime = audioAfter.currentTime;
-                    } else {
                         audioAfter.currentTime = audioBefore.currentTime;
+                        audioAfter.play();
+                    } else {
+                        audioBefore.currentTime = audioAfter.currentTime;
+                        audioBefore.play();
                     }
                     
-                    audioBefore.play();
-                    audioAfter.play();
                     playBtn.innerHTML = '<i class="fas fa-pause"></i>';
                     isPlaying = true;
                 }
@@ -151,15 +140,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // ─── Toggle Before / After ───
+        // 💎💎💎 Toggle Before / After 💎💎💎
         if (toggleBtn) {
             toggleBtn.addEventListener('click', () => {
                 isAfter = !isAfter;
                 
                 if (isAfter) {
-                    audioBefore.volume = 0;
-                    audioAfter.volume = 1;
-                    
                     if (waveformContainer) waveformContainer.classList.add('is-after');
                     if (stateLabel) stateLabel.textContent = 'AFTER';
                     toggleBtn.innerHTML = '<i class="fas fa-arrow-right-arrow-left"></i><span>Before</span>';
@@ -167,12 +153,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     if (isPlaying) {
                         const t = audioBefore.currentTime;
+                        audioBefore.pause(); // Pause the old track
                         if (Math.abs(audioAfter.currentTime - t) > 0.1) audioAfter.currentTime = t;
+                        audioAfter.play();   // Play the new track
                     }
                 } else {
-                    audioBefore.volume = 1;
-                    audioAfter.volume = 0;
-                    
                     if (waveformContainer) waveformContainer.classList.remove('is-after');
                     if (stateLabel) stateLabel.textContent = 'BEFORE';
                     toggleBtn.innerHTML = '<i class="fas fa-arrow-right-arrow-left"></i><span>After</span>';
@@ -180,7 +165,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     if (isPlaying) {
                         const t = audioAfter.currentTime;
+                        audioAfter.pause(); // Pause the old track
                         if (Math.abs(audioBefore.currentTime - t) > 0.1) audioBefore.currentTime = t;
+                        audioBefore.play();   // Play the new track
                     }
                 }
             });
