@@ -21,12 +21,17 @@
         -webkit-mask-image: linear-gradient(to top, transparent, black 30%);
     }
     .video-bg {
-        width: 100%;
+        position: absolute;
+        top: 0;
+        /* Make the video extremely wide (3x) so there is enough "video" to the right of the character to fill the screen */
+        width: 300%;
         height: 100%;
+        /* Shift left so the character (at ~80% of video) lands exactly in the center (50% of screen) */
+        left: -190%;
+        max-width: none;
         object-fit: cover;
-        /* Shift left and zoom in to center the character on mobile */
         object-position: center;
-        transform: scale(1.6) translateX(-10%);
+        transform: scale(1);
     }
     .easter-container {
         flex: 1;
@@ -110,6 +115,12 @@
         }
         .video-bg {
             /* Reset zoom and position for desktop */
+            position: relative;
+            top: auto;
+            left: auto;
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
             object-position: center;
             transform: scale(1);
         }
