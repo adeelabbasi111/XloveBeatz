@@ -14,7 +14,7 @@
     }
     .video-container {
         width: 100%;
-        height: 50vh;
+        height: 38vh;
         position: relative;
         overflow: hidden;
         mask-image: linear-gradient(to top, transparent, black 30%);
@@ -23,14 +23,14 @@
     .video-bg {
         position: absolute;
         top: 0;
-        /* Make the video extremely wide (3x) so there is enough "video" to the right of the character to fill the screen */
-        width: 300%;
+        /* Scaled down by ~30% from previous size to shrink character nicely while maintaining full screen coverage */
+        width: 220%;
         height: 100%;
-        /* Shift left so the character (at ~80% of video) lands exactly in the center (50% of screen) */
-        left: -190%;
+        /* Shift left so character (at ~73% of video width) lands at 49.7% (dead center) */
+        left: -110%;
         max-width: none;
         object-fit: cover;
-        object-position: center;
+        object-position: center 15%;
         transform: scale(1);
     }
     .easter-container {
