@@ -24,7 +24,9 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
+        /* Shift left and zoom in to center the character on mobile */
         object-position: center;
+        transform: scale(1.6) translateX(-10%);
     }
     .easter-container {
         flex: 1;
@@ -105,6 +107,11 @@
             /* Remove the mask so we can see the particles on the left side of the video */
             mask-image: none;
             -webkit-mask-image: none;
+        }
+        .video-bg {
+            /* Reset zoom and position for desktop */
+            object-position: center;
+            transform: scale(1);
         }
         /* Add a black fade gradient overlay on the left side to ensure text readability without hiding particles completely */
         .video-container::after {
