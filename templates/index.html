@@ -62,10 +62,7 @@
                         {% for img in col1_images %}
                         <img src="{{ img }}" alt="Studio Visual" class="strip-img" width="1000" height="1000" loading="lazy" onerror="this.style.display='none'">
                         {% endfor %}
-                        {# Triple just in case of tall screens #}
-                        {% for img in col1_images %}
-                        <img src="{{ img }}" alt="Studio Visual" class="strip-img" width="1000" height="1000" loading="lazy" onerror="this.style.display='none'">
-                        {% endfor %}
+
                     </div>
                 </div>
 
@@ -79,10 +76,7 @@
                         {% for img in col2_images %}
                         <img src="{{ img }}" alt="Studio Visual" class="strip-img" width="1000" height="1000" loading="lazy" onerror="this.style.display='none'">
                         {% endfor %}
-                        {# Triple #}
-                        {% for img in col2_images %}
-                        <img src="{{ img }}" alt="Studio Visual" class="strip-img" width="1000" height="1000" loading="lazy" onerror="this.style.display='none'">
-                        {% endfor %}
+
                     </div>
                 </div>
 
@@ -459,33 +453,33 @@
         <!-- Beat Packs Portal (Featured) -->
         <a href="{{ url_for('public.beat_packs_page') }}" class="portal-card portal-featured">
             <div class="portal-bg-wrapper">
-                <img src="{{ url_for('static', filename='images/beat_packs_bg.jpg') }}" class="portal-bg" width="1920" height="1080" onerror="this.src='https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?q=80&w=800&auto=format&fit=crop'" alt="Beat Packs">
+                <img src="{{ url_for('static', filename='images/beat_packs_bg.webp') }}" class="portal-bg" width="1920" height="1080" onerror="this.src='https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?q=80&w=800&auto=format&fit=crop'" alt="Beat Packs" loading="lazy">
             </div>
             <div class="portal-gradient"></div>
             <div class="portal-content">
-                <h2 class="portal-title">Beat Packs</h2>
-                <p class="portal-subtitle">Curated collections of premium beats ready for your next hit.</p>
-                <div class="portal-btn"><i class="fas fa-layer-group"></i> View Packs</div>
+                <div class="portal-label">Browse Collection</div>
+                <h2 class="portal-title">Curated Beat Packs</h2>
+                <span class="portal-link">View Packs <i class="fas fa-arrow-right"></i></span>
             </div>
         </a>
 
         <!-- Singles Portal -->
         <a href="{{ url_for('public.player_page') }}" class="portal-card">
             <div class="portal-bg-wrapper">
-                <img src="{{ url_for('static', filename='images/singles_bg.jpg') }}" class="portal-bg" width="1920" height="1080" onerror="this.src='https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=1600&auto=format&fit=crop'" alt="Singles">
+                <img src="{{ url_for('static', filename='images/singles_bg.webp') }}" class="portal-bg" width="1920" height="1080" onerror="this.src='https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=1600&auto=format&fit=crop'" alt="Singles" loading="lazy">
             </div>
             <div class="portal-gradient"></div>
             <div class="portal-content">
-                <h2 class="portal-title">Singles</h2>
-                <p class="portal-subtitle">Explore our massive catalog of individual beats.</p>
-                <div class="portal-btn"><i class="fas fa-music"></i> Open Player</div>
+                <div class="portal-label">Latest Drops</div>
+                <h2 class="portal-title">Single Beats</h2>
+                <span class="portal-link">Listen Now <i class="fas fa-arrow-right"></i></span>
             </div>
         </a>
 
         <!-- Vocal Presets Portal -->
         <a href="{{ url_for('public.vocal_presets_page') }}" class="portal-card">
             <div class="portal-bg-wrapper">
-                <img src="{{ url_for('static', filename='images/presets_bg.jpg') }}" class="portal-bg" width="1920" height="1080" onerror="this.src='https://images.unsplash.com/photo-1520113412646-fa108a0cb59d?q=80&w=800&auto=format&fit=crop'" alt="Vocal Presets">
+                <img src="{{ url_for('static', filename='images/presets_bg.webp') }}" class="portal-bg" width="1920" height="1080" onerror="this.src='https://images.unsplash.com/photo-1520113412646-fa108a0cb59d?q=80&w=800&auto=format&fit=crop'" alt="Vocal Presets" loading="lazy">
             </div>
             <div class="portal-gradient"></div>
             <div class="portal-content">

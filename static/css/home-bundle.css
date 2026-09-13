@@ -11,7 +11,7 @@
 
 /* ── HERO CONTAINER ── */
 .hero {
-    min-height: 90vh; /*[cite: 2] */
+    min-height: 90svh; /* svh prevents layout shift on mobile when address bar hides */
     display: flex;
     align-items: center;
     padding: 120px 40px 140px; /* Increased bottom padding for trusted strip */
@@ -1232,11 +1232,11 @@
 
 @keyframes scroll-up-anim {
     0% { transform: translateY(0); }
-    100% { transform: translateY(-33.3333%); } /* Scrolls exactly 1 copy length out of 3 */
+    100% { transform: translateY(-50%); } /* Scrolls exactly 1 copy length out of 2 */
 }
 
 @keyframes scroll-down-anim {
-    0% { transform: translateY(-33.3333%); } /* Start offset by 1 copy */
+    0% { transform: translateY(-50%); } /* Start offset by 1 copy */
     100% { transform: translateY(0); } /* Scroll back up */
 }
 

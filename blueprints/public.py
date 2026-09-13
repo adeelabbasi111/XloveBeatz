@@ -53,7 +53,7 @@ def home():
     # Let's shuffle them in Python so it's a nice mix every time
     import random
     random.shuffle(all_covers)
-    all_covers = all_covers[:14] # Limit to 14 to prevent DOM overload in marquee
+    all_covers = all_covers[:8] # Limit to 8 to prevent DOM overload in marquee
 
     return render_template(
         'index.html',
