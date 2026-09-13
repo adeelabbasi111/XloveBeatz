@@ -1,0 +1,119 @@
+{% extends "admin/base.html" %}
+
+{% block admin_title %}Bulk Optimization Migration{% endblock %}
+
+{% block content %}
+<div class="admin-dashboard">
+    <div class="admin-header" style="padding: 20px;">
+        <h1 style="color: #fff; margin-bottom: 10px;">Bulk Image & Audio Optimization</h1>
+        <p style="color: #aaa; max-width: 800px; line-height: 1.6;">This tool will safely convert all your existing images and audio previews to the new optimized formats (WebP, precise dimensions, 60s/96k audio) without deleting your original WAVs.</p>
+    </div>
+
+    <div class="dashboard-card" style="margin: 20px; padding: 30px; background: #1a1a1a; border-radius: 12px; border: 1px solid #333;">
+        <h3 style="color: #fff; margin-bottom: 15px;">Migration Controls</h3>
+        <p style="color: #ffcc00;"><i class="fas fa-exclamation-triangle"></i> <strong>Warning:</strong> Depending on the number of files, this might take a few minutes. Do not close this tab once started.</p>
+        
+        <button id="startMigrationBtn" class="btn btn-primary" style="font-size: 1.1rem; padding: 12px 24px; margin-top: 20px; cursor: pointer;">
+            <i class="fas fa-rocket"></i> Start Optimization Pipeline
+        </button>
+        
+        <div id="progressContainer" style="display: none; margin-top: 40px;">
+            <h4 style="color: #fff; margin-bottom: 10px;">Overall Progress</h4>
+            <div style="background: #2a2a2a; border-radius: 8px; height: 24px; overflow: hidden;">
+                <div id="progressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #ff3366, #ff9933); transition: width 0.3s ease;"></div>
+            </div>
+            <div id="progressText" style="text-align: right; margin-top: 8px; font-weight: 600; color: #ff9933; font-size: 1.1rem;">0%</div>
+            
+            <h4 style="color: #fff; margin-top: 35px; margin-bottom: 10px;">Live Console Log</h4>
+            <div id="consoleLog" style="background: #000; color: #0f0; font-family: 'DM Mono', monospace; padding: 20px; border-radius: 8px; height: 400px; overflow-y: auto; font-size: 0.95rem; line-height: 1.6; border: 1px solid #444;">
+                <div>[SYSTEM] Ready to start...</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block admin_scripts %}
+<script>
+document.getElementById('startMigrationBtn').addEventListener('click', function() {
+    this.disabled = true;
+    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Optimizing... Do not close window';
+    this.style.opacity = '0.7';
+    
+    const progressContainer = document.getElementById('progressContainer');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    const consoleLog = document.getElementById('consoleLog');
+    
+    progressContainer.style.display = 'block';
+    consoleLog.innerHTML += `<div>[SYSTEM] Connecting to optimization pipeline...</div>`;
+    
+    // Server-Sent Events (SSE) stream using Fetch API
+    fetch('{{ url_for("admin.migration_run") }}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    }).then(response => {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        
+        function read() {
+            reader.read().then(({done, value}) => {
+                if (done) {
+                    consoleLog.innerHTML += `<div style="color: #ff9933;">[SYSTEM] Connection closed. Migration complete.</div>`;
+                    scrollToBottom();
+                    document.getElementById('startMigrationBtn').innerHTML = '<i class="fas fa-check"></i> Optimization Complete';
+                    document.getElementById('startMigrationBtn').style.background = '#28a745';
+                    document.getElementById('startMigrationBtn').style.borderColor = '#28a745';
+                    return;
+                }
+                
+                buffer += decoder.decode(value, {stream: true});
+                
+                let eolIndex;
+                while ((eolIndex = buffer.indexOf('\n\n')) >= 0) {
+                    const chunk = buffer.slice(0, eolIndex);
+                    buffer = buffer.slice(eolIndex + 2);
+                    
+                    if (chunk.startsWith('data: ')) {
+                        try {
+                            const data = JSON.parse(chunk.substring(6));
+                            
+                            if (data.msg) {
+                                let color = '#0f0';
+                                if (data.msg.includes('Error')) color = '#ff3366';
+                                consoleLog.innerHTML += `<div style="color: ${color}">[>] ${data.msg}</div>`;
+                                scrollToBottom();
+                            }
+                            
+                            if (data.progress !== undefined) {
+                                progressBar.style.width = data.progress + '%';
+                                progressText.innerText = data.progress + '%';
+                            }
+                        } catch (e) {
+                            console.error("Error parsing SSE JSON", e);
+                        }
+                    }
+                }
+                
+                read();
+            });
+        }
+        
+        read();
+    }).catch(error => {
+        consoleLog.innerHTML += `<div style="color: #ff3366;">[ERROR] ${error.message}</div>`;
+        scrollToBottom();
+        this.disabled = false;
+        this.innerHTML = '<i class="fas fa-rocket"></i> Retry Optimization Pipeline';
+        this.style.opacity = '1';
+    });
+    
+    function scrollToBottom() {
+        consoleLog.scrollTop = consoleLog.scrollHeight;
+    }
+});
+</script>
+{% endblock %}
