@@ -111,9 +111,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         }
 
         // ── Configuration ──
-        var MIN_DISPLAY_MS   = 400;   // don't flash — show for at least this long
+        var MIN_DISPLAY_MS   = 0;     // don't flash — show for at least this long
         var MAX_DISPLAY_MS   = 2000;  // hard safety cap — never block longer than this
-        var FADE_DURATION_MS = 700;   // CSS transition matches this
+        var FADE_DURATION_MS = 300;   // CSS transition matches this
 
         var startTime    = Date.now();
         var loadComplete = false;

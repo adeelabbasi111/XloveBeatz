@@ -54,13 +54,13 @@ document.addEventListener('DOMContentLoaded', function() {
         // 💎💎💎 Loading State & Server Range Fix 💎💎💎
         let loadedCount = 0;
         bothLoaded = false;
-        if (playBtn) playBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        if (playBtn) playBtn.innerHTML = '<i class="fas fa-play"></i>';
 
         function checkLoaded() {
             loadedCount++;
             if (loadedCount >= 2) {
                 bothLoaded = true;
-                if (playBtn) playBtn.innerHTML = '<i class="fas fa-play"></i>';
+                if (playBtn && !isPlaying) playBtn.innerHTML = '<i class="fas fa-play"></i>';
                 if (timeTotal) timeTotal.textContent = formatTime(audioBefore.duration);
             }
         }
@@ -89,18 +89,41 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        Promise.all([
-            loadAudioAsBlob(audioBefore),
-            loadAudioAsBlob(audioAfter)
-        ]).then(([beforeBlobUrl, afterBlobUrl]) => {
-            if (beforeBlobUrl && waveformUI) {
-                waveformUI.loadRealWaveform(beforeBlobUrl);
-            }
-        });
+        let hasStartedLoading = false;
+        function initiateAudioLoad() {
+            if (hasStartedLoading) return;
+            hasStartedLoading = true;
+            
+            if (playBtn && !bothLoaded) playBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+            Promise.all([
+                loadAudioAsBlob(audioBefore),
+                loadAudioAsBlob(audioAfter)
+            ]).then(([beforeBlobUrl, afterBlobUrl]) => {
+                if (beforeBlobUrl && waveformUI) {
+                    waveformUI.loadRealWaveform(beforeBlobUrl);
+                }
+                if (isPlaying) {
+                    // If they clicked play while loading, start it now
+                    if (isAfter) {
+                        audioAfter.play();
+                    } else {
+                        audioBefore.play();
+                    }
+                    if (playBtn) playBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                }
+            });
+        }
+
+        // Start loading if user hovers or taps the container
+        container.addEventListener('mouseenter', initiateAudioLoad, { once: true });
+        container.addEventListener('touchstart', initiateAudioLoad, { once: true });
 
         // 💎💎💎 Play / Pause 💎💎💎
         if (playBtn) {
             playBtn.addEventListener('click', () => {
+                initiateAudioLoad();
+                
                 // Pause all other players
                 containers.forEach(other => {
                     if (other !== container) {
@@ -108,14 +131,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 });
 
-                if (!bothLoaded) return;
-
                 if (isPlaying) {
                     audioBefore.pause();
                     audioAfter.pause();
                     playBtn.innerHTML = '<i class="fas fa-play"></i>';
                     isPlaying = false;
                 } else {
+                    isPlaying = true;
+                    if (!bothLoaded) {
+                        playBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                        return; // Will play automatically when loaded
+                    }
+                    
                     // Only play the active track
                     if (isAfter) {
                         audioAfter.currentTime = audioBefore.currentTime;
@@ -126,7 +153,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     
                     playBtn.innerHTML = '<i class="fas fa-pause"></i>';
-                    isPlaying = true;
                 }
             });
         }

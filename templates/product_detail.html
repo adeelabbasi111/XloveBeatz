@@ -72,10 +72,10 @@
                 {% endif %}
                 
                 <!-- Audio Elements -->
-                <audio class="baAudioBefore" preload="auto">
+                <audio class="baAudioBefore" preload="none">
                     <source src="{{ url_for('static', filename=demo.demo_before) }}" type="audio/mpeg">
                 </audio>
-                <audio class="baAudioAfter" preload="auto">
+                <audio class="baAudioAfter" preload="none">
                     <source src="{{ url_for('static', filename=demo.demo_after) }}" type="audio/mpeg">
                 </audio>
 
