@@ -34,9 +34,7 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
-    .hero-content {
-        animation: heroFadeIn 0.8s ease-out; /*[cite: 2] */
-    }
+    /* Animation removed to prevent artificial LCP delay for Core Web Vitals */
 }
 
 @keyframes heroFadeIn {
