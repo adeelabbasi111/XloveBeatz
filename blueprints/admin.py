@@ -2050,21 +2050,21 @@ def admin_regenerate_previews():
 # BULK MIGRATION / OPTIMIZATION
 # ==============================================================================
 @bp.route('/admin/migration', methods=['GET'])
-@login_required
+@admin_required
 def migration_page():
-    if not current_user.is_admin:
+    if not get_current_user().is_admin:
         return jsonify({'error': 'Unauthorized'}), 403
     from flask import render_template
     return render_template('admin/migration.html')
 
 @bp.route('/admin/migration/run', methods=['POST'])
-@login_required
+@admin_required
 def migration_run():
     from flask import Response, stream_with_context
     import json, os, subprocess
     from helpers.audio_utils import PREVIEW_MAX_SECONDS, PREVIEW_BITRATE
 
-    if not current_user.is_admin:
+    if not get_current_user().is_admin:
         return jsonify({'error': 'Unauthorized'}), 403
 
     def generate():
