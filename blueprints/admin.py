@@ -77,6 +77,12 @@ def optimize_image_size_duel(img, dest_dir, base_filename, max_w=IMG_MAX_WIDTH, 
     if img.mode in ('RGBA', 'P', 'LA'):
         img = img.convert('RGB')
 
+    is_already_small = (img.width <= max_w and img.height <= max_h)
+    
+    # If it's already a WebP or JPEG that's small enough, just skip the heavy re-compression
+    if is_already_small and img.format in ('WEBP', 'JPEG'):
+        return None
+
     if img.width > max_w or img.height > max_h:
         img.thumbnail((max_w, max_h), Image.Resampling.LANCZOS)
 
@@ -84,7 +90,7 @@ def optimize_image_size_duel(img, dest_dir, base_filename, max_w=IMG_MAX_WIDTH, 
     webp_io = io.BytesIO()
     jpg_io = io.BytesIO()
     
-    img.save(webp_io, format='WEBP', quality=quality, method=6)
+    img.save(webp_io, format='WEBP', quality=quality, method=4)
     img.save(jpg_io, format='JPEG', quality=quality, optimize=True, progressive=True)
     
     webp_size = webp_io.tell()
@@ -2081,6 +2087,8 @@ def migration_run():
             if g.image_path:
                 abs_path = os.path.join(current_app.root_path, 'static', g.image_path)
                 if os.path.exists(abs_path):
+                    if g.image_path.lower().endswith(('.webp', '.jpg')):
+                        continue
                     yield f"data: {json.dumps({'msg': f'Optimizing Genre: {g.name}', 'progress': int(5 + (i/max(total_genres,1))*15)})}\n\n"
                     try:
                         img = Image.open(abs_path)
@@ -2154,6 +2162,10 @@ def migration_run():
             if b.preview_audio:
                 abs_path = os.path.join(current_app.root_path, 'static', b.preview_audio)
                 if os.path.exists(abs_path):
+                    # If it's under 850KB, it's already optimized (60s @ 96kbps is ~720KB)
+                    if os.path.getsize(abs_path) < 850 * 1024:
+                        continue
+                        
                     yield f"data: {json.dumps({'msg': f'Optimizing Audio Preview: {b.product.name if b.product else b.id}', 'progress': int(70 + (i/max(total_beats,1))*25)})}\n\n"
                     try:
                         temp_out = abs_path.replace('.mp3', '_temp.mp3')
