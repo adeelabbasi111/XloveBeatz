@@ -56,7 +56,7 @@
                 <div class="hero-strip strip-down">
                     <div class="strip-track track-down">
                         {% for img in col1_images %}
-                        <img src="{{ img }}" alt="Studio Visual" class="strip-img" width="1000" height="1000" loading="eager" fetchpriority="high" onerror="this.style.display='none'">
+                        <img src="{{ img }}" alt="Studio Visual" class="strip-img" width="1000" height="1000" loading="{% if loop.index <= 2 %}eager{% else %}lazy{% endif %}" {% if loop.first %}fetchpriority="high"{% endif %} onerror="this.style.display='none'">
                         {% endfor %}
                         {# Duplicate for infinite loop #}
                         {% for img in col1_images %}
@@ -73,7 +73,7 @@
                 <div class="hero-strip strip-up">
                     <div class="strip-track track-up">
                         {% for img in col2_images %}
-                        <img src="{{ img }}" alt="Studio Visual" class="strip-img" width="1000" height="1000" loading="eager" fetchpriority="high" onerror="this.style.display='none'">
+                        <img src="{{ img }}" alt="Studio Visual" class="strip-img" width="1000" height="1000" loading="{% if loop.index <= 2 %}eager{% else %}lazy{% endif %}" {% if loop.first %}fetchpriority="high"{% endif %} onerror="this.style.display='none'">
                         {% endfor %}
                         {# Duplicate for infinite loop #}
                         {% for img in col2_images %}

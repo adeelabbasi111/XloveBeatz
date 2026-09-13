@@ -204,10 +204,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     {% include 'partials/mobile_nav.html' %}
 
     {# ─── External scripts ─── #}
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-    <script src="{{ url_for('static', filename='js/cart.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/fomo.js') }}"></script>
+    <script defer src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script defer src="{{ url_for('static', filename='js/cart.js') }}"></script>
+    <script defer src="{{ url_for('static', filename='js/auth.js') }}"></script>
+    <script defer src="{{ url_for('static', filename='js/fomo.js') }}"></script>
 
     {# Page-specific Scripts #}
     {% block page_scripts %}{% endblock %}
