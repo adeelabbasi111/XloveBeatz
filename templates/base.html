@@ -58,6 +58,7 @@
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5LZWVV2L"
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
+{% include 'partials/preloader.html' %}
 <div id="floatingNotes"></div>{# ============ GLOBAL LOOPING ANNOUNCEMENT STRIP ============ #}
 {% if strip_messages %}
 <div class="looping-strip-wrapper">
@@ -93,7 +94,89 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     {% include 'partials/cart.html' %}
     {% include 'partials/toast.html' %}
 
+    {# ─── PRELOADER: inline so it works on every page ─── #}
+    <script>
+    (function () {
+        'use strict';
 
+        var preloader = document.getElementById('preloader');
+        var bar       = document.getElementById('preloaderProgress');
+        if (!preloader) return;
+
+        var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        // ── Reduced motion: remove immediately, no animation ──
+        if (prefersReduced) {
+            preloader.remove();
+            return;
+        }
+
+        // ── Configuration ──
+        var MIN_DISPLAY_MS   = 0;     // don't flash — show for at least this long
+        var MAX_DISPLAY_MS   = 2000;  // hard safety cap — never block longer than this
+        var FADE_DURATION_MS = 300;   // CSS transition matches this
+
+        var startTime    = Date.now();
+        var loadComplete = false;
+        var removed      = false;
+
+        // ── Fake progress (visual only, doesn't control dismissal) ──
+        var textNode = document.getElementById('preloaderText');
+        var progress = 0;
+        var progressInterval = setInterval(function () {
+            if (loadComplete) {
+                progress = 100;
+            } else if (progress < 90) {
+                progress += Math.random() * 5 + 1;
+            }
+            if (bar) bar.style.width = Math.min(progress, 100) + '%';
+            if (textNode) textNode.textContent = 'LOADING... ' + Math.min(Math.round(progress), 100) + '%';
+            if (progress >= 100) clearInterval(progressInterval);
+        }, 80);
+
+        // ── Remove preloader with fade ──
+        function removePreloader() {
+            if (removed) return;
+            removed = true;
+
+            // Snap bar to 100%
+            if (bar) bar.style.width = '100%';
+
+            // Calculate how much of MIN_DISPLAY_MS is left
+            var elapsed = Date.now() - startTime;
+            var remaining = Math.max(0, MIN_DISPLAY_MS - elapsed);
+
+            setTimeout(function () {
+                preloader.classList.add('hidden');
+                // Remove from DOM after CSS transition finishes
+                setTimeout(function () {
+                    if (preloader.parentNode) preloader.remove();
+                }, FADE_DURATION_MS);
+            }, remaining);
+        }
+
+        // ── Strategy: listen to real load events ──
+
+        // 1) DOMContentLoaded — HTML parsed, no need to wait for heavy media
+        document.addEventListener('DOMContentLoaded', function () {
+            loadComplete = true;
+            if (bar) bar.style.width = '100%';
+            removePreloader();
+        });
+
+        // 2) Safety net: force-remove after MAX_DISPLAY_MS no matter what
+        setTimeout(function () {
+            removePreloader();
+        }, MAX_DISPLAY_MS);
+
+        // 3) If DOMContentLoaded already fired by the time this script runs
+        //    (e.g. slow network, script at bottom of body), start filling faster
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            // Page content is already parsed — accelerate progress
+            if (progress < 70) progress = 70;
+        }
+    })();
+    </script>
 
     {# ─── CSRF + API Helper ─── #}
     <script>
