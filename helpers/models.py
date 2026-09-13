@@ -1,6 +1,7 @@
 """
 Database models only. No business logic, no service functions.
 """
+import os
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func, UniqueConstraint
 from sqlalchemy import event
