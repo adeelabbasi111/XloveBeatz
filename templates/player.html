@@ -52,7 +52,7 @@
                 {# Artwork / Vinyl Zone #}
                 <div id="artworkZone" class="artwork-zone">
                     <div class="artwork-glow-ring" id="artworkGlowRing"></div>
-                    <img id="playerCoverImage" class="player-cover-image"
+                    <img id="playerCoverImage" class="player-cover-image" width="1000" height="1000"
                          src="" alt="" style="display:none;">
                     <i class="fas fa-music fallback-icon"></i>
                 </div>
@@ -205,7 +205,7 @@
                 {# Thumbnail or Number #}
                 <div class="track-num">
                     {% if beat.beat_image %}
-                    <img src="{{ url_for('static', filename=beat.beat_image) }}"
+                    <img src="{{ url_for('static', filename=beat.beat_image) }}" width="300" height="300"
                          alt="" class="track-thumb-img" loading="lazy">
                     {% else %}
                     {{ '%02d' | format(loop.index) }}

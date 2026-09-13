@@ -69,52 +69,43 @@ bp = Blueprint('admin', __name__)
 #  IMAGE COMPRESSION
 # ═══════════════════════════════════════════════════════════════
 
-def compress_image_at_path(abs_path, max_w=IMG_MAX_WIDTH, max_h=IMG_MAX_HEIGHT, quality=IMG_QUALITY):
-    """Compress an image file in-place. Returns True on success."""
-    try:
-        img = Image.open(abs_path)
-        if img.mode in ('RGBA', 'P'):
-            img = img.convert('RGB')
-
-        if img.width > max_w or img.height > max_h:
-            img.thumbnail((max_w, max_h), Image.LANCZOS)
-
-        ext = os.path.splitext(abs_path)[1].lower()
-        save_kwargs = {'optimize': True}
-        if ext in ('.jpg', '.jpeg', '.webp'):
-            save_kwargs['quality'] = quality
-
-        img.save(abs_path, **save_kwargs)
-        return True
-    except Exception as e:
-        logger.error("Image compression failed for %s: %s", abs_path, e)
-        return False
-
-
-def compress_and_save_image(file_storage, dest_abs_path, max_w=IMG_MAX_WIDTH, max_h=IMG_MAX_HEIGHT, quality=IMG_QUALITY):
+def optimize_image_size_duel(img, dest_dir, base_filename, max_w=IMG_MAX_WIDTH, max_h=IMG_MAX_HEIGHT, quality=IMG_QUALITY):
     """
-    Save a Werkzeug FileStorage to dest_abs_path with compression.
-    Returns True on success, False on failure.
+    Size Duel: Compresses in-memory as both WebP and JPG.
+    Saves the smaller of the two. Returns the final filename (including correct extension).
     """
-    try:
-        img = Image.open(file_storage.stream)
-        if img.mode in ('RGBA', 'P'):
-            img = img.convert('RGB')
+    if img.mode in ('RGBA', 'P', 'LA'):
+        img = img.convert('RGB')
 
-        if img.width > max_w or img.height > max_h:
-            img.thumbnail((max_w, max_h), Image.LANCZOS)
+    if img.width > max_w or img.height > max_h:
+        img.thumbnail((max_w, max_h), Image.Resampling.LANCZOS)
 
-        ext = os.path.splitext(dest_abs_path)[1].lower()
-        save_kwargs = {'optimize': True}
-        if ext in ('.jpg', '.jpeg', '.webp'):
-            save_kwargs['quality'] = quality
+    import io
+    webp_io = io.BytesIO()
+    jpg_io = io.BytesIO()
+    
+    img.save(webp_io, format='WEBP', quality=quality, method=6)
+    img.save(jpg_io, format='JPEG', quality=quality, optimize=True, progressive=True)
+    
+    webp_size = webp_io.tell()
+    jpg_size = jpg_io.tell()
 
-        os.makedirs(os.path.dirname(dest_abs_path), exist_ok=True)
-        img.save(dest_abs_path, **save_kwargs)
-        return True
-    except Exception as e:
-        logger.error("Image compress+save failed: %s", e)
-        return False
+    os.makedirs(dest_dir, exist_ok=True)
+
+    if webp_size <= jpg_size:
+        final_ext = '.webp'
+        buffer_to_save = webp_io
+    else:
+        final_ext = '.jpg'
+        buffer_to_save = jpg_io
+
+    final_filename = f"{base_filename}{final_ext}"
+    abs_dest = os.path.join(dest_dir, final_filename)
+    
+    with open(abs_dest, 'wb') as f:
+        f.write(buffer_to_save.getvalue())
+        
+    return final_filename
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -172,58 +163,57 @@ def move_temp_file(form, field_name, dest_subfolder, app, readable_name=None):
 
 def move_temp_image_compressed(form, field_name, dest_subfolder, app, readable_name=None):
     """
-    Like move_temp_file but compresses the image after moving.
-    If the file comes from temp, it's moved then compressed in-place.
-    If it's a direct upload, it's saved compressed.
+    Moves temp image or saves uploaded image and runs size duel compression.
     """
+    dest_dir = os.path.join(app.root_path, 'static', 'data', dest_subfolder)
     temp_path = form.get(f'{field_name}_temp_path', '').strip()
 
+    file_or_path = None
     if temp_path:
         abs_temp = os.path.join(app.root_path, temp_path)
-        if not os.path.exists(abs_temp):
-            logger.warning("Temp image not found: %s", abs_temp)
-            return None
+        if os.path.exists(abs_temp):
+            file_or_path = abs_temp
+    else:
+        file = request.files.get(field_name)
+        if file and file.filename:
+            file_or_path = file
 
-        ext = os.path.splitext(temp_path)[1]
+    if not file_or_path:
+        return None
 
-        if readable_name:
-            safe_name = secure_filename(readable_name)
-            filename = f"{safe_name}{ext}"
+    try:
+        if isinstance(file_or_path, str):
+            img = Image.open(file_or_path)
         else:
-            filename = f"{uuid.uuid4().hex}{ext}"
+            img = Image.open(file_or_path.stream)
+            
+        base_name = secure_filename(readable_name) if readable_name else uuid.uuid4().hex
+        
+        # Determine specific compression sizing rules
+        max_w = IMG_MAX_WIDTH
+        max_h = IMG_MAX_HEIGHT
+        q = IMG_QUALITY
+        
+        if dest_subfolder == 'beat_images': # Individual beats
+            max_w, max_h, q = 300, 300, 60
+        elif dest_subfolder == 'genres':
+            max_w, max_h, q = 800, 800, 85
+        elif dest_subfolder == 'covers': # Packs / Presets
+            max_w, max_h, q = 1000, 1000, 85
 
-        dest_dir = os.path.join(app.root_path, 'static', 'data', dest_subfolder)
-        os.makedirs(dest_dir, exist_ok=True)
-
-        abs_dest = os.path.join(dest_dir, filename)
-        shutil.move(abs_temp, abs_dest)
-
-        # Compress in-place
-        compress_image_at_path(abs_dest)
-
-        return f"data/{dest_subfolder}/{filename}"
-
-    file = request.files.get(field_name)
-    if file and file.filename:
-        ext = os.path.splitext(file.filename)[1]
-        if ext.lower() not in ('.jpg', '.jpeg', '.png', '.webp'):
-            return None
-
-        if readable_name:
-            safe_name = secure_filename(readable_name)
-            filename = f"{safe_name}{ext}"
-        else:
-            filename = f"{uuid.uuid4().hex}{ext}"
-
-        dest_dir = os.path.join(app.root_path, 'static', 'data', dest_subfolder)
-        os.makedirs(dest_dir, exist_ok=True)
-
-        abs_path = os.path.join(dest_dir, filename)
-        compress_and_save_image(file, abs_path)
-
-        return f"data/{dest_subfolder}/{filename}"
-
-    return None
+        final_filename = optimize_image_size_duel(img, dest_dir, base_name, max_w=max_w, max_h=max_h, quality=q)
+        
+        # Clean up temp file if used
+        if isinstance(file_or_path, str):
+            try:
+                os.remove(file_or_path)
+            except OSError:
+                pass
+                
+        return f"data/{dest_subfolder}/{final_filename}" if final_filename else None
+    except Exception as e:
+        logger.error("Image size duel failed: %s", e)
+        return None
 
 
 def cleanup_old_temp_files(app):
@@ -333,7 +323,7 @@ def create_audio_preview(full_audio_abs_path, start_sec, end_sec, output_filenam
     return f"data/{FOLDER_PREVIEWS}/{output_filename}"
 
 
-def convert_wav_to_full_preview(wav_abs_path, beat_slug, max_seconds=90):
+def convert_wav_to_full_preview(wav_abs_path, beat_slug, max_seconds=60):
     """
     Convert a WAV file to a full-length (or capped) MP3 preview.
     If the WAV is longer than max_seconds, trim it with a fade-out.
@@ -354,7 +344,7 @@ def convert_wav_to_full_preview(wav_abs_path, beat_slug, max_seconds=90):
             '-t', str(max_seconds),
             '-af', f'afade=t=out:st={max_seconds - 3}:d=3',
             '-acodec', 'libmp3lame',
-            '-b:a', '128k',
+            '-b:a', '96k',
             '-loglevel', 'error',
             abs_output,
         ]

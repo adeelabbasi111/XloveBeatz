@@ -8,7 +8,7 @@
 
 <main class="product-detail-page">
     <div class="pd-hero-bg">
-        <img src="{% if product.cover_image %}{{ url_for('static', filename=product.cover_image) }}{% else %}{{ url_for('static', filename='data/images/' + product.slug + '_cover.png') }}{% endif %}" class="pd-bg-img">
+        <img src="{% if product.cover_image %}{{ url_for('static', filename=product.cover_image) }}{% else %}{{ url_for('static', filename='data/images/' + product.slug + '_cover.png') }}{% endif %}" class="pd-bg-img" width="1000" height="1000">
         <div class="pd-hero-overlay"></div>
     </div>
     
@@ -17,7 +17,7 @@
 
         <div class="pd-grid">
             <div class="pd-left">
-                <img src="{% if product.cover_image %}{{ url_for('static', filename=product.cover_image) }}{% else %}{{ url_for('static', filename='data/images/' + product.slug + '_cover.png') }}{% endif %}" class="pd-cover">
+                <img src="{% if product.cover_image %}{{ url_for('static', filename=product.cover_image) }}{% else %}{{ url_for('static', filename='data/images/' + product.slug + '_cover.png') }}{% endif %}" class="pd-cover" width="1000" height="1000">
             </div>
             <div class="pd-right">
                 <div class="pd-meta">

@@ -12,7 +12,7 @@
 {% block content %}
 <main class="products-page">
     <header class="page-header-visual">
-        <img src="{{ url_for('static', filename='images/beat_packs_bg.jpg') }}" class="page-header-bg" onerror="this.src='https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?q=80&w=1600&auto=format&fit=crop'" alt="Beat Packs Header">
+        <img src="{{ url_for('static', filename='images/beat_packs_bg.jpg') }}" class="page-header-bg" width="1920" height="1080" onerror="this.src='https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?q=80&w=1600&auto=format&fit=crop'" alt="Beat Packs Header">
         <div class="page-header-gradient"></div>
         <div class="page-header-content">
             <h1 class="page-title">Curated Beat Packs</h1>
@@ -24,9 +24,9 @@
         {% for pack in beat_packs %}
         <a href="{{ url_for('public.product_detail', product_id=pack.id) }}" class="bento-item" style="text-decoration: none; color: inherit;">
             {% if pack.cover_image %}
-            <img src="{{ url_for('static', filename=pack.cover_image) }}" class="bento-bg" alt="{{ pack.name }}" loading="lazy">
+            <img src="{{ url_for('static', filename=pack.cover_image) }}" class="bento-bg" width="1000" height="1000" alt="{{ pack.name }}" loading="lazy">
             {% else %}
-            <img src="{{ url_for('static', filename='data/images/' + pack.slug + '_cover.png') }}" class="bento-bg" onerror="this.src='https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?q=80&w=800&auto=format&fit=crop'" loading="lazy">
+            <img src="{{ url_for('static', filename='data/images/' + pack.slug + '_cover.png') }}" class="bento-bg" width="1000" height="1000" onerror="this.src='https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?q=80&w=800&auto=format&fit=crop'" loading="lazy">
             {% endif %}
             <div class="bento-overlay"></div>
             <div class="bento-content">

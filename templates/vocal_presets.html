@@ -13,7 +13,7 @@
 {% block content %}
 <main class="presets-page">
     <header class="page-header-visual preset-theme">
-        <img src="{{ url_for('static', filename='images/presets_bg.jpg') }}" class="page-header-bg" onerror="this.src='https://images.unsplash.com/photo-1520113412646-fa108a0cb59d?q=80&w=1600&auto=format&fit=crop'" alt="Vocal Presets Header">
+        <img src="{{ url_for('static', filename='images/presets_bg.jpg') }}" class="page-header-bg" width="1920" height="1080" onerror="this.src='https://images.unsplash.com/photo-1520113412646-fa108a0cb59d?q=80&w=1600&auto=format&fit=crop'" alt="Vocal Presets Header">
         <div class="page-header-gradient"></div>
         <div class="page-header-content">
             <h1 class="page-title">Studio Vocal Presets</h1>
@@ -27,9 +27,9 @@
             <div class="preset-waveform"></div>
             <div class="preset-info">
                 {% if preset.cover_image %}
-                <img src="{{ url_for('static', filename=preset.cover_image) }}" class="preset-img" alt="{{ preset.name }}" loading="lazy">
+                <img src="{{ url_for('static', filename=preset.cover_image) }}" class="preset-img" width="1000" height="1000" alt="{{ preset.name }}" loading="lazy">
                 {% else %}
-                <img src="{{ url_for('static', filename='data/images/' + preset.slug + '_cover.jpg') }}" class="preset-img" onerror="this.src='https://images.unsplash.com/photo-1520113412646-fa108a0cb59d?q=80&w=800&auto=format&fit=crop'" loading="lazy">
+                <img src="{{ url_for('static', filename='data/images/' + preset.slug + '_cover.jpg') }}" class="preset-img" width="1000" height="1000" onerror="this.src='https://images.unsplash.com/photo-1520113412646-fa108a0cb59d?q=80&w=800&auto=format&fit=crop'" loading="lazy">
                 {% endif %}
                 <div>
                     <h3 class="preset-name">{{ preset.name }}</h3>

@@ -13,8 +13,8 @@ if BASE_DIR not in os.environ.get("PATH", ""):
 
 
 PREVIEW_DIR = os.path.join('static', 'data', 'previews')
-PREVIEW_BITRATE = '128k'
-PREVIEW_MAX_SECONDS = 90
+PREVIEW_BITRATE = '96k'
+PREVIEW_MAX_SECONDS = 60
 FADE_OUT_MS = 3000
 
 
