@@ -624,7 +624,7 @@ def fomo_events():
     # 2. Real recent purchases (real name + real product)
     recent_orders = (
         Order.query
-        .filter(Order.status == 'paid', Order.email != 'adeelabbasipersonal@gmail.com')
+        .filter(Order.payment_status == 'paid', Order.email != 'adeelabbasipersonal@gmail.com')
         .order_by(Order.created_at.desc())
         .limit(5)
         .all()
