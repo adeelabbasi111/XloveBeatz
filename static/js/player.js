@@ -678,6 +678,9 @@ function loadAndPlayTrack(index) {
       setPlayingState(true);
       startVisualizerLoop();
     }).catch(function (err) {
+      if (err && err.name === 'AbortError') {
+        return; // Interrupted by new play/pause request, normal browser behavior
+      }
       console.warn('Auto-play blocked:', err);
       showLoadingState(false);
       showToast('Tap play to start');

@@ -151,7 +151,18 @@ def create_app(config_class=Config):
     # ---- Error handlers ----
     @app.errorhandler(404)
     def not_found(e):
-        from flask import render_template
+        from flask import render_template, request, send_from_directory
+        # If an image under /static/ 404s (e.g. converted from .jfif/.jpg to .webp),
+        # automatically serve the existing file with the alternate extension
+        if request.path.startswith('/static/'):
+            rel_path = request.path[len('/static/'):]
+            base_no_ext, ext = os.path.splitext(rel_path)
+            if ext.lower() in ('.jfif', '.jpg', '.jpeg', '.png', '.webp'):
+                for alt_ext in ('.webp', '.jpg', '.jpeg', '.png', '.jfif'):
+                    alt_rel = base_no_ext + alt_ext
+                    abs_alt = os.path.join(app.static_folder, alt_rel)
+                    if os.path.exists(abs_alt):
+                        return send_from_directory(app.static_folder, alt_rel)
         return render_template('404.html'), 404
 
     @app.errorhandler(500)
@@ -165,10 +176,15 @@ def create_app(config_class=Config):
         from flask import jsonify
         return jsonify(error="Rate limit exceeded. Please try again later."), 429
 
-    # ---- Seed data on first run ----
+    # ---- Seed data and auto-migrate image paths on run ----
     with app.app_context():
         from helpers.seed import seed_initial_data
         seed_initial_data()
+        try:
+            from helpers.migrate_images import migrate_db_image_paths
+            migrate_db_image_paths(app)
+        except Exception as err:
+            app.logger.warning("Image path auto-migration skipped: %s", err)
 
     return app
 

@@ -94,9 +94,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     <a href="{{ url_for('admin.admin_settings') }}" class="nav-item {% if request.endpoint == 'admin.admin_settings' %}active{% endif %}">
         <i class="fas fa-gear"></i> <span>Site Settings</span>
     </a>
-                    <a href="{{ url_for('admin.migration_page') }}" class="nav-item {% if request.endpoint == 'admin.migration_page' %}active{% endif %}" style="margin-top: 15px; background-color: rgba(255, 51, 102, 0.1); border-left-color: #ff3366;">
-        <i class="fas fa-rocket" style="color: #ff3366;"></i> <span>Bulk Optimize</span>
-    </a>
 </nav>
             <div class="sidebar-footer">
                 <a href="{{ url_for('public.home') }}" class="nav-item">
