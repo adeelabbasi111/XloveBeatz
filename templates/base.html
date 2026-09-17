@@ -1,31 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Google Tag Manager -->
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-5LZWVV2L');</script>
-    <!-- End Google Tag Manager -->
+    <!-- Deferred Analytics -->
+    <script>
+    window.addEventListener('load', function() {
+        // GTM
+        (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+        })(window,document,'script','dataLayer','GTM-5LZWVV2L');
 
-    <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-6RLY88HN0K"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+        // gtag.js
+        var gt = document.createElement('script');
+        gt.async = true;
+        gt.src = "https://www.googletagmanager.com/gtag/js?id=G-6RLY88HN0K";
+        document.head.appendChild(gt);
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-6RLY88HN0K');
 
-  gtag('config', 'G-6RLY88HN0K');
-</script>
-
-    <!-- Microsoft Clarity -->
-    <script type="text/javascript">
+        // Clarity
         (function(c,l,a,r,i,t,y){
             c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
             t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
             y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
         })(window, document, "clarity", "script", "x76b9w3kba");
+    }, {once: true});
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -322,6 +324,35 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 1500);
     }
 });
+</script>
+
+{# ─── Instagram WebView Detection Banner ─── #}
+<div id="igBrowserBanner" style="display: none; position: fixed; bottom: 0; left: 0; width: 100%; background: #000; color: #fff; text-align: center; padding: 12px; z-index: 99999; border-top: 1px solid #333; font-size: 0.9rem;">
+    🎵 For uninterrupted playback in background, <a href="#" id="igBrowserEscapeLink" style="color: #ff3366; font-weight: bold; text-decoration: underline;">Open in Safari/Chrome</a>
+</div>
+<script>
+(function() {
+    var ua = navigator.userAgent || navigator.vendor || window.opera;
+    if ((ua.indexOf('Instagram') > -1) || (ua.indexOf('FBAN') > -1) || (ua.indexOf('FBAV') > -1)) {
+        var banner = document.getElementById('igBrowserBanner');
+        if (banner && !sessionStorage.getItem('igBannerDismissed')) {
+            banner.style.display = 'block';
+            document.body.style.paddingBottom = '50px'; // make room
+            
+            document.getElementById('igBrowserEscapeLink').addEventListener('click', function(e) {
+                e.preventDefault();
+                sessionStorage.setItem('igBannerDismissed', 'true');
+                banner.style.display = 'none';
+                document.body.style.paddingBottom = '';
+                // Try to force external browser
+                window.location.href = 'googlechrome://navigate?url=' + location.href;
+                setTimeout(function() {
+                    window.open(location.href, '_system');
+                }, 500);
+            });
+        }
+    }
+})();
 </script>
 </body>
 </html>

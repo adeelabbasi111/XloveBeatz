@@ -16,6 +16,11 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+button, a, input, select, textarea, [role="button"] {
+    touch-action: manipulation;
 }
 
 /* ---------- DESIGN TOKENS ---------- */
@@ -699,3 +704,23 @@ a {
     }
 }
 
+@ m e d i a   ( m a x - w i d t h :   7 0 0 p x )   {   i n p u t ,   s e l e c t ,   t e x t a r e a   {   f o n t - s i z e :   1 6 p x   ! i m p o r t a n t ;   }   }  
+ 
+/* ============================================================
+   TOUCH TARGET NORMALIZATION (44x44px minimum)
+   Ensures small buttons are easy to tap on mobile without changing visual design
+   ============================================================ */
+.ctrl-btn-sm, .play-btn-big, .volume-icon-btn, .play-track-icon, .close-btn, .modal-close {
+    position: relative;
+}
+.ctrl-btn-sm::after, .play-btn-big::after, .volume-icon-btn::after, .play-track-icon::after, .close-btn::after, .modal-close::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 44px;
+    height: 44px;
+    transform: translate(-50%, -50%);
+    min-width: 100%;
+    min-height: 100%;
+}

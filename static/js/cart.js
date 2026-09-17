@@ -1015,3 +1015,125 @@
         updateCartUI();
     }
 })();
+
+// Swipe-to-Dismiss for Mobile Cart Drawer
+(function() {
+    var drawer = document.getElementById('cartDrawer');
+    var overlay = document.getElementById('cartOverlay');
+    if (!drawer) return;
+    
+    var startY = 0;
+    var currentY = 0;
+    var isDragging = false;
+    
+    drawer.addEventListener('touchstart', function(e) {
+        // Only allow swipe from the header area or if drawer is scrolled to top
+        var itemsList = document.getElementById('cartItemsList');
+        if (itemsList && itemsList.scrollTop > 0) return;
+        
+        startY = e.touches[0].clientY;
+        isDragging = true;
+        drawer.style.transition = 'none';
+    }, {passive: true});
+    
+    drawer.addEventListener('touchmove', function(e) {
+        if (!isDragging) return;
+        currentY = e.touches[0].clientY;
+        var diff = currentY - startY;
+        
+        if (diff > 0) { // dragging down
+            drawer.style.transform = 'translateY(' + diff + 'px)';
+        }
+    }, {passive: true});
+    
+    drawer.addEventListener('touchend', function(e) {
+        if (!isDragging) return;
+        isDragging = false;
+        drawer.style.transition = ''; // restore css transition
+        
+        var diff = currentY - startY;
+        if (diff > 150) {
+            // Dismiss
+            drawer.style.transform = ''; // let css handle hidden state
+            if (overlay) overlay.classList.remove('show');
+            drawer.classList.remove('open');
+            document.body.style.overflow = '';
+        } else {
+            // Snap back
+            drawer.style.transform = '';
+        }
+    });
+})();
+
+// Exit Intent Discount (Mobile + Desktop)
+(function() {
+    let exitIntentTriggered = false;
+    
+    function showExitModal() {
+        if (exitIntentTriggered || sessionStorage.getItem('exitIntentShown')) return;
+        
+        // Only show if there is something in the cart
+        var cartCount = document.getElementById('cartItemsCount');
+        if (!cartCount || parseInt(cartCount.innerText || '0') === 0) return;
+        
+        exitIntentTriggered = true;
+        sessionStorage.setItem('exitIntentShown', 'true');
+        
+        // Create simple modal
+        var modal = document.createElement('div');
+        modal.id = 'exitIntentModal';
+        modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:999999; display:flex; justify-content:center; align-items:center; opacity:0; transition:opacity 0.3s; padding:20px;';
+        
+        var content = document.createElement('div');
+        content.style.cssText = 'background:var(--bg-elevated, #1B1E27); padding:30px; border-radius:24px; text-align:center; max-width:400px; border:1px solid rgba(255,255,255,0.1); transform:translateY(20px); transition:transform 0.3s;';
+        
+        content.innerHTML = '<h2 style="font-size:1.8rem; margin-bottom:10px; font-family:Syne, sans-serif; font-weight:800; background:linear-gradient(45deg,#ff3366,#ff7b93); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">Wait! Don\'t Leave Empty-Handed</h2><p style="color:var(--text-secondary, #94a3b8); margin-bottom:20px; font-size:1rem;">Complete your purchase right now and take <strong>10% OFF</strong> your entire cart!</p><div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:8px; font-family:monospace; font-size:1.2rem; letter-spacing:2px; margin-bottom:20px; border:1px dashed #ff3366; color:#fff;">TAKE10</div><button id="applyExitCoupon" style="background:#ff3366; color:#fff; border:none; padding:12px 24px; border-radius:30px; font-weight:bold; font-size:1rem; cursor:pointer; width:100%; margin-bottom:12px;">Apply Code & Checkout</button><button id="closeExitModal" style="background:transparent; color:#94a3b8; border:none; font-size:0.9rem; cursor:pointer;">No thanks, I\'ll pay full price</button>';
+        
+        modal.appendChild(content);
+        document.body.appendChild(modal);
+        
+        setTimeout(() => {
+            modal.style.opacity = '1';
+            content.style.transform = 'translateY(0)';
+        }, 10);
+        
+        document.getElementById('closeExitModal').addEventListener('click', function() {
+            modal.style.opacity = '0';
+            setTimeout(() => modal.remove(), 300);
+        });
+        
+        document.getElementById('applyExitCoupon').addEventListener('click', function() {
+            var input = document.getElementById('couponInput');
+            var applyBtn = document.getElementById('couponApplyBtn');
+            var drawer = document.getElementById('cartDrawer');
+            var overlay = document.getElementById('cartOverlay');
+            
+            if (input && applyBtn) {
+                input.value = 'TAKE10';
+                applyBtn.click();
+            }
+            if (drawer) drawer.classList.add('open');
+            if (overlay) overlay.classList.add('show');
+            document.body.style.overflow = 'hidden';
+            
+            modal.style.opacity = '0';
+            setTimeout(() => modal.remove(), 300);
+        });
+    }
+    
+    // Desktop Exit Intent
+    document.addEventListener('mouseout', function(e) {
+        if (e.clientY < 50 && e.movementY < 0) {
+            showExitModal();
+        }
+    });
+    
+    // Mobile Exit Intent (Fast scroll up)
+    let lastScrollY = window.scrollY;
+    document.addEventListener('scroll', function() {
+        if (window.scrollY < lastScrollY - 100 && window.scrollY < 200) {
+            showExitModal();
+        }
+        lastScrollY = window.scrollY;
+    }, {passive: true});
+})();

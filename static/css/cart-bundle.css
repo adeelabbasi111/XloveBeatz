@@ -331,7 +331,7 @@
 }
 
 .cart-item-type {
-    font-size: 0.68rem;
+    font-size: 0.75rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -357,7 +357,7 @@
 }
 
 .cart-item-license {
-    font-size: 0.68rem;
+    font-size: 0.75rem;
     color: var(--text-muted);
     text-transform: capitalize;
 }
@@ -379,8 +379,8 @@
 }
 
 .remove-item {
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
     border-radius: 8px;
     background: rgba(239, 68, 68, 0.06);
     border: 1px solid rgba(239, 68, 68, 0.15);
@@ -712,7 +712,7 @@
 
 .coupon-toggle-arrow {
     margin-left: auto;
-    font-size: 0.65rem;
+    font-size: 0.75rem;
     transition: transform 0.3s ease;
 }
 
@@ -854,8 +854,8 @@
 }
 
 .coupon-remove-btn {
-    width: 28px;
-    height: 28px;
+    width: 44px;
+    height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;

@@ -183,7 +183,7 @@
 }
 
 .trusted-by-text {
-    font-size: 0.65rem;
+    font-size: 0.75rem;
     letter-spacing: 4px;
     color: rgba(255, 255, 255, 0.4);
     text-transform: uppercase;
@@ -1273,4 +1273,15 @@
     .hero-strips-perspective {
         transform: rotate(-10deg) scale(1.3) translateY(-5%);
     }
+}
+/* ============================================================
+   PERFORMANCE UX FIXES
+   ============================================================ */
+.genres-section,
+.trending-section,
+.portals-grid,
+.social-proof-section,
+.features-section {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 500px;
 }

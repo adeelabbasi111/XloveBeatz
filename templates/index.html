@@ -60,13 +60,13 @@
                         {% endfor %}
                         {# Duplicate for infinite loop #}
                         {% for img in col1_images %}
-                        <img src="{{ img }}" alt="Studio Visual" class="strip-img" width="1000" height="1000" loading="lazy" onerror="this.style.display='none'">
+                        <img src="{{ img }}" alt="Studio Visual" class="strip-img" width="1000" height="1000" loading="lazy" fetchpriority="low" onerror="this.style.display='none'">
                         {% endfor %}
 
                     </div>
                 </div>
 
-                <!-- Strip 2: Moves Up -->
+                <!-- Right Strip (Scrolls Up) -->
                 <div class="hero-strip strip-up">
                     <div class="strip-track track-up">
                         {% for img in col2_images %}
@@ -74,7 +74,7 @@
                         {% endfor %}
                         {# Duplicate for infinite loop #}
                         {% for img in col2_images %}
-                        <img src="{{ img }}" alt="Studio Visual" class="strip-img" width="1000" height="1000" loading="lazy" onerror="this.style.display='none'">
+                        <img src="{{ img }}" alt="Studio Visual" class="strip-img" width="1000" height="1000" loading="lazy" fetchpriority="low" onerror="this.style.display='none'">
                         {% endfor %}
 
                     </div>

@@ -266,7 +266,7 @@
 .nav-badge {
     background: linear-gradient(145deg, #fbbf24, #f59e0b);
     color: #1a1a1a;
-    font-size: 0.68rem;
+    font-size: 0.75rem;
     font-weight: 800;
     min-width: 22px;
     height: 22px;
@@ -663,7 +663,7 @@
     gap: 3px;
     color: var(--text-muted);
     text-decoration: none;
-    font-size: 0.68rem;
+    font-size: 0.75rem;
     font-weight: 700;
     letter-spacing: 0.02em;
     transition: var(--transition-smooth);
@@ -787,7 +787,7 @@
     right: 2px;
     background: linear-gradient(135deg, var(--accent-soft), var(--accent-purple));
     color: #fff;
-    font-size: 0.62rem;
+    font-size: 0.75rem;
     font-weight: 800;
     min-width: 16px;
     height: 16px;

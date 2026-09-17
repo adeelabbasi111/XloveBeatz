@@ -6,11 +6,14 @@ from helpers.geo import get_geo_pricing, apply_geo_pricing_to_beats
 
 bp = Blueprint('public', __name__)
 
-@bp.route('/')
 @bp.route('/home')
+def home_legacy():
+    return redirect(url_for('public.home'), code=301)
+
+@bp.route('/')
 def home():
     from helpers.services import get_site_setting
-    if request.path == '/' and get_site_setting('waiting_page_enabled', 'false') == 'true':
+    if get_site_setting('waiting_page_enabled', 'false') == 'true':
         return redirect(url_for('public.waiting'))
 
     genres = Genre.query.filter_by(is_active=True).order_by(Genre.sort_order).all()

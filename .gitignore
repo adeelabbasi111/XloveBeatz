@@ -16,6 +16,18 @@ ENV/
 .env
 .env.*
 *.env
+*creds*.json
+*.pem
+*.key
+*.zip
+*.jfif
+test*.py
+clarity_*.py
+ga4_*.py
+append_route.py
+fix*.py
+inject_warnings.py
+t.py
 
 
 # Database and local data
