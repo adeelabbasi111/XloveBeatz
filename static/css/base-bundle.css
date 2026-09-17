@@ -704,11 +704,20 @@ a {
     }
 }
 
-@ m e d i a   ( m a x - w i d t h :   7 0 0 p x )   {   i n p u t ,   s e l e c t ,   t e x t a r e a   {   f o n t - s i z e :   1 6 p x   ! i m p o r t a n t ;   }   }  
- 
+/* ============================================================
+   iOS AUTO-ZOOM FIX
+   iOS Safari zooms the page when an input with font-size < 16px is focused
+   ============================================================ */
+@media (max-width: 700px) {
+    input, select, textarea {
+        font-size: 16px !important;
+    }
+}
+
 /* ============================================================
    TOUCH TARGET NORMALIZATION (44x44px minimum)
-   Ensures small buttons are easy to tap on mobile without changing visual design
+   Invisible hit-area expansion - does NOT change visual design.
+   pointer-events: none ensures clicks pass through to the actual button.
    ============================================================ */
 .ctrl-btn-sm, .play-btn-big, .volume-icon-btn, .play-track-icon, .close-btn, .modal-close {
     position: relative;
@@ -723,4 +732,5 @@ a {
     transform: translate(-50%, -50%);
     min-width: 100%;
     min-height: 100%;
+    pointer-events: none;
 }
