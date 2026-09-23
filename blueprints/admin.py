@@ -981,19 +981,11 @@ def _create_beat_details(product):
         preview_end = request.form.get('preview_end', '').strip()
 
         if preview_start and preview_end:
-            try:
-                preview_fname = f"{secure_filename(slug)}_preview.mp3"
-                preview_db_path = create_audio_preview(
-                    abs_wav,
-                    float(preview_start),
-                    float(preview_end),
-                    preview_fname,
-                )
-            except Exception as e:
-                logger.error("Trimmed preview creation failed for %s: %s", slug, e)
+            # We no longer generate trimmed MP3s; just use the WAV
+            preview_db_path = wav_db_path
         else:
-            # Default: convert entire WAV to 90-second preview with fade
-            preview_db_path = convert_wav_to_full_preview(abs_wav, slug) or ''
+            # We no longer generate MP3 previews; just use the WAV
+            preview_db_path = wav_db_path
 
     # ── 3. Beat cover image (compressed) ──
     beat_image_path = move_temp_image_compressed(
@@ -1078,19 +1070,11 @@ def _update_beat_files(slug, beat_detail):
         preview_end = request.form.get('preview_end', '').strip()
 
         if preview_start and preview_end:
-            try:
-                preview_fname = f"{secure_filename(slug)}_preview.mp3"
-                beat_detail.preview_audio = create_audio_preview(
-                    abs_wav,
-                    float(preview_start),
-                    float(preview_end),
-                    preview_fname,
-                )
-            except Exception as e:
-                logger.error("Preview regeneration failed for %s: %s", slug, e)
-                beat_detail.preview_audio = ''
+            # We no longer generate trimmed MP3s; just use the WAV
+            beat_detail.preview_audio = new_wav
         else:
-            beat_detail.preview_audio = convert_wav_to_full_preview(abs_wav, slug) or ''
+            # We no longer generate MP3 previews; just use the WAV
+            beat_detail.preview_audio = new_wav
 
     # ── Beat cover image (compressed) ──
     new_beat_image = move_temp_image_compressed(

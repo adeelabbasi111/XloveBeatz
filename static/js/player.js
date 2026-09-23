@@ -23,7 +23,7 @@ var prevBtn          = document.getElementById('prevBtn');
 var nextBtn          = document.getElementById('nextBtn');
 var addToCartBtn     = document.getElementById('addToCartBtn');
 var buyNowBtn        = document.getElementById('buyNowBtn');
-var downloadBtn      = document.getElementById('downloadPreviewBtn');
+
 var categoryTabs     = document.getElementById('categoryTabs');
 var tracklistScroll  = document.getElementById('tracklistScroll');
 var trackCount       = document.getElementById('trackCount');
@@ -732,30 +732,7 @@ if (nextBtn) nextBtn.addEventListener('click', function () {
   loadAndPlayTrack(parseInt(filtered[next].dataset.index, 10));
 });
 
-// ── Download Preview ──
-if (downloadBtn) {
-  downloadBtn.addEventListener('click', function () {
-    var trackItem = allTrackItems.find(function (t) {
-      return parseInt(t.dataset.index, 10) === currentTrackIndex;
-    });
-    if (!trackItem) {
-      showToast('No track selected');
-      return;
-    }
-    var previewUrl = trackItem.dataset.preview || '';
-    if (!previewUrl) {
-      showToast('No preview available');
-      return;
-    }
-    var link = document.createElement('a');
-    link.href = previewUrl;
-    link.download = (trackItem.dataset.name || 'preview') + '_preview.mp3';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    showToast('Downloading preview...');
-  });
-}
+
 
 // ── Share Beat ──
 var shareBeatBtn = document.getElementById('shareBeatBtn');
