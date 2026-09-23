@@ -110,8 +110,12 @@ def main():
                 
                 if ext == '.wav':
                     abs_wav = os.path.abspath(dest_path)
-                    # We no longer generate MP3 previews; just use the WAV
-                    preview_db_path = wav_db_path
+                    try:
+                        p_path = convert_wav_to_full_preview(abs_wav, slug)
+                        if p_path:
+                            preview_db_path = p_path
+                    except Exception as e:
+                        print(f"Preview gen failed for {clean_name}: {e}")
                 
                 prod = Product(
                     product_type='beat',
