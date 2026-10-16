@@ -12,30 +12,33 @@ from flask import session, flash, redirect, url_for
 logger = logging.getLogger(__name__)
 
 import smtplib
-import threading
+import email.utils
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
 
 def send_reset_email(to_email, reset_url):
     """Send password reset email using SMTP."""
-    smtp_host = os.getenv('SMTP_HOST', 'smtp.gmail.com')
-    smtp_port = int(os.getenv('SMTP_PORT', '587'))
+    smtp_host = os.getenv('SMTP_HOST', 'mail.xlovebeatz.com')
+    smtp_port = int(os.getenv('SMTP_PORT', '465'))
     smtp_user = os.getenv('SMTP_USER', '')
     smtp_pass = os.getenv('SMTP_PASS', '')
     from_name = os.getenv('FROM_NAME', 'XLoveBeats')
 
     if not smtp_user or not smtp_pass:
-        print(f"[DEV MODE] Password reset link for {to_email}: {reset_url}")
+        logger.warning("[DEV MODE] Password reset link for %s: %s", to_email, reset_url)
         return False
 
     msg = MIMEMultipart('alternative')
     msg['Subject'] = 'Reset Your XLoveBeats Password'
     msg['From'] = f'{from_name} <{smtp_user}>'
     msg['To'] = to_email
+    msg['Reply-To'] = smtp_user
+    msg['Date'] = email.utils.formatdate(localtime=True)
+    msg['Message-ID'] = email.utils.make_msgid(domain='xlovebeatz.com')
+    msg['Auto-Submitted'] = 'auto-generated'
 
-    text_body = f"""
-Hi,
+    text_body = f"""Hi,
 
 You requested a password reset for your XLoveBeats account.
 
@@ -49,39 +52,55 @@ If you didn't request this, ignore this email.
 — XLoveBeats Team
 """
 
-    html_body = f"""
-<div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #111; color: #fff; padding: 40px 30px; border-radius: 12px;">
-    <h2 style="color: #7c8df0; margin-bottom: 20px;">Reset Your Password</h2>
-    <p style="color: #ccc; line-height: 1.6;">You requested a password reset for your XLoveBeats account.</p>
-    <a href="{reset_url}" style="display: inline-block; background: linear-gradient(135deg, #7c8df0, #9d7cec); color: #fff; text-decoration: none; padding: 14px 32px; border-radius: 12px; font-weight: 700; margin: 20px 0;">Reset Password</a>
-    <p style="color: #888; font-size: 0.85rem;">This link will expire in 1 hour.</p>
-    <p style="color: #888; font-size: 0.85rem;">If you didn't request this, ignore this email.</p>
-    <hr style="border: 1px solid #333; margin: 24px 0;">
-    <p style="color: #555; font-size: 0.75rem;">— XLoveBeats Team</p>
+    html_body = f"""<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body style="margin:0; padding:20px; background-color:#0b0c10; font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;">
+<div style="max-width:520px; margin:0 auto; background-color:#13151c; border:1px solid #232734; border-radius:14px; padding:36px 30px; color:#f1f3f8;">
+    <div style="text-align:center; margin-bottom:24px;">
+        <h1 style="margin:0; font-size:1.6rem; color:#7c8df0; letter-spacing:1px;">XLOVEBEATZ</h1>
+    </div>
+    <h2 style="color:#ffffff; font-size:1.25rem; margin-top:0; margin-bottom:14px;">Reset Your Password</h2>
+    <p style="color:#a0a5b5; font-size:0.95rem; line-height:1.6; margin-bottom:24px;">
+        You requested a password reset for your XLoveBeats account. Click the button below to reset your password:
+    </p>
+    <div style="text-align:center; margin:30px 0;">
+        <a href="{reset_url}" style="display:inline-block; background:linear-gradient(135deg, #7c8df0, #9d7cec); color:#ffffff; text-decoration:none; padding:13px 32px; border-radius:10px; font-weight:700; font-size:0.95rem;">
+            Reset Password
+        </a>
+    </div>
+    <p style="color:#888888; font-size:0.85rem; line-height:1.5;">
+        This link will expire in <strong>1 hour</strong>.
+    </p>
+    <p style="color:#888888; font-size:0.85rem; line-height:1.5;">
+        If you didn't request this, you can safely ignore this email.
+    </p>
+    <hr style="border:none; border-top:1px solid #232734; margin:24px 0;">
+    <p style="color:#555555; font-size:0.75rem; text-align:center; margin:0;">
+        &copy; XLoveBeats. All rights reserved.
+    </p>
 </div>
-"""
+</body>
+</html>"""
 
-    msg.attach(MIMEText(text_body, 'plain'))
-    msg.attach(MIMEText(html_body, 'html'))
+    msg.attach(MIMEText(text_body, 'plain', 'utf-8'))
+    msg.attach(MIMEText(html_body, 'html', 'utf-8'))
 
-    def send_async():
-        try:
-            if int(smtp_port) == 465:
-                server = smtplib.SMTP_SSL(smtp_host, smtp_port)
-            else:
-                server = smtplib.SMTP(smtp_host, smtp_port)
-                server.starttls()
-                
-            server.login(smtp_user, smtp_pass)
-            server.sendmail(smtp_user, to_email, msg.as_string())
-            server.quit()
-        except Exception as e:
-            print(f"Email send failed: {e}")
+    try:
+        if smtp_port == 465:
+            server = smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=10)
+        else:
+            server = smtplib.SMTP(smtp_host, smtp_port, timeout=10)
+            server.starttls()
 
-    thread = threading.Thread(target=send_async)
-    thread.daemon = True
-    thread.start()
-    return True
+        server.login(smtp_user, smtp_pass)
+        server.sendmail(smtp_user, [to_email], msg.as_string())
+        server.quit()
+        logger.info("Password reset email sent successfully to %s", to_email)
+        return True
+    except Exception as e:
+        logger.error("Failed to send password reset email to %s: %s", to_email, e)
+        return False
 
 # =========================
 # SLUG GENERATION (single source of truth)

@@ -28,7 +28,10 @@ def forgot_password():
         user.password_reset_expires = datetime.utcnow() + timedelta(hours=1)
         db.session.commit()
 
-        reset_url = f"{request.host_url}reset-password/{token}"
+        reset_url = url_for('auth.reset_password_page', token=token, _external=True, _scheme='https')
+        if reset_url.startswith('http://'):
+            reset_url = 'https://' + reset_url[7:]
+
         send_reset_email(user.email, reset_url)
 
     return jsonify({
