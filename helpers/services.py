@@ -28,7 +28,19 @@ def create_user(username, email, password_hash):
 
 
 def get_user_by_email(email):
-    return User.query.filter_by(email=email).first()
+    if not email:
+        return None
+    clean = email.strip().lower()
+    return User.query.filter(db.func.lower(User.email) == clean).first()
+
+
+def get_user_by_email_or_username(identifier):
+    if not identifier:
+        return None
+    clean = identifier.strip().lower()
+    return User.query.filter(
+        (db.func.lower(User.email) == clean) | (db.func.lower(User.username) == clean)
+    ).first()
 
 
 # =========================

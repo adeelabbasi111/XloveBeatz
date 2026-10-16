@@ -1306,7 +1306,11 @@ def admin_user_change_password(user_id):
         flash(err_msg, 'error')
         return redirect(redirect_target)
 
-    if confirm_password and new_password != confirm_password:
+    if not confirm_password:
+        flash('Please confirm the new password.', 'error')
+        return redirect(redirect_target)
+
+    if new_password != confirm_password:
         flash('Passwords do not match.', 'error')
         return redirect(redirect_target)
 
@@ -1323,7 +1327,7 @@ def admin_user_change_password(user_id):
         except Exception as e:
             logger.error("Failed to log password change activity: %s", e)
 
-    flash(f"Password for '{user.username}' updated successfully!", 'success')
+    flash(f"Password for '{user.username}' updated successfully! They can log in using either username '{user.username}' or email '{user.email}'.", 'success')
     return redirect(redirect_target)
 
 

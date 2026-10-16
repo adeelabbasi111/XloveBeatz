@@ -2,7 +2,7 @@ import logging
 from flask import Blueprint, request, jsonify, session
 from werkzeug.security import generate_password_hash, check_password_hash
 from helpers.utils import get_current_user, validate_email, validate_password
-from helpers.services import create_user, get_user_by_email, merge_guest_cart, get_user_purchases
+from helpers.services import create_user, get_user_by_email, get_user_by_email_or_username, merge_guest_cart, get_user_purchases
 from helpers.models import User , db
 from helpers.models import DiscountCode
 from datetime import datetime
@@ -77,14 +77,19 @@ def api_signup():
 @bp.route('/api/auth/login', methods=['POST'])
 def api_login():
     data = request.json or {}
-    email = data.get('email', '').strip().lower()
-    password = data.get('password', '')
+    identifier = (data.get('email') or data.get('username') or '').strip()
+    password = data.get('password', '').strip()
 
-    if not email or not password:
-        return jsonify(success=False, error='Email and password are required'), 400
+    if not identifier or not password:
+        return jsonify(success=False, error='Email or username and password are required'), 400
 
-    user = get_user_by_email(email)
+    user = get_user_by_email_or_username(identifier)
     if user and check_password_hash(user.password_hash, password):
+        user.last_login = datetime.utcnow()
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
         session.permanent = True
         session['user_id'] = user.id
         return jsonify(success=True, message=f'Welcome back, {user.username}!',

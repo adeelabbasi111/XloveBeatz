@@ -208,9 +208,11 @@
     async function handleLogin(e) {
         e.preventDefault();
         var formData = new FormData(loginForm);
+        var identifier = (formData.get('email') || '').trim();
+        var password = (formData.get('password') || '').trim();
         var data = {
-            email: formData.get('email'),
-            password: formData.get('password')
+            email: identifier,
+            password: password
         };
 
         var submitBtn = document.getElementById('loginSubmitBtn');

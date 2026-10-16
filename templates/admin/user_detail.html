@@ -388,6 +388,8 @@
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="return_to" value="detail">
 
+                <div style="font-size:0.8rem; color:#7C8DF0; margin-bottom:1.25rem;"><i class="fas fa-info-circle"></i> {{ user.username }} can log in using either their username (<code>{{ user.username }}</code>) or their email (<code>{{ user.email }}</code>).</div>
+
                 <div class="password-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
                     <div>
                         <label for="detail_new_password" style="display:block; margin-bottom: 0.5rem; font-size: 0.85rem; color: var(--text-secondary, #A0A5B5);">New Password</label>

@@ -12,8 +12,8 @@
         <form id="loginForm" class="auth-form" onsubmit="return false;">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="form-group">
-                <label for="loginEmail">Email</label>
-                <input type="email" id="loginEmail" name="email" required placeholder="your@email.com" autocomplete="email">
+                <label for="loginEmail">Email or Username</label>
+                <input type="text" id="loginEmail" name="email" required placeholder="your@email.com or username" autocomplete="username">
             </div>
             <div class="form-group">
                 <label for="loginPassword">Password</label>

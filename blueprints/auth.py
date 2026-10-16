@@ -1,7 +1,7 @@
 from flask import jsonify,Blueprint, render_template, request, redirect, url_for, flash, session
 from werkzeug.security import generate_password_hash, check_password_hash
 from helpers.utils import validate_email, validate_password
-from helpers.services import create_user, get_user_by_email, merge_guest_cart
+from helpers.services import create_user, get_user_by_email, get_user_by_email_or_username, merge_guest_cart
 from datetime import datetime
 bp = Blueprint('auth', __name__)
 import uuid
@@ -134,16 +134,20 @@ def signup():
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        email = request.form.get('email', '').strip().lower()
-        password = request.form.get('password', '')
+        identifier = (request.form.get('email') or request.form.get('username') or '').strip()
+        password = request.form.get('password', '').strip()
 
-        if not email or not password:
-            flash('Email and password are required', 'error')
+        if not identifier or not password:
+            flash('Email or username and password are required', 'error')
             return redirect(url_for('public.home'))
 
-        user = get_user_by_email(email)
+        user = get_user_by_email_or_username(identifier)
         if user and check_password_hash(user.password_hash, password):
             user.last_login = datetime.utcnow()
+            try:
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
             session.permanent = True
 
             session['user_id'] = user.id

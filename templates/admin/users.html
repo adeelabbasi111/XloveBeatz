@@ -113,10 +113,11 @@
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="return_to" value="users">
             
-            <p style="margin:0 0 1.25rem 0; font-size:0.85rem; color:var(--text-secondary, #A0A5B5); line-height:1.4;">
-                Changing password for: <strong id="modalUserName" style="color:#fff;"></strong> <br>
-                <span id="modalUserEmail" class="text-muted" style="font-size:0.8rem;"></span>
-            </p>
+            <div style="margin:0 0 1.25rem 0; padding:0.75rem 1rem; background:rgba(255,255,255,0.03); border:1px solid var(--border-light, rgba(255,255,255,0.06)); border-radius:8px; font-size:0.85rem; color:var(--text-secondary, #A0A5B5); line-height:1.5;">
+                <div>User: <strong id="modalUserName" style="color:#fff;"></strong></div>
+                <div style="font-size:0.8rem; color:var(--text-muted, #8A90A2);">Email: <span id="modalUserEmail" style="color:#cbd5e1;"></span></div>
+                <div style="font-size:0.75rem; color:#7C8DF0; margin-top:4px;"><i class="fas fa-info-circle"></i> User can log in using either their username or email.</div>
+            </div>
 
             <div style="margin-bottom:1rem;">
                 <label for="modal_new_password" style="display:block; margin-bottom:0.4rem; font-size:0.85rem; color:var(--text-secondary, #A0A5B5);">New Password</label>
@@ -172,7 +173,7 @@ function openPasswordModal(userId, username, email) {
     
     if (form) form.action = '/admin/user/' + userId + '/change-password';
     if (nameSpan) nameSpan.textContent = username;
-    if (emailSpan) emailSpan.textContent = email ? '(' + email + ')' : '';
+    if (emailSpan) emailSpan.textContent = email || '—';
     if (p1) { p1.value = ''; p1.type = 'password'; }
     if (p2) { p2.value = ''; p2.type = 'password'; }
     
