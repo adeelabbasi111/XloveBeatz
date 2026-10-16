@@ -14,6 +14,7 @@ from flask import (
     url_for, flash, current_app, send_file, jsonify, session
 )
 from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash
 from PIL import Image
 from helpers.license_generator import BeatLicenseGenerator
 
@@ -25,7 +26,7 @@ from helpers.models import (
 )
 from helpers.utils import (
     admin_required, get_current_user,
-    generate_unique_slug
+    generate_unique_slug, validate_password
 )
 from helpers.services import (
     log_activity, get_site_setting, set_site_setting,
@@ -1288,6 +1289,42 @@ def admin_user_toggle_admin(user_id):
     status = "granted admin" if user.is_admin else "removed from admin"
     flash(f'{user.username} {status}!', 'success')
     return redirect(url_for('admin.admin_user_detail', user_id=user_id))
+
+
+@bp.route('/admin/user/<int:user_id>/change-password', methods=['POST'])
+@admin_required
+def admin_user_change_password(user_id):
+    user = User.query.get_or_404(user_id)
+    new_password = request.form.get('new_password', '').strip()
+    confirm_password = request.form.get('confirm_password', '').strip()
+    return_to = request.form.get('return_to', 'detail')
+
+    redirect_target = url_for('admin.admin_users') if return_to == 'users' else url_for('admin.admin_user_detail', user_id=user.id)
+
+    is_valid, err_msg = validate_password(new_password)
+    if not is_valid:
+        flash(err_msg, 'error')
+        return redirect(redirect_target)
+
+    if confirm_password and new_password != confirm_password:
+        flash('Passwords do not match.', 'error')
+        return redirect(redirect_target)
+
+    user.password_hash = generate_password_hash(new_password)
+    user.password_reset_token = None
+    user.password_reset_expires = None
+    db.session.commit()
+
+    current_admin = get_current_user()
+    admin_id = current_admin.id if current_admin else None
+    if admin_id:
+        try:
+            log_activity(admin_id, 'update', 'user', user.id, f"Admin updated password for user '{user.username}' (ID: {user.id})")
+        except Exception as e:
+            logger.error("Failed to log password change activity: %s", e)
+
+    flash(f"Password for '{user.username}' updated successfully!", 'success')
+    return redirect(redirect_target)
 
 
 # ═══════════════════════════════════════════════════════════════

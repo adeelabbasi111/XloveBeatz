@@ -52,10 +52,17 @@
                 </td>
 
                 <td>
-                    <a href="{{ url_for('admin.admin_user_detail', user_id=user.id) }}"
-                       class="btn btn-secondary btn-sm" title="View Details">
-                        <i class="fas fa-eye"></i>
-                    </a>
+                    <div style="display:flex; gap:6px; align-items:center;">
+                        <a href="{{ url_for('admin.admin_user_detail', user_id=user.id) }}"
+                           class="btn btn-secondary btn-sm" title="View Details">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <button type="button" class="btn btn-secondary btn-sm"
+                                onclick="openPasswordModal('{{ user.id }}', '{{ user.username|e }}', '{{ user.email|e }}')"
+                                title="Change Password" style="color:var(--accent-soft, #7C8DF0);">
+                            <i class="fas fa-key"></i>
+                        </button>
+                    </div>
                 </td>
             </tr>
             {% else %}
@@ -90,4 +97,140 @@
     {% endif %}
 </div>
 {% endif %}
+
+<!-- Admin Change Password Modal -->
+<div id="passwordModal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.75); backdrop-filter:blur(4px); align-items:center; justify-content:center; padding:1rem;">
+    <div style="background:var(--bg-surface, #13151C); border:1px solid var(--border-light, rgba(255,255,255,0.08)); border-radius:16px; width:100%; max-width:460px; overflow:hidden; box-shadow:0 20px 40px rgba(0,0,0,0.6);">
+        <div style="padding:1.25rem 1.5rem; border-bottom:1px solid var(--border-light, rgba(255,255,255,0.06)); display:flex; justify-content:space-between; align-items:center;">
+            <h3 style="margin:0; font-size:1.15rem; color:#fff; display:flex; align-items:center; gap:8px;">
+                <i class="fas fa-key" style="color:#C9AE74;"></i> Change User Password
+            </h3>
+            <button type="button" onclick="closePasswordModal()" style="background:none; border:none; color:var(--text-muted, #6C7285); font-size:1.2rem; cursor:pointer; padding:4px;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form id="passwordModalForm" method="POST" action="" style="padding:1.5rem;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="return_to" value="users">
+            
+            <p style="margin:0 0 1.25rem 0; font-size:0.85rem; color:var(--text-secondary, #A0A5B5); line-height:1.4;">
+                Changing password for: <strong id="modalUserName" style="color:#fff;"></strong> <br>
+                <span id="modalUserEmail" class="text-muted" style="font-size:0.8rem;"></span>
+            </p>
+
+            <div style="margin-bottom:1rem;">
+                <label for="modal_new_password" style="display:block; margin-bottom:0.4rem; font-size:0.85rem; color:var(--text-secondary, #A0A5B5);">New Password</label>
+                <div style="position:relative;">
+                    <input type="password" id="modal_new_password" name="new_password" required minlength="6"
+                           placeholder="Min. 6 characters"
+                           style="width:100%; box-sizing:border-box; padding:0.65rem 2.2rem 0.65rem 0.8rem; background:var(--bg-elevated, #1B1E27); border:1px solid var(--border-light, rgba(255,255,255,0.08)); border-radius:8px; color:#fff; font-size:0.9rem;">
+                    <button type="button" onclick="togglePassVis('modal_new_password', this)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--text-muted, #6C7285); cursor:pointer; padding:0;">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div style="margin-bottom:1.25rem;">
+                <label for="modal_confirm_password" style="display:block; margin-bottom:0.4rem; font-size:0.85rem; color:var(--text-secondary, #A0A5B5);">Confirm Password</label>
+                <div style="position:relative;">
+                    <input type="password" id="modal_confirm_password" name="confirm_password" required minlength="6"
+                           placeholder="Re-enter password"
+                           style="width:100%; box-sizing:border-box; padding:0.65rem 2.2rem 0.65rem 0.8rem; background:var(--bg-elevated, #1B1E27); border:1px solid var(--border-light, rgba(255,255,255,0.08)); border-radius:8px; color:#fff; font-size:0.9rem;">
+                    <button type="button" onclick="togglePassVis('modal_confirm_password', this)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--text-muted, #6C7285); cursor:pointer; padding:0;">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="generatePass('modal_new_password', 'modal_confirm_password', 'modal_copy_notice')">
+                    <i class="fas fa-dice"></i> Generate Random
+                </button>
+                <span id="modal_copy_notice" style="display:none; font-size:0.8rem; color:#4ade80;">
+                    <i class="fas fa-check"></i> Copied to clipboard!
+                </span>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:0.75rem;">
+                <button type="button" class="btn btn-secondary" onclick="closePasswordModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Save Password
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openPasswordModal(userId, username, email) {
+    var modal = document.getElementById('passwordModal');
+    var form = document.getElementById('passwordModalForm');
+    var nameSpan = document.getElementById('modalUserName');
+    var emailSpan = document.getElementById('modalUserEmail');
+    var p1 = document.getElementById('modal_new_password');
+    var p2 = document.getElementById('modal_confirm_password');
+    
+    if (form) form.action = '/admin/user/' + userId + '/change-password';
+    if (nameSpan) nameSpan.textContent = username;
+    if (emailSpan) emailSpan.textContent = email ? '(' + email + ')' : '';
+    if (p1) { p1.value = ''; p1.type = 'password'; }
+    if (p2) { p2.value = ''; p2.type = 'password'; }
+    
+    if (modal) {
+        modal.style.display = 'flex';
+    }
+}
+
+function closePasswordModal() {
+    var modal = document.getElementById('passwordModal');
+    if (modal) modal.style.display = 'none';
+}
+
+window.addEventListener('click', function(e) {
+    var modal = document.getElementById('passwordModal');
+    if (e.target === modal) {
+        closePasswordModal();
+    }
+});
+
+function togglePassVis(inputId, btn) {
+    var input = document.getElementById(inputId);
+    if (!input) return;
+    var icon = btn.querySelector('i');
+    if (input.type === 'password') {
+        input.type = 'text';
+        if (icon) icon.className = 'fas fa-eye-slash';
+    } else {
+        input.type = 'password';
+        if (icon) icon.className = 'fas fa-eye';
+    }
+}
+
+function generatePass(newPassId, confirmPassId, noticeId) {
+    var chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%&*';
+    var pass = '';
+    for (var i = 0; i < 12; i++) {
+        pass += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    var input1 = document.getElementById(newPassId);
+    var input2 = document.getElementById(confirmPassId);
+    if (input1) {
+        input1.value = pass;
+        input1.type = 'text';
+    }
+    if (input2) {
+        input2.value = pass;
+        input2.type = 'text';
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(pass).then(function() {
+            var notice = document.getElementById(noticeId);
+            if (notice) {
+                notice.style.display = 'inline-block';
+                setTimeout(function() { notice.style.display = 'none'; }, 3500);
+            }
+        }).catch(function() {});
+    }
+}
+</script>
 {% endblock %}

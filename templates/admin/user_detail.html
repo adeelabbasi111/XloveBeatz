@@ -376,6 +376,59 @@
     </div>
 
     {# ═══════════════════════════════════════════
+       SECURITY / PASSWORD MANAGEMENT
+       ═══════════════════════════════════════════ #}
+    <div class="user-section" style="margin-bottom: 2rem;">
+        <div class="section-header" style="display:flex; justify-content:space-between; align-items:center;">
+            <h3><i class="fas fa-key"></i> Change Password</h3>
+            <span class="text-muted" style="font-size:0.8rem;">Directly set a new password for {{ user.username }}</span>
+        </div>
+        <div class="section-body" style="padding: 1.5rem;">
+            <form method="POST" action="{{ url_for('admin.admin_user_change_password', user_id=user.id) }}" style="max-width: 600px;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="return_to" value="detail">
+
+                <div class="password-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+                    <div>
+                        <label for="detail_new_password" style="display:block; margin-bottom: 0.5rem; font-size: 0.85rem; color: var(--text-secondary, #A0A5B5);">New Password</label>
+                        <div style="position:relative;">
+                            <input type="password" id="detail_new_password" name="new_password" required minlength="6"
+                                   placeholder="Min. 6 characters"
+                                   style="width: 100%; box-sizing:border-box; padding: 0.65rem 2.2rem 0.65rem 0.8rem; background: var(--bg-elevated, #1B1E27); border: 1px solid var(--border-light, rgba(255,255,255,0.08)); border-radius: 8px; color: #fff; font-size: 0.9rem;">
+                            <button type="button" onclick="togglePassVis('detail_new_password', this)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--text-muted, #6C7285); cursor:pointer; padding:0;">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="detail_confirm_password" style="display:block; margin-bottom: 0.5rem; font-size: 0.85rem; color: var(--text-secondary, #A0A5B5);">Confirm Password</label>
+                        <div style="position:relative;">
+                            <input type="password" id="detail_confirm_password" name="confirm_password" required minlength="6"
+                                   placeholder="Re-enter password"
+                                   style="width: 100%; box-sizing:border-box; padding: 0.65rem 2.2rem 0.65rem 0.8rem; background: var(--bg-elevated, #1B1E27); border: 1px solid var(--border-light, rgba(255,255,255,0.08)); border-radius: 8px; color: #fff; font-size: 0.9rem;">
+                            <button type="button" onclick="togglePassVis('detail_confirm_password', this)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--text-muted, #6C7285); cursor:pointer; padding:0;">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap: 0.75rem; align-items:center; flex-wrap:wrap;">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save New Password
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="generatePass('detail_new_password', 'detail_confirm_password', 'detail_copy_notice')">
+                        <i class="fas fa-dice"></i> Generate Strong Password
+                    </button>
+                    <span id="detail_copy_notice" style="display:none; font-size:0.8rem; color:#4ade80;">
+                        <i class="fas fa-check"></i> Copied to clipboard!
+                    </span>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {# ═══════════════════════════════════════════
        ORDERS TABLE
        ═══════════════════════════════════════════ #}
     <div class="user-section">
@@ -460,4 +513,46 @@
     </div>
 
 </div>
+
+<script>
+function togglePassVis(inputId, btn) {
+    var input = document.getElementById(inputId);
+    if (!input) return;
+    var icon = btn.querySelector('i');
+    if (input.type === 'password') {
+        input.type = 'text';
+        if (icon) icon.className = 'fas fa-eye-slash';
+    } else {
+        input.type = 'password';
+        if (icon) icon.className = 'fas fa-eye';
+    }
+}
+
+function generatePass(newPassId, confirmPassId, noticeId) {
+    var chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%&*';
+    var pass = '';
+    for (var i = 0; i < 12; i++) {
+        pass += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    var input1 = document.getElementById(newPassId);
+    var input2 = document.getElementById(confirmPassId);
+    if (input1) {
+        input1.value = pass;
+        input1.type = 'text';
+    }
+    if (input2) {
+        input2.value = pass;
+        input2.type = 'text';
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(pass).then(function() {
+            var notice = document.getElementById(noticeId);
+            if (notice) {
+                notice.style.display = 'inline-block';
+                setTimeout(function() { notice.style.display = 'none'; }, 3500);
+            }
+        }).catch(function() {});
+    }
+}
+</script>
 {% endblock %}
