@@ -1,5 +1,6 @@
 
-from flask import Blueprint, render_template, flash, redirect, url_for, current_app, request
+import os
+from flask import Blueprint, render_template, flash, redirect, url_for, current_app, request, send_file
 from helpers.models import Product, Genre
 from helpers.services import get_player_beats, build_beats_data, get_beat_with_details
 from helpers.geo import get_geo_pricing, apply_geo_pricing_to_beats
@@ -110,6 +111,37 @@ def player_page(pack_id=None):
         is_foreign_user=geo_info['is_foreign'],
     )
 
+
+@bp.route('/download/free/<int:product_id>')
+def download_free_beat(product_id):
+    from helpers.models import BeatDetail
+    product = Product.query.get_or_404(product_id)
+    if product.product_type != 'beat':
+        flash('Invalid product for free download', 'error')
+        return redirect(url_for('public.player_page'))
+
+    detail = BeatDetail.query.filter_by(product_id=product.id).first()
+    if not detail or not detail.is_free:
+        flash('This beat is not available for free download. Please purchase a license.', 'error')
+        return redirect(url_for('public.player_page'))
+
+    # Locate audio file for free download (preview MP3 or WAV)
+    rel_path = detail.preview_audio or detail.wav_file
+    if not rel_path:
+        flash('Audio file not found for this beat.', 'error')
+        return redirect(url_for('public.player_page'))
+
+    norm_rel = os.path.normpath(rel_path.lstrip('/\\'))
+    abs_path = os.path.join(current_app.root_path, 'static', norm_rel)
+    if not os.path.exists(abs_path):
+        flash('Audio file missing on server.', 'error')
+        return redirect(url_for('public.player_page'))
+
+    ext = os.path.splitext(rel_path)[1] or '.mp3'
+    clean_name = product.name.replace('/', '_').replace('\\', '_')
+    filename = f"{clean_name} (Free Non-Commercial Use Only){ext}"
+
+    return send_file(abs_path, as_attachment=True, download_name=filename)
 
 @bp.route('/beat/<slug>')
 def beat_detail_page(slug):

@@ -52,16 +52,20 @@ def dashboard():
             seen_product_ids.add(item.product.id)
             purchased.append(item.product)
 
-    # Generated licenses for this user's paid order items
-    order_item_ids = [item.id for item in purchased_items]
+    # On-the-fly licenses for all paid beat purchases (zero disk storage)
     licenses = []
-    if order_item_ids:
-        licenses = (
-            GeneratedLicense.query
-            .filter(GeneratedLicense.order_item_id.in_(order_item_ids))
-            .order_by(GeneratedLicense.generated_at.desc())
-            .all()
-        )
+    for item in purchased_items:
+        if item.product and item.product.product_type == 'beat':
+            lic_name = item.license.name if item.license else 'Basic'
+            order_date = item.order.created_at if item.order else datetime.utcnow()
+            licenses.append({
+                'id': item.id,
+                'order_item_id': item.id,
+                'beat_name': item.product.name,
+                'license_type': lic_name,
+                'generated_at': order_date,
+                'product_id': item.product_id,
+            })
 
     return render_template(
         'dashboard.html',
@@ -371,18 +375,20 @@ def download_product(product_id):
 
 
 @bp.route('/download/license/<int:license_id>')
+@bp.route('/download/license/item/<int:license_id>')
 @login_required
 def download_license(license_id):
     user = get_current_user()
 
-    lic = GeneratedLicense.query.get(license_id)
-    if not lic:
-        flash('License not found', 'error')
-        return redirect(url_for('dashboard.dashboard'))
-
-    order_item = OrderItem.query.get(lic.order_item_id) if lic.order_item_id else None
+    # Try finding directly by OrderItem first, then fall back to GeneratedLicense table
+    order_item = OrderItem.query.get(license_id)
     if not order_item:
-        flash('License not associated with an order', 'error')
+        lic = GeneratedLicense.query.get(license_id)
+        if lic and lic.order_item_id:
+            order_item = OrderItem.query.get(lic.order_item_id)
+
+    if not order_item:
+        flash('License not found', 'error')
         return redirect(url_for('dashboard.dashboard'))
 
     order = Order.query.get(order_item.order_id)
@@ -390,20 +396,19 @@ def download_license(license_id):
         flash('You do not have access to this license', 'error')
         return redirect(url_for('dashboard.dashboard'))
 
-    # Generate on-the-fly
+    if order.payment_status != 'paid':
+        flash('Order has not been paid', 'error')
+        return redirect(url_for('dashboard.dashboard'))
+
+    # Generate on-the-fly (in memory, zero disk usage)
     product = order_item.product
     if not product or product.product_type != 'beat':
         flash('Invalid product for license', 'error')
         return redirect(url_for('dashboard.dashboard'))
 
-    if not order_item.license:
-        flash('No license type found', 'error')
-        return redirect(url_for('dashboard.dashboard'))
-
-    license_type = order_item.license.name.lower()
+    license_type = order_item.license.name.lower() if order_item.license else 'basic'
     if license_type not in ('basic', 'premium', 'exclusive'):
-        flash('Invalid license type', 'error')
-        return redirect(url_for('dashboard.dashboard'))
+        license_type = 'basic' 
 
     beat_detail = BeatDetail.query.filter_by(product_id=product.id).first()
     

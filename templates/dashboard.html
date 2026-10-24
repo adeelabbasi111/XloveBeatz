@@ -13,6 +13,17 @@ body.is-dashboard .site-header,
 body.is-dashboard .looping-strip-wrapper {
     display: none !important;
 }
+
+.dash-lic-btn {
+    background: rgba(16, 185, 129, 0.1) !important;
+    color: #10b981 !important;
+    border: 1px solid rgba(16, 185, 129, 0.25) !important;
+}
+.dash-lic-btn:hover {
+    background: #10b981 !important;
+    color: #0b0c10 !important;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3) !important;
+}
 </style>
 
 <section class="dashboard-page">
@@ -96,12 +107,13 @@ body.is-dashboard .looping-strip-wrapper {
                                 <div class="bento-value">{{ downloads|length }}</div>
                             </div>
                         </div>
-                        <div class="dash-bento-card" data-accent="green">
+                        <div class="dash-bento-card" data-accent="green" style="cursor: pointer;" onclick="switchToTab('licenses')" title="View all your licenses">
                             <div class="bento-icon"><i class="fas fa-file-contract"></i></div>
                             <div class="bento-info">
                                 <div class="bento-label">Licenses</div>
                                 <div class="bento-value">{{ licenses|length }}</div>
                             </div>
+                            <div class="bento-bg-accent"></div>
                         </div>
                     </div>
 
@@ -131,9 +143,14 @@ body.is-dashboard .looping-strip-wrapper {
                                     </div>
                                     <div class="dash-product-right">
                                         <div class="dash-download-actions">
-                                            <a href="/download/{{ item.product_id }}" class="dash-download-btn">
+                                            <a href="/download/{{ item.product_id }}" class="dash-download-btn" title="Download Audio File">
                                                 <i class="fas fa-download"></i> Download
                                             </a>
+                                            {% if item.product and item.product.product_type == 'beat' %}
+                                                <a href="/download/license/item/{{ item.id }}" class="dash-download-btn dash-lic-btn" title="Download Legal License Agreement PDF">
+                                                    <i class="fas fa-file-contract"></i> License
+                                                </a>
+                                            {% endif %}
                                             {% if item.product and item.product.product_type == 'beat' and item.license and item.license.name.lower() in ('premium', 'exclusive') %}
                                                 <a href="/download/flp/{{ item.product_id }}" class="dash-download-btn dash-flp-btn">
                                                     <i class="fas fa-file-code"></i> FLP
@@ -172,14 +189,10 @@ body.is-dashboard .looping-strip-wrapper {
                                         </div>
                                     </div>
                                     <div class="dash-product-right">
-                                        <span class="dash-license-badge {% if lic.license_type == 'Exclusive' %}gold{% endif %}">{{ lic.license_type }}</span>
-                                        {% if lic.pdf_path %}
-                                            <a href="/download/license/{{ lic.id }}" class="dash-download-btn">
-                                                <i class="fas fa-file-pdf"></i> PDF
-                                            </a>
-                                        {% else %}
-                                            <span class="dash-no-pdf">No PDF</span>
-                                        {% endif %}
+                                        <span class="dash-license-badge {% if lic.license_type == 'Exclusive' %}gold{% endif %}">{{ lic.license_type }} License</span>
+                                        <a href="/download/license/item/{{ lic.id }}" class="dash-download-btn" title="Generate & Download Legal License Agreement PDF">
+                                            <i class="fas fa-file-pdf"></i> Download PDF
+                                        </a>
                                     </div>
                                 </div>
                                 {% endfor %}

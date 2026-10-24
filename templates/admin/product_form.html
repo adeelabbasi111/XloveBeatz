@@ -156,6 +156,31 @@
             </div>
 
             {# ───────────────────────────────────────── #}
+            {#  FREE BEAT TOGGLE                          #}
+            {# ───────────────────────────────────────── #}
+            <div class="form-group" style="background: rgba(16, 185, 129, 0.08); padding: 16px 20px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.25); margin: 1.5rem 0 1rem 0;">
+                <label for="is_free" style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; margin: 0;">
+                    <div style="display: flex; align-items: center; gap: 14px;">
+                        <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(16, 185, 129, 0.15); display: flex; align-items: center; justify-content: center; color: #10b981; font-size: 1.25rem;">
+                            <i class="fas fa-gift"></i>
+                        </div>
+                        <div>
+                            <strong style="color: #fff; font-size: 1.05rem; display: flex; align-items: center; gap: 8px;">
+                                Free Beat (Free to Use / Non-Profit)
+                                <span style="font-size: 0.72rem; padding: 2px 8px; border-radius: 20px; background: #10b981; color: #0b0c10; font-weight: 700; text-transform: uppercase;">Optional</span>
+                            </strong>
+                            <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: var(--text-muted, #a0a5b5); line-height: 1.4;">
+                                Enable free non-commercial download for this beat. On the store, users can download it for free, but a prominent warning will state that <strong>distribution and monetization are strictly prohibited</strong> without purchasing a commercial license below.
+                            </p>
+                        </div>
+                    </div>
+                    <div style="margin-left: 20px; flex-shrink: 0;">
+                        <input type="checkbox" name="is_free" id="is_free" {% if beat_detail and beat_detail.is_free %}checked{% endif %} style="width: 24px; height: 24px; accent-color: #10b981; cursor: pointer;">
+                    </div>
+                </label>
+            </div>
+
+            {# ───────────────────────────────────────── #}
             {#  LICENSE PRICING                           #}
             {# ───────────────────────────────────────── #}
             <h4 style="margin-top:2rem;"><i class="fas fa-tags"></i> License Pricing</h4>

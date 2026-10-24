@@ -578,6 +578,16 @@ function updatePlayerUI(trackData) {
   if (currentTimeEl) currentTimeEl.textContent = '0:00';
   if (addToCartBtn) addToCartBtn.dataset.id = trackData.id;
   if (buyNowBtn) buyNowBtn.dataset.id = trackData.id;
+  var downloadFreeBtn = document.getElementById('downloadFreeBtn');
+  if (downloadFreeBtn) {
+    if (trackData.isFree === 'true') {
+      downloadFreeBtn.style.display = 'inline-flex';
+      downloadFreeBtn.dataset.id = trackData.id;
+      downloadFreeBtn.dataset.name = trackData.name;
+    } else {
+      downloadFreeBtn.style.display = 'none';
+    }
+  }
 
   currentTrackIndex = parseInt(trackData.index, 10);
 
@@ -733,6 +743,19 @@ if (nextBtn) nextBtn.addEventListener('click', function () {
 });
 
 
+
+// ── Free Beat Download ──
+var downloadFreeBtn = document.getElementById('downloadFreeBtn');
+if (downloadFreeBtn) {
+  downloadFreeBtn.addEventListener('click', function (e) {
+    e.preventDefault();
+    var id = downloadFreeBtn.dataset.id;
+    var name = downloadFreeBtn.dataset.name;
+    if (id && typeof window.openFreeDownloadModal === 'function') {
+      window.openFreeDownloadModal(id, name);
+    }
+  });
+}
 
 // ── Share Beat ──
 var shareBeatBtn = document.getElementById('shareBeatBtn');

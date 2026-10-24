@@ -5,17 +5,27 @@ document.addEventListener('DOMContentLoaded', function() {
     var tabs = document.querySelectorAll('.dash-tab');
     var contents = document.querySelectorAll('.dash-tab-content');
 
+    window.switchToTab = function(target) {
+        if (!target) return;
+        tabs.forEach(function(t) {
+            if (t.dataset.tab === target) t.classList.add('active');
+            else t.classList.remove('active');
+        });
+        contents.forEach(function(c) {
+            if (c.id === 'tab-' + target) c.classList.add('active');
+            else c.classList.remove('active');
+        });
+        var content = document.getElementById('tab-' + target);
+        if (content) {
+            content.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    };
+
     if (tabs.length > 0) {
         tabs.forEach(function(tab) {
             tab.addEventListener('click', function() {
                 var target = tab.dataset.tab;
-
-                tabs.forEach(function(t) { t.classList.remove('active'); });
-                contents.forEach(function(c) { c.classList.remove('active'); });
-
-                tab.classList.add('active');
-                var content = document.getElementById('tab-' + target);
-                if (content) content.classList.add('active');
+                window.switchToTab(target);
             });
         });
     }

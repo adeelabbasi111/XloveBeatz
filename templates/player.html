@@ -32,6 +32,47 @@
                     transform: translateY(-50px);
                 }
             }
+            .free-tag-badge {
+                background: rgba(16, 185, 129, 0.15) !important;
+                color: #10b981 !important;
+                border: 1px solid rgba(16, 185, 129, 0.35) !important;
+                font-weight: 700 !important;
+                letter-spacing: 0.5px;
+            }
+            .track-free-btn {
+                background: rgba(16, 185, 129, 0.15);
+                color: #10b981;
+                border: 1px solid rgba(16, 185, 129, 0.35);
+                padding: 6px 14px;
+                border-radius: 20px;
+                font-size: 0.8rem;
+                font-weight: 700;
+                cursor: pointer;
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                transition: all 0.2s ease;
+                z-index: 2;
+                white-space: nowrap;
+            }
+            .track-free-btn:hover {
+                background: #10b981;
+                color: #0b0c10;
+                box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+                transform: translateY(-1px);
+            }
+            .btn-free {
+                background: #10b981 !important;
+                color: #0b0c10 !important;
+                font-weight: 700 !important;
+                border: none !important;
+                box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3) !important;
+            }
+            .btn-free:hover {
+                background: #059669 !important;
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45) !important;
+            }
         </style>
         <div class="player-card-wrapper {% if pack_info %}pack-mode{% endif %}">
             <div class="player-glow-bg" id="playerGlow"></div>
@@ -95,6 +136,9 @@
                     </button>
                     <button class="btn btn-buy" id="buyNowBtn">
                         <i class="fas fa-bolt"></i> {% if pack_info %}Buy Single{% else %}Buy Now{% endif %}
+                    </button>
+                    <button class="btn btn-free" id="downloadFreeBtn" style="display:none;" title="Download Free Beat (Non-Commercial Use Only)">
+                        <i class="fas fa-download"></i> Free Download
                     </button>
                 </div>
                 {% if pack_info %}
@@ -198,7 +242,8 @@
      data-price-premium="{{ beat.license_tiers.get('premium', {}).get('price', '') }}"
      data-files-exclusive="{{ beat.license_tiers.get('exclusive', {}).get('files', '') }}"
      data-price-exclusive="{{ beat.license_tiers.get('exclusive', {}).get('price', '') }}"
-     data-has-stems="{{ 'true' if beat.get('has_stems', True) else 'false' }}">
+     data-has-stems="{{ 'true' if beat.get('has_stems', True) else 'false' }}"
+     data-is-free="{{ 'true' if beat.get('is_free', False) else 'false' }}">
 
                 {# Thumbnail or Number #}
                 <div class="track-num">
@@ -222,10 +267,22 @@
                         <span class="detail-badge genre-badge">
                             <i class="fas fa-tag"></i> {{ beat.genre if beat.genre else '—' }}
                         </span>
+                        {% if beat.get('is_free') %}
+                        <span class="detail-badge free-tag-badge">
+                            <i class="fas fa-gift"></i> FREE TO USE
+                        </span>
+                        {% endif %}
                     </div>
                 </div>
 
-                <div class="track-price-tag">{{ currency_symbol }}{% if is_foreign_user %}{{ "%.2f"|format(beat.price) }}{% else %}{{ beat.price | int }}{% endif %}</div>
+                <div class="track-actions-cell" style="display: flex; align-items: center; gap: 8px;">
+                    {% if beat.get('is_free') %}
+                    <button type="button" class="track-free-btn" onclick="openFreeDownloadModal('{{ beat.id }}', '{{ beat.name|e }}', event)" title="Download Free Beat (Non-Commercial Use Only)">
+                        <i class="fas fa-download"></i> Free
+                    </button>
+                    {% endif %}
+                    <div class="track-price-tag">{{ currency_symbol }}{% if is_foreign_user %}{{ "%.2f"|format(beat.price) }}{% else %}{{ beat.price | int }}{% endif %}</div>
+                </div>
 
                 <div class="play-track-icon">
                     <i class="fas fa-play"></i>
@@ -302,6 +359,92 @@
             </div>
         </div>
     </div>
+
+    {# ============ FREE DOWNLOAD TERMS MODAL ============ #}
+    <div id="freeDownloadModal" class="license-modal-overlay">
+        <div class="license-modal-container" style="max-width: 540px; padding: 2rem;">
+            <button class="modal-close-btn" type="button" onclick="closeFreeDownloadModal()"><i class="fas fa-xmark"></i></button>
+            
+            <div style="text-align: center; margin-bottom: 1.5rem;">
+                <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(16, 185, 129, 0.15); color: #10b981; display: inline-flex; align-items: center; justify-content: center; font-size: 1.75rem; margin-bottom: 1rem;">
+                    <i class="fas fa-gift"></i>
+                </div>
+                <h3 style="margin: 0 0 0.5rem 0; font-size: 1.35rem; color: #fff;">Free Beat Download Terms</h3>
+                <p style="margin: 0; color: var(--accent-gold, #C9AE74); font-weight: 600; font-size: 1.1rem;" id="freeModalBeatName"></p>
+            </div>
+
+            {# Strict Non-Monetization Warning Box #}
+            <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.25rem; text-align: left;">
+                <div style="display: flex; align-items: flex-start; gap: 10px; color: #ef4444; font-weight: 700; font-size: 0.95rem; margin-bottom: 0.5rem;">
+                    <i class="fas fa-triangle-exclamation" style="font-size: 1.15rem; margin-top: 2px;"></i>
+                    <span>MONETIZATION & DISTRIBUTION STRICTLY PROHIBITED</span>
+                </div>
+                <ul style="margin: 0; padding-left: 1.25rem; font-size: 0.85rem; color: #f1f3f8; line-height: 1.6;">
+                    <li><strong>No Streaming / Distribution:</strong> Distribution or uploading to <strong>Spotify, Apple Music, YouTube Content ID, TikTok, Amazon Music, or Radio is strictly not allowed</strong>.</li>
+                    <li><strong>Non-Commercial Use Only:</strong> This free download is licensed solely for non-profit listening, auditioning, or writing private demo tracks.</li>
+                    <li><strong>No Copyright Claims:</strong> You cannot claim copyright, register with a PRO, or register with digital distributors.</li>
+                </ul>
+            </div>
+
+            <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; font-size: 0.88rem; color: #cbd5e1; text-align: center; line-height: 1.5;">
+                <i class="fas fa-lightbulb" style="color: var(--accent-gold, #C9AE74);"></i> 
+                <strong>Want to release and earn money from your song?</strong><br>
+                Purchase a commercial license below to get distribution rights, monetization clearance, and uncompressed high-quality audio files.
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <a id="freeModalDownloadLink" href="#" class="btn" style="background: #10b981; color: #0b0c10; font-weight: 700; padding: 12px 20px; border-radius: 10px; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.95rem; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">
+                    <i class="fas fa-download"></i> I Understand — Download Free Beat
+                </a>
+                <button type="button" id="freeModalBuyBtn" class="btn btn-buy" style="width: 100%; padding: 12px 20px; border-radius: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <i class="fas fa-bolt"></i> Buy Commercial License
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    window.openFreeDownloadModal = function(beatId, beatName, event) {
+        if (event) event.stopPropagation();
+        var modal = document.getElementById('freeDownloadModal');
+        var nameEl = document.getElementById('freeModalBeatName');
+        var dlLink = document.getElementById('freeModalDownloadLink');
+        var buyBtn = document.getElementById('freeModalBuyBtn');
+        
+        if (nameEl) nameEl.textContent = beatName;
+        if (dlLink) {
+            dlLink.href = '/download/free/' + beatId;
+            dlLink.onclick = function() {
+                setTimeout(closeFreeDownloadModal, 800);
+                if (typeof showToast === 'function') {
+                    showToast('Downloading free beat... (Non-commercial use only)', 'info');
+                }
+            };
+        }
+        if (buyBtn) {
+            buyBtn.onclick = function() {
+                closeFreeDownloadModal();
+                var trackItem = document.querySelector('.track-item[data-id="' + beatId + '"]');
+                if (trackItem && typeof openLicenseModal === 'function') {
+                    openLicenseModal(trackItem);
+                }
+            };
+        }
+        if (modal) modal.classList.add('active');
+    };
+
+    window.closeFreeDownloadModal = function() {
+        var modal = document.getElementById('freeDownloadModal');
+        if (modal) modal.classList.remove('active');
+    };
+
+    window.addEventListener('click', function(e) {
+        var modal = document.getElementById('freeDownloadModal');
+        if (e.target === modal) {
+            closeFreeDownloadModal();
+        }
+    });
+    </script>
 
     {# Toast #}
     <div id="toast" class="toast"></div>

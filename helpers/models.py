@@ -94,6 +94,7 @@ class BeatDetail(db.Model):
     project_file = db.Column(db.String(500))
     beat_image = db.Column(db.String(500), nullable=True)  # NEW
     has_stems = db.Column(db.Boolean, default=True)  # NEW
+    is_free = db.Column(db.Boolean, default=False, index=True)
 
     pack_id = db.Column(db.Integer, db.ForeignKey("beat_packs.id"), nullable=True, index=True)
 
@@ -324,6 +325,17 @@ def init_db(app):
     """Create tables and seed default license tiers."""
     with app.app_context():
         db.create_all()
+
+        # Ensure is_free column exists in beat_details
+        try:
+            with db.engine.connect() as conn:
+                res = conn.execute(db.text("PRAGMA table_info(beat_details)")).fetchall()
+                cols = [r[1] for r in res]
+                if cols and "is_free" not in cols:
+                    conn.execute(db.text("ALTER TABLE beat_details ADD COLUMN is_free BOOLEAN DEFAULT 0"))
+                    conn.commit()
+        except Exception:
+            pass
 
         if License.query.count() == 0:
             db.session.add_all([

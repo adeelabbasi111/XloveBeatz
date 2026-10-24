@@ -136,6 +136,7 @@ def build_beats_data(beats):
                 'sort_order': beat.sort_order if hasattr(beat, 'sort_order') else 0,
                 'genre_sort_order': detail.genre_sort_order if detail and hasattr(detail, 'genre_sort_order') else 0,
                 'has_stems': getattr(detail, 'has_stems', True) if detail else True,
+                'is_free': getattr(detail, 'is_free', False) if detail else False,
                 'created_at': beat.created_at.timestamp() if beat.created_at else 0,
             })
         except Exception as e:

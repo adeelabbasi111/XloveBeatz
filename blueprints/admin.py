@@ -740,6 +740,7 @@ def admin_product_edit(product_id):
                     detail.genre = genre
                     detail.pack_id = request.form.get('pack_id', type=int) or None
                     detail.has_stems = 'has_stems' in request.form
+                    detail.is_free = 'is_free' in request.form
 
                     _update_beat_files(product.slug, detail)
 
@@ -1028,6 +1029,7 @@ def _create_beat_details(product):
         wav_file=wav_db_path or '',
         project_file=project_db_path or '',
         has_stems=has_stems,
+        is_free='is_free' in request.form,
         beat_image=beat_image_path or None,
         pack_id=pack_id,
     )
