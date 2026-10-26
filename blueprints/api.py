@@ -4,7 +4,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from helpers.utils import get_current_user, validate_email, validate_password
 from helpers.services import create_user, get_user_by_email, get_user_by_email_or_username, merge_guest_cart, get_user_purchases
 from helpers.models import User , db
-from helpers.models import DiscountCode
+from helpers.models import DiscountCode, Product, BeatDetail, Order, OrderItem
+import uuid
 from datetime import datetime
 logger = logging.getLogger(__name__)
 bp = Blueprint('api', __name__)
@@ -188,4 +189,59 @@ def validate_coupon():
         max_discount=res_max_discount,
         min_order=res_min_order,
         description=desc
+    )
+
+@bp.route('/api/beat/claim-free/<int:product_id>', methods=['POST'])
+def claim_free_beat(product_id):
+    user = get_current_user()
+    if not user:
+        return jsonify(success=False, error='Please log in to claim this free beat.', login_required=True), 401
+
+    product = Product.query.get(product_id)
+    if not product or product.product_type != 'beat':
+        return jsonify(success=False, error='Invalid beat'), 404
+
+    detail = BeatDetail.query.filter_by(product_id=product.id).first()
+    if not detail or not detail.is_free:
+        return jsonify(success=False, error='This beat is not available for free.'), 400
+
+    # Check if user already claimed/purchased this product
+    existing_item = (
+        OrderItem.query.join(Order)
+        .filter(Order.user_id == user.id, Order.payment_status == 'paid', OrderItem.product_id == product.id)
+        .first()
+    )
+    if existing_item:
+        return jsonify(
+            success=True,
+            already_claimed=True,
+            message=f"'{product.name}' is already in your account! Check your dashboard to download.",
+            dashboard_url='/dashboard'
+        )
+
+    # Create free order and order item
+    order = Order(
+        user_id=user.id,
+        email=user.email,
+        total_cents=0,
+        payment_status='paid',
+        payment_method='free',
+        transaction_id=f"FREE-{uuid.uuid4().hex[:12].upper()}"
+    )
+    db.session.add(order)
+    db.session.flush()
+
+    order_item = OrderItem(
+        order_id=order.id,
+        product_id=product.id,
+        license_id=None,
+        price_paid_cents=0
+    )
+    db.session.add(order_item)
+    db.session.commit()
+
+    return jsonify(
+        success=True,
+        message=f"'{product.name}' added to your account! Check your dashboard to download.",
+        dashboard_url='/dashboard'
     )

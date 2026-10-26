@@ -136,7 +136,7 @@ body.is-dashboard .looping-strip-wrapper {
                                         <div class="dash-product-meta">
                                             <span>{{ item.product.product_type|capitalize if item.product else '—' }}</span>
                                             &bull;
-                                            <span>{{ item.license.name if item.license else 'Standard' }}</span>
+                                            <span>{{ 'Free (Non-Commercial)' if ((item.price_paid_cents or 0) == 0 or (item.order and item.order.payment_method == 'free')) else (item.license.name if item.license else 'Standard') }}</span>
                                             &bull;
                                             <span>{{ download_counts.get(item.product_id, 0) }} dls</span>
                                         </div>
@@ -147,9 +147,15 @@ body.is-dashboard .looping-strip-wrapper {
                                                 <i class="fas fa-download"></i> Download
                                             </a>
                                             {% if item.product and item.product.product_type == 'beat' %}
-                                                <a href="/download/license/item/{{ item.id }}" class="dash-download-btn dash-lic-btn" title="Download Legal License Agreement PDF">
-                                                    <i class="fas fa-file-contract"></i> License
-                                                </a>
+                                                {% if (item.price_paid_cents or 0) == 0 or (item.order and item.order.payment_method == 'free') %}
+                                                    <a href="/player" class="dash-download-btn dash-lic-btn" style="border-color: rgba(201, 174, 116, 0.4); color: var(--accent-gold, #C9AE74);" title="Upgrade to Commercial License">
+                                                        <i class="fas fa-bolt"></i> Upgrade License
+                                                    </a>
+                                                {% else %}
+                                                    <a href="/download/license/item/{{ item.id }}" class="dash-download-btn dash-lic-btn" title="Download Legal License Agreement PDF">
+                                                        <i class="fas fa-file-contract"></i> License
+                                                    </a>
+                                                {% endif %}
                                             {% endif %}
                                             {% if item.product and item.product.product_type == 'beat' and item.license and item.license.name.lower() in ('premium', 'exclusive') %}
                                                 <a href="/download/flp/{{ item.product_id }}" class="dash-download-btn dash-flp-btn">
@@ -223,15 +229,15 @@ body.is-dashboard .looping-strip-wrapper {
                                         </div>
                                         <div class="dash-order-status-wrap">
                                             <span class="dash-order-status {{ order.payment_status }}">{{ order.payment_status }}</span>
-                                            <span class="dash-order-total">₹{{ '%.0f' % (order.total_cents / 100) if order.total_cents else '0' }}</span>
+                                            <span class="dash-order-total">{% if order.payment_method == 'free' or (order.total_cents or 0) == 0 %}FREE{% else %}₹{{ '%.0f' % (order.total_cents / 100) }}{% endif %}</span>
                                         </div>
                                     </div>
                                     <div class="dash-order-items">
                                         {% for item in order.items %}
                                         <div class="dash-order-item">
                                             <span class="dash-order-item-name">{{ item.product.name if item.product else 'Unknown' }}</span>
-                                            <span class="dash-order-item-license">{{ item.license.name if item.license else 'Standard' }}</span>
-                                            <span class="dash-order-item-price">₹{{ '%.0f' % (item.price_paid_cents / 100) if item.price_paid_cents else '0' }}</span>
+                                            <span class="dash-order-item-license">{{ 'Free (Non-Commercial)' if ((item.price_paid_cents or 0) == 0 or order.payment_method == 'free') else (item.license.name if item.license else 'Standard') }}</span>
+                                            <span class="dash-order-item-price">{% if (item.price_paid_cents or 0) == 0 or order.payment_method == 'free' %}FREE{% else %}₹{{ '%.0f' % (item.price_paid_cents / 100) }}{% endif %}</span>
                                         </div>
                                         {% endfor %}
                                     </div>

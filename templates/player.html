@@ -137,8 +137,8 @@
                     <button class="btn btn-buy" id="buyNowBtn">
                         <i class="fas fa-bolt"></i> {% if pack_info %}Buy Single{% else %}Buy Now{% endif %}
                     </button>
-                    <button class="btn btn-free" id="downloadFreeBtn" style="display:none;" title="Download Free Beat (Non-Commercial Use Only)">
-                        <i class="fas fa-download"></i> Free Download
+                    <button class="btn btn-free" id="downloadFreeBtn" style="display:none;" title="Get Free Beat (Non-Commercial Use Only)">
+                        <i class="fas fa-gift"></i> Get For Free
                     </button>
                 </div>
                 {% if pack_info %}
@@ -360,7 +360,7 @@
         </div>
     </div>
 
-    {# ============ FREE DOWNLOAD TERMS MODAL ============ #}
+        {# ============ FREE DOWNLOAD TERMS MODAL ============ #}
     <div id="freeDownloadModal" class="license-modal-overlay">
         <div class="license-modal-container" style="max-width: 540px; padding: 2rem;">
             <button class="modal-close-btn" type="button" onclick="closeFreeDownloadModal()"><i class="fas fa-xmark"></i></button>
@@ -373,54 +373,85 @@
                 <p style="margin: 0; color: var(--accent-gold, #C9AE74); font-weight: 600; font-size: 1.1rem;" id="freeModalBeatName"></p>
             </div>
 
-            {# Strict Non-Monetization Warning Box #}
-            <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.25rem; text-align: left;">
-                <div style="display: flex; align-items: flex-start; gap: 10px; color: #ef4444; font-weight: 700; font-size: 0.95rem; margin-bottom: 0.5rem;">
-                    <i class="fas fa-triangle-exclamation" style="font-size: 1.15rem; margin-top: 2px;"></i>
-                    <span>MONETIZATION & DISTRIBUTION STRICTLY PROHIBITED</span>
+            {# Standard Modal View #}
+            <div id="freeModalBody">
+                {# Strict Non-Monetization Warning Box #}
+                <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.25rem; text-align: left;">
+                    <div style="display: flex; align-items: flex-start; gap: 10px; color: #ef4444; font-weight: 700; font-size: 0.95rem; margin-bottom: 0.5rem;">
+                        <i class="fas fa-triangle-exclamation" style="font-size: 1.15rem; margin-top: 2px;"></i>
+                        <span>MONETIZATION & DISTRIBUTION STRICTLY PROHIBITED</span>
+                    </div>
+                    <ul style="margin: 0; padding-left: 1.25rem; font-size: 0.85rem; color: #f1f3f8; line-height: 1.6;">
+                        <li><strong>No Streaming / Distribution:</strong> Distribution or uploading to <strong>Spotify, Apple Music, YouTube Content ID, TikTok, Amazon Music, or Radio is strictly not allowed</strong>.</li>
+                        <li><strong>Non-Commercial Use Only:</strong> This free download is licensed solely for non-profit listening, auditioning, or writing private demo tracks.</li>
+                        <li><strong>No Copyright Claims:</strong> You cannot claim copyright, register with a PRO, or register with digital distributors.</li>
+                    </ul>
                 </div>
-                <ul style="margin: 0; padding-left: 1.25rem; font-size: 0.85rem; color: #f1f3f8; line-height: 1.6;">
-                    <li><strong>No Streaming / Distribution:</strong> Distribution or uploading to <strong>Spotify, Apple Music, YouTube Content ID, TikTok, Amazon Music, or Radio is strictly not allowed</strong>.</li>
-                    <li><strong>Non-Commercial Use Only:</strong> This free download is licensed solely for non-profit listening, auditioning, or writing private demo tracks.</li>
-                    <li><strong>No Copyright Claims:</strong> You cannot claim copyright, register with a PRO, or register with digital distributors.</li>
-                </ul>
+
+                <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; font-size: 0.88rem; color: #cbd5e1; text-align: center; line-height: 1.5;">
+                    <i class="fas fa-lightbulb" style="color: var(--accent-gold, #C9AE74);"></i> 
+                    <strong>Want to release and earn money from your song?</strong><br>
+                    Purchase a commercial license below to get distribution rights, monetization clearance, and uncompressed high-quality audio files.
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    <button type="button" id="freeModalClaimBtn" class="btn" style="background: #10b981; color: #0b0c10; font-weight: 700; padding: 12px 20px; border-radius: 10px; text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.95rem; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); border: none; cursor: pointer; transition: all 0.2s ease;">
+                        <i class="fas fa-gift"></i> <span id="freeModalClaimBtnText">Get For Free</span>
+                    </button>
+                    <button type="button" id="freeModalBuyBtn" class="btn btn-buy" style="width: 100%; padding: 12px 20px; border-radius: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <i class="fas fa-bolt"></i> Buy Commercial License
+                    </button>
+                </div>
             </div>
 
-            <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; font-size: 0.88rem; color: #cbd5e1; text-align: center; line-height: 1.5;">
-                <i class="fas fa-lightbulb" style="color: var(--accent-gold, #C9AE74);"></i> 
-                <strong>Want to release and earn money from your song?</strong><br>
-                Purchase a commercial license below to get distribution rights, monetization clearance, and uncompressed high-quality audio files.
-            </div>
-
-            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                <a id="freeModalDownloadLink" href="#" class="btn" style="background: #10b981; color: #0b0c10; font-weight: 700; padding: 12px 20px; border-radius: 10px; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.95rem; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">
-                    <i class="fas fa-download"></i> I Understand — Download Free Beat
-                </a>
-                <button type="button" id="freeModalBuyBtn" class="btn btn-buy" style="width: 100%; padding: 12px 20px; border-radius: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                    <i class="fas fa-bolt"></i> Buy Commercial License
-                </button>
+            {# Success View after Claiming #}
+            <div id="freeModalSuccess" style="display: none; text-align: center; padding: 0.5rem 0 1rem 0;">
+                <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(16, 185, 129, 0.15); color: #10b981; display: inline-flex; align-items: center; justify-content: center; font-size: 2.25rem; margin-bottom: 1rem;">
+                    <i class="fas fa-circle-check"></i>
+                </div>
+                <h4 style="color: #fff; font-size: 1.25rem; margin: 0 0 0.5rem 0;">Beat Added to Your Account!</h4>
+                <p id="freeModalSuccessText" style="color: #cbd5e1; font-size: 0.95rem; line-height: 1.6; margin: 0 0 1.5rem 0;">
+                    Check your dashboard to download your beat anytime.
+                </p>
+                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    <a href="{{ url_for('dashboard.dashboard') }}" class="btn" style="background: #10b981; color: #0b0c10; font-weight: 700; padding: 12px 20px; border-radius: 10px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.95rem; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">
+                        <i class="fas fa-columns"></i> Check Your Dashboard to Download
+                    </a>
+                    <button type="button" onclick="closeFreeDownloadModal()" class="btn" style="background: rgba(255, 255, 255, 0.08); color: #fff; border: 1px solid rgba(255, 255, 255, 0.15); padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 0.9rem;">
+                        Close
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
+    var currentFreeBeatId = null;
+    var currentFreeBeatName = '';
+
     window.openFreeDownloadModal = function(beatId, beatName, event) {
         if (event) event.stopPropagation();
+        currentFreeBeatId = beatId;
+        currentFreeBeatName = beatName || '';
+
         var modal = document.getElementById('freeDownloadModal');
         var nameEl = document.getElementById('freeModalBeatName');
-        var dlLink = document.getElementById('freeModalDownloadLink');
+        var bodyEl = document.getElementById('freeModalBody');
+        var successEl = document.getElementById('freeModalSuccess');
+        var claimBtn = document.getElementById('freeModalClaimBtn');
+        var claimBtnText = document.getElementById('freeModalClaimBtnText');
         var buyBtn = document.getElementById('freeModalBuyBtn');
-        
-        if (nameEl) nameEl.textContent = beatName;
-        if (dlLink) {
-            dlLink.href = '/download/free/' + beatId;
-            dlLink.onclick = function() {
-                setTimeout(closeFreeDownloadModal, 800);
-                if (typeof showToast === 'function') {
-                    showToast('Downloading free beat... (Non-commercial use only)', 'info');
-                }
-            };
+
+        if (nameEl) nameEl.textContent = currentFreeBeatName;
+        if (bodyEl) bodyEl.style.display = 'block';
+        if (successEl) successEl.style.display = 'none';
+
+        if (claimBtn) {
+            claimBtn.disabled = false;
+            if (claimBtnText) claimBtnText.innerHTML = 'Get For Free';
+            claimBtn.onclick = handleClaimFreeBeat;
         }
+
         if (buyBtn) {
             buyBtn.onclick = function() {
                 closeFreeDownloadModal();
@@ -437,6 +468,92 @@
         var modal = document.getElementById('freeDownloadModal');
         if (modal) modal.classList.remove('active');
     };
+
+    async function handleClaimFreeBeat() {
+        if (!currentFreeBeatId) return;
+
+        // Verify login state
+        var isLoggedIn = (window.IS_LOGGED_IN === true) || 
+                         (typeof window.getCurrentUser === 'function' && window.getCurrentUser() !== null);
+
+        if (!isLoggedIn) {
+            closeFreeDownloadModal();
+            if (typeof showToast === 'function') {
+                showToast('Please log in to claim this free beat.', 'info');
+            }
+            if (typeof window.openLoginModal === 'function') {
+                var savedId = currentFreeBeatId;
+                var savedName = currentFreeBeatName;
+                window.resumeCheckoutAfterLogin = function() {
+                    window.resumeCheckoutAfterLogin = null;
+                    window.openFreeDownloadModal(savedId, savedName);
+                    setTimeout(function() {
+                        var btn = document.getElementById('freeModalClaimBtn');
+                        if (btn) btn.click();
+                    }, 300);
+                };
+                window.openLoginModal();
+            } else {
+                window.location.href = '/login?next=/player';
+            }
+            return;
+        }
+
+        var claimBtn = document.getElementById('freeModalClaimBtn');
+        var claimBtnText = document.getElementById('freeModalClaimBtnText');
+        if (claimBtn) claimBtn.disabled = true;
+        if (claimBtnText) claimBtnText.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding to Account...';
+
+        try {
+            var csrf = window.CSRF_TOKEN || (document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').getAttribute('content') : '');
+            var res = await fetch('/api/beat/claim-free/' + currentFreeBeatId, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrf
+                }
+            });
+            var data = await res.json();
+
+            if (data.success) {
+                var bodyEl = document.getElementById('freeModalBody');
+                var successEl = document.getElementById('freeModalSuccess');
+                var successText = document.getElementById('freeModalSuccessText');
+
+                if (bodyEl) bodyEl.style.display = 'none';
+                if (successEl) successEl.style.display = 'block';
+                if (successText) {
+                    successText.innerHTML = '<strong>' + (currentFreeBeatName || 'Beat') + '</strong> has been added to your account.<br><span style="color:#10b981; font-weight:600;">Check your dashboard to download!</span>';
+                }
+                if (typeof showToast === 'function') {
+                    showToast('Check your dashboard to download!', 'success');
+                }
+            } else {
+                if (data.login_required) {
+                    closeFreeDownloadModal();
+                    if (typeof showToast === 'function') {
+                        showToast(data.error || 'Please log in to claim this beat.', 'info');
+                    }
+                    if (typeof window.openLoginModal === 'function') {
+                        window.openLoginModal();
+                    }
+                } else {
+                    if (typeof showToast === 'function') {
+                        showToast(data.error || 'Failed to claim beat', 'error');
+                    }
+                    if (claimBtn) claimBtn.disabled = false;
+                    if (claimBtnText) claimBtnText.innerHTML = 'Get For Free';
+                }
+            }
+        } catch (err) {
+            console.error('Error claiming free beat:', err);
+            if (typeof showToast === 'function') {
+                showToast('Network error while claiming beat.', 'error');
+            }
+            if (claimBtn) claimBtn.disabled = false;
+            if (claimBtnText) claimBtnText.innerHTML = 'Get For Free';
+        }
+    }
 
     window.addEventListener('click', function(e) {
         var modal = document.getElementById('freeDownloadModal');

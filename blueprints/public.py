@@ -114,7 +114,16 @@ def player_page(pack_id=None):
 
 @bp.route('/download/free/<int:product_id>')
 def download_free_beat(product_id):
-    from helpers.models import BeatDetail
+    from helpers.utils import get_current_user
+    user = get_current_user()
+    if not user:
+        flash('Please log in to download this free beat.', 'info')
+        return redirect(url_for('public.player_page'))
+
+    from helpers.models import BeatDetail, Order, OrderItem, db
+    from helpers.services import track_download
+    import uuid
+
     product = Product.query.get_or_404(product_id)
     if product.product_type != 'beat':
         flash('Invalid product for free download', 'error')
@@ -125,17 +134,56 @@ def download_free_beat(product_id):
         flash('This beat is not available for free download. Please purchase a license.', 'error')
         return redirect(url_for('public.player_page'))
 
+    # Auto-claim beat for user if not already in collection
+    existing_item = (
+        OrderItem.query.join(Order)
+        .filter(Order.user_id == user.id, Order.payment_status == 'paid', OrderItem.product_id == product.id)
+        .first()
+    )
+    if not existing_item:
+        order = Order(
+            user_id=user.id,
+            email=user.email,
+            total_cents=0,
+            payment_status='paid',
+            payment_method='free',
+            transaction_id=f"FREE-{uuid.uuid4().hex[:12].upper()}"
+        )
+        db.session.add(order)
+        db.session.flush()
+
+        order_item = OrderItem(
+            order_id=order.id,
+            product_id=product.id,
+            license_id=None,
+            price_paid_cents=0
+        )
+        db.session.add(order_item)
+        db.session.commit()
+
+    track_download(user.id, product.id)
+
     # Locate audio file for free download (preview MP3 or WAV)
     rel_path = detail.preview_audio or detail.wav_file
     if not rel_path:
         flash('Audio file not found for this beat.', 'error')
-        return redirect(url_for('public.player_page'))
+        return redirect(url_for('dashboard.dashboard'))
 
     norm_rel = os.path.normpath(rel_path.lstrip('/\\'))
     abs_path = os.path.join(current_app.root_path, 'static', norm_rel)
     if not os.path.exists(abs_path):
+        data_dir = current_app.config.get('DATA_DIR')
+        if data_dir:
+            relative = norm_rel
+            if relative.startswith('data\\') or relative.startswith('data/'):
+                relative = relative[5:]
+            candidate = os.path.join(data_dir, relative)
+            if os.path.exists(candidate):
+                abs_path = candidate
+
+    if not os.path.exists(abs_path):
         flash('Audio file missing on server.', 'error')
-        return redirect(url_for('public.player_page'))
+        return redirect(url_for('dashboard.dashboard'))
 
     ext = os.path.splitext(rel_path)[1] or '.mp3'
     clean_name = product.name.replace('/', '_').replace('\\', '_')

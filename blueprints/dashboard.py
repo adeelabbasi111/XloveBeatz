@@ -55,7 +55,7 @@ def dashboard():
     # On-the-fly licenses for all paid beat purchases (zero disk storage)
     licenses = []
     for item in purchased_items:
-        if item.product and item.product.product_type == 'beat':
+        if item.product and item.product.product_type == 'beat' and (item.price_paid_cents or 0) > 0 and (not item.order or item.order.payment_method != 'free'):
             lic_name = item.license.name if item.license else 'Basic'
             order_date = item.order.created_at if item.order else datetime.utcnow()
             licenses.append({
@@ -330,8 +330,10 @@ def download_product(product_id):
     if product.product_type == 'beat':
         detail = BeatDetail.query.filter_by(product_id=product_id).first()
         if detail:
-            # Prefer WAV, fall back to MP3
-            file_path = detail.wav_file or detail.mp3_file
+            if (order_item.price_paid_cents or 0) == 0 or (order_item.order and order_item.order.payment_method == 'free'):
+                file_path = detail.preview_audio or detail.wav_file
+            else:
+                file_path = detail.wav_file or detail.preview_audio
 
     elif product.product_type == 'preset':
         preset = VocalPreset.query.filter_by(product_id=product_id).first()
@@ -371,7 +373,14 @@ def download_product(product_id):
 
     track_download(user.id, product_id)
 
-    return send_file(abs_path, as_attachment=True)
+    ext = os.path.splitext(file_path)[1] or ('.mp3' if (order_item.price_paid_cents or 0) == 0 else '.wav')
+    clean_name = product.name.replace('/', '_').replace('\\', '_')
+    if (order_item.price_paid_cents or 0) == 0 or (order_item.order and order_item.order.payment_method == 'free'):
+        dl_name = f"{clean_name} (Free Non-Commercial Use){ext}"
+    else:
+        dl_name = f"{clean_name}{ext}"
+
+    return send_file(abs_path, as_attachment=True, download_name=dl_name)
 
 
 @bp.route('/download/license/<int:license_id>')
@@ -399,6 +408,10 @@ def download_license(license_id):
     if order.payment_status != 'paid':
         flash('Order has not been paid', 'error')
         return redirect(url_for('dashboard.dashboard'))
+
+    if (order_item.price_paid_cents or 0) == 0 or order.payment_method == 'free':
+        flash('Free beats do not include a commercial license. Purchase a license to monetize and distribute.', 'info')
+        return redirect(url_for('public.player_page'))
 
     # Generate on-the-fly (in memory, zero disk usage)
     product = order_item.product
@@ -591,7 +604,14 @@ def download_flp(product_id):
 
     track_download(user.id, product_id)
 
-    return send_file(abs_path, as_attachment=True)
+    ext = os.path.splitext(file_path)[1] or ('.mp3' if (order_item.price_paid_cents or 0) == 0 else '.wav')
+    clean_name = product.name.replace('/', '_').replace('\\', '_')
+    if (order_item.price_paid_cents or 0) == 0 or (order_item.order and order_item.order.payment_method == 'free'):
+        dl_name = f"{clean_name} (Free Non-Commercial Use){ext}"
+    else:
+        dl_name = f"{clean_name}{ext}"
+
+    return send_file(abs_path, as_attachment=True, download_name=dl_name)
 
 
 # ═══════════════════════════════════════════════════════════════
