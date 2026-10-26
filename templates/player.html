@@ -32,13 +32,6 @@
                     transform: translateY(-50px);
                 }
             }
-            .free-tag-badge {
-                background: rgba(16, 185, 129, 0.15) !important;
-                color: #10b981 !important;
-                border: 1px solid rgba(16, 185, 129, 0.35) !important;
-                font-weight: 700 !important;
-                letter-spacing: 0.5px;
-            }
             .track-free-btn {
                 background: rgba(16, 185, 129, 0.15);
                 color: #10b981;
@@ -267,11 +260,6 @@
                         <span class="detail-badge genre-badge">
                             <i class="fas fa-tag"></i> {{ beat.genre if beat.genre else '—' }}
                         </span>
-                        {% if beat.get('is_free') %}
-                        <span class="detail-badge free-tag-badge">
-                            <i class="fas fa-gift"></i> FREE TO USE
-                        </span>
-                        {% endif %}
                     </div>
                 </div>
 
