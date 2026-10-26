@@ -148,7 +148,7 @@ body.is-dashboard .looping-strip-wrapper {
                                             </a>
                                             {% if item.product and item.product.product_type == 'beat' %}
                                                 {% if (item.price_paid_cents or 0) == 0 or (item.order and item.order.payment_method == 'free') %}
-                                                    <a href="/player" class="dash-download-btn dash-lic-btn" style="border-color: rgba(201, 174, 116, 0.4); color: var(--accent-gold, #C9AE74);" title="Upgrade to Commercial License">
+                                                    <a href="/player?beat_id={{ item.product_id }}&action=buy" class="dash-download-btn dash-lic-btn" style="border-color: rgba(201, 174, 116, 0.4); color: var(--accent-gold, #C9AE74);" title="Upgrade to Commercial License">
                                                         <i class="fas fa-bolt"></i> Upgrade License
                                                     </a>
                                                 {% else %}

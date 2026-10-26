@@ -847,6 +847,14 @@ if (tracklistScroll) {
     var trackItem = e.target.closest('.track-item');
     if (!trackItem) return;
     var index = parseInt(trackItem.dataset.index, 10);
+    if (e.target.closest('.track-free-btn')) {
+      return;
+    }
+    if (e.target.closest('.track-price-tag')) {
+      e.stopPropagation();
+      triggerPurchaseFlow(trackItem.dataset.id, 'buy');
+      return;
+    }
     if (e.target.closest('.play-track-icon')) {
       if (index === currentTrackIndex && isPlaying) {
         audio.pause();
@@ -1053,6 +1061,44 @@ window.selectLicense = function (licenseType) {
 };
 
 function openLicenseModal(beatData, action) {
+  if (!beatData) return;
+
+  // Defensive: Handle case where a DOM element (.track-item) was passed
+  if (beatData.nodeType === 1) {
+    var d = beatData.dataset;
+    var basePrice = parseFloat(d.price) || 0;
+    var hasStems = d.hasStems === 'true';
+    beatData = {
+      id: parseInt(d.id, 10),
+      name: d.name,
+      has_stems: hasStems,
+      license_tiers: {
+        basic: {
+          price: parseFloat(d.priceBasic) || basePrice,
+          files: d.filesBasic || 'MP3 + WAV'
+        },
+        premium: {
+          price: d.pricePremium ? parseFloat(d.pricePremium) : Math.round(basePrice * 1.7),
+          files: d.filesPremium || 'MP3 + WAV + Stems'
+        },
+        exclusive: {
+          price: d.priceExclusive ? parseFloat(d.priceExclusive) : 0,
+          files: d.filesExclusive || 'WAV + Stems + Project File'
+        }
+      }
+    };
+    if (!hasStems) {
+      delete beatData.license_tiers.premium;
+    }
+  } else if (typeof beatData === 'string' || typeof beatData === 'number') {
+    // If beatId was passed directly
+    return triggerPurchaseFlow(beatData, action || 'buy');
+  }
+
+  if (!beatData.license_tiers) {
+    beatData.license_tiers = {};
+  }
+
   currentModalBeat = beatData;
   currentActionType = action;
   selectedLicenseType = 'basic';
@@ -1119,6 +1165,8 @@ function openLicenseModal(beatData, action) {
   if (licenseModal) licenseModal.classList.add('active');
 }
 window.openLicenseModal = openLicenseModal;
+window.closeLicenseModal = closeLicenseModal;
+window.triggerPurchaseFlow = triggerPurchaseFlow;
 
 function closeLicenseModal() {
   if (licenseModal) licenseModal.classList.remove('active');
