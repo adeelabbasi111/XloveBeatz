@@ -54,10 +54,22 @@ def dashboard():
 
     # On-the-fly licenses for all paid beat purchases (zero disk storage)
     licenses = []
+    now = datetime.utcnow()
     for item in purchased_items:
         if item.product and item.product.product_type == 'beat' and (item.price_paid_cents or 0) > 0 and (not item.order or item.order.payment_method != 'free'):
             lic_name = item.license.name if item.license else 'Basic'
-            order_date = item.order.created_at if item.order else datetime.utcnow()
+            order_date = item.order.created_at if item.order else now
+            
+            term_years = 5 if lic_name.lower() == 'basic' else (7 if lic_name.lower() == 'premium' else None)
+            expiry_date = None
+            if term_years and order_date:
+                try:
+                    expiry_date = order_date.replace(year=order_date.year + term_years)
+                except ValueError:
+                    expiry_date = order_date.replace(year=order_date.year + term_years, day=28)
+            
+            is_expired = bool(expiry_date and expiry_date < now)
+
             licenses.append({
                 'id': item.id,
                 'order_item_id': item.id,
@@ -65,6 +77,10 @@ def dashboard():
                 'license_type': lic_name,
                 'generated_at': order_date,
                 'product_id': item.product_id,
+                'term': f'{term_years} Years' if term_years else 'Lifetime (Perpetual)',
+                'expiry_date': expiry_date,
+                'is_expired': is_expired,
+                'price_paid': (item.price_paid_cents or 0) / 100,
             })
 
     return render_template(
@@ -135,36 +151,56 @@ def api_user_licenses():
     if not user_id:
         return jsonify({'error': 'Not logged in'}), 401
 
-    licenses = (
-        GeneratedLicense.query
-        .join(OrderItem, GeneratedLicense.order_item_id == OrderItem.id)
+    order_items = (
+        OrderItem.query
         .join(Order, OrderItem.order_id == Order.id)
         .join(Product, OrderItem.product_id == Product.id)
-        .filter(Order.user_id == user_id, Order.payment_status == 'paid')
-        .order_by(GeneratedLicense.generated_at.desc())
+        .filter(
+            Order.user_id == user_id,
+            Order.payment_status == 'paid',
+            Product.product_type == 'beat',
+            (OrderItem.price_paid_cents or 0) > 0,
+            (Order.payment_method != 'free')
+        )
+        .options(
+            db.joinedload(OrderItem.order),
+            db.joinedload(OrderItem.product),
+            db.joinedload(OrderItem.license)
+        )
+        .order_by(Order.created_at.desc())
         .all()
     )
 
     result = []
-    for lic in licenses:
-        order_item = lic.order_item
-        product = order_item.product if order_item else None
-        license_name = order_item.license.name if order_item and order_item.license else 'License'
+    now = datetime.utcnow()
+    for item in order_items:
+        lic_name = item.license.name if item.license else 'Basic'
+        order_date = item.order.created_at if item.order else now
+        term_years = 5 if lic_name.lower() == 'basic' else (7 if lic_name.lower() == 'premium' else None)
+        expiry_date = None
+        if term_years and order_date:
+            try:
+                expiry_date = order_date.replace(year=order_date.year + term_years)
+            except ValueError:
+                expiry_date = order_date.replace(year=order_date.year + term_years, day=28)
+        
+        is_expired = bool(expiry_date and expiry_date < now)
 
         result.append({
-            'license_id': lic.id,
-            'product_name': product.name if product else 'Unknown',
-            'product_type': product.product_type if product else '—',
-            'license_type': license_name,
-            'pdf_filename': os.path.basename(lic.pdf_path) if lic.pdf_path else None,
-            'has_pdf': bool(lic.pdf_path and os.path.exists(
-                os.path.join(current_app.root_path, lic.pdf_path)
-            )),
-            'generated_at': lic.generated_at.strftime('%d %b %Y') if lic.generated_at else '—',
-            'order_date': order_item.order.created_at.strftime('%d %b %Y') if order_item and order_item.order else '—',
+            'license_id': item.id,
+            'product_id': item.product_id,
+            'product_name': item.product.name if item.product else 'Beat',
+            'product_type': 'beat',
+            'license_type': lic_name,
+            'term': f'{term_years} Years' if term_years else 'Lifetime (Perpetual)',
+            'expiry_date': expiry_date.strftime('%d %b %Y') if expiry_date else 'Perpetual',
+            'is_expired': is_expired,
+            'generated_at': order_date.strftime('%d %b %Y') if order_date else '—',
+            'order_date': order_date.strftime('%d %b %Y') if order_date else '—',
+            'download_url': f'/download/license/item/{item.id}',
         })
 
-    return jsonify({'licenses': result})
+    return jsonify({'licenses': result, 'total': len(result)})
 
 
 # ═══════════════════════════════════════════════════════════════

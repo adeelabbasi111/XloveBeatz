@@ -1617,24 +1617,97 @@ def admin_offer_delete(offer_id):
 @admin_required
 def admin_licenses():
     page = request.args.get('page', 1, type=int)
-    pagination = (
-        GeneratedLicense.query
-        .options(db.joinedload(GeneratedLicense.order_item).joinedload(OrderItem.order))
-        .order_by(GeneratedLicense.generated_at.desc())
-        .paginate(page=page, per_page=25, error_out=False)
+    status_filter = request.args.get('status', 'all')
+
+    query = (
+        OrderItem.query
+        .join(Order, OrderItem.order_id == Order.id)
+        .join(Product, OrderItem.product_id == Product.id)
+        .filter(Product.product_type == 'beat', (OrderItem.price_paid_cents or 0) > 0)
+        .options(
+            db.joinedload(OrderItem.order).joinedload(Order.user),
+            db.joinedload(OrderItem.product).joinedload(Product.beat_detail),
+            db.joinedload(OrderItem.license)
+        )
     )
+
+    if status_filter == 'paid':
+        query = query.filter(Order.payment_status == 'paid')
+    elif status_filter == 'pending':
+        query = query.filter(Order.payment_status == 'pending')
+
+    pagination = query.order_by(Order.created_at.desc()).paginate(
+        page=page, per_page=20, error_out=False
+    )
+
+    licenses = []
+    now = datetime.utcnow()
+    for item in pagination.items:
+        order = item.order
+        user = order.user if order else None
+        lic_name = item.license.name if item.license else 'Basic'
+        order_date = order.created_at if order else now
+        
+        term_years = 5 if lic_name.lower() == 'basic' else (7 if lic_name.lower() == 'premium' else None)
+        expiry_date = None
+        if term_years and order_date:
+            try:
+                expiry_date = order_date.replace(year=order_date.year + term_years)
+            except ValueError:
+                expiry_date = order_date.replace(year=order_date.year + term_years, day=28)
+        
+        is_expired = bool(expiry_date and expiry_date < now)
+
+        licenses.append({
+            'id': item.id,
+            'order_id': order.id if order else None,
+            'order_status': order.payment_status if order else 'unknown',
+            'buyer_name': user.username if user else (order.email if order else 'Customer'),
+            'buyer_email': user.email if user else (order.email if order else '—'),
+            'beat_name': item.product.name if item.product else 'Beat',
+            'license_type': lic_name,
+            'price_paid': (item.price_paid_cents or 0) / 100,
+            'created_at': order_date,
+            'term': f'{term_years} Years' if term_years else 'Perpetual (Lifetime)',
+            'expiry_date': expiry_date,
+            'is_expired': is_expired,
+        })
+
+    total_count = (
+        OrderItem.query
+        .join(Order, OrderItem.order_id == Order.id)
+        .join(Product, OrderItem.product_id == Product.id)
+        .filter(Product.product_type == 'beat', (OrderItem.price_paid_cents or 0) > 0)
+        .count()
+    )
+
+    total_paid = (
+        OrderItem.query
+        .join(Order, OrderItem.order_id == Order.id)
+        .join(Product, OrderItem.product_id == Product.id)
+        .filter(Product.product_type == 'beat', Order.payment_status == 'paid', (OrderItem.price_paid_cents or 0) > 0)
+        .count()
+    )
+
     return render_template('admin/licenses.html',
-                           licenses=pagination.items, pagination=pagination)
+                           licenses=licenses,
+                           pagination=pagination,
+                           current_status=status_filter,
+                           total_count=total_count,
+                           total_paid=total_paid)
 
 
 @bp.route('/admin/licenses/<int:lic_id>/download')
 @admin_required
 def admin_license_download(lic_id):
-    gen_lic = GeneratedLicense.query.get_or_404(lic_id)
-
-    order_item = OrderItem.query.get(gen_lic.order_item_id) if gen_lic.order_item_id else None
+    order_item = OrderItem.query.get(lic_id)
     if not order_item:
-        flash('License not associated with an order item', 'error')
+        gen_lic = GeneratedLicense.query.get(lic_id)
+        if gen_lic and gen_lic.order_item_id:
+            order_item = OrderItem.query.get(gen_lic.order_item_id)
+
+    if not order_item:
+        flash('License record not found', 'error')
         return redirect(url_for('admin.admin_licenses'))
         
     order = order_item.order
@@ -1644,14 +1717,14 @@ def admin_license_download(lic_id):
         flash('Invalid product for license', 'error')
         return redirect(url_for('admin.admin_licenses'))
 
-    license_type = gen_lic.license_type.lower() if gen_lic.license_type else 'basic'
+    license_type = order_item.license.name.lower() if order_item.license else 'basic'
     beat_detail = BeatDetail.query.filter_by(product_id=product.id).first()
     
     effective_date = order.created_at.strftime('%d-%m-%Y') if order and order.created_at else datetime.now().strftime('%d-%m-%Y')
     
     user = User.query.get(order.user_id) if order and order.user_id else None
-    licensee_name = gen_lic.buyer_name or (user.username if user else (order.email if order else 'Customer'))
-    beat_name = gen_lic.beat_name or product.name
+    licensee_name = user.username if user else (order.email if order else 'Customer')
+    beat_name = product.name
     price_paid = order_item.price_paid_cents / 100 if order_item.price_paid_cents else 0
 
     license_data = {
@@ -1681,7 +1754,8 @@ def admin_license_download(lic_id):
     safe_beat = beat_name.replace(' ', '_').replace('/', '_')
     filename = f'{safe_beat}_{license_type.capitalize()}_License.pdf'
 
-    return send_file(io.BytesIO(pdf_bytes), mimetype='application/pdf', as_attachment=True, download_name=filename)
+    as_attachment = (request.args.get('view') != '1')
+    return send_file(io.BytesIO(pdf_bytes), mimetype='application/pdf', as_attachment=as_attachment, download_name=filename)
 
 
 # ═══════════════════════════════════════════════════════════════

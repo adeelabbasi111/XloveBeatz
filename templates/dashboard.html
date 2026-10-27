@@ -190,15 +190,32 @@ body.is-dashboard .looping-strip-wrapper {
                                     <div class="dash-product-icon"><i class="fas fa-file-contract"></i></div>
                                     <div class="dash-product-info">
                                         <div class="dash-product-name">{{ lic.beat_name or 'Unknown' }}</div>
-                                        <div class="dash-product-meta">
-                                            Generated on {{ lic.generated_at.strftime('%d %b %Y') if lic.generated_at else '—' }}
+                                        <div class="dash-product-meta" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 4px;">
+                                            <span>Purchased on {{ lic.generated_at.strftime('%d %b %Y') if lic.generated_at else '—' }}</span>
+                                            <span style="opacity: 0.4;">&bull;</span>
+                                            <span>Term: <strong>{{ lic.term }}</strong></span>
+                                            <span style="opacity: 0.4;">&bull;</span>
+                                            {% if lic.expiry_date %}
+                                                {% if lic.is_expired %}
+                                                    <span style="color: #ef4444; font-weight: 600;"><i class="fas fa-circle-exclamation"></i> Expired on {{ lic.expiry_date.strftime('%d %b %Y') }} (Renewal Required)</span>
+                                                {% else %}
+                                                    <span style="color: #94a3b8;"><i class="fas fa-calendar-check" style="color: #10b981; margin-right: 4px;"></i>Valid until {{ lic.expiry_date.strftime('%d %b %Y') }}</span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span style="color: var(--accent-gold, #C9AE74); font-weight: 500;"><i class="fas fa-infinity" style="margin-right: 4px;"></i>Perpetual (No Renewal Needed)</span>
+                                            {% endif %}
                                         </div>
                                     </div>
                                     <div class="dash-product-right">
                                         <span class="dash-license-badge {% if lic.license_type == 'Exclusive' %}gold{% endif %}">{{ lic.license_type }} License</span>
-                                        <a href="/download/license/item/{{ lic.id }}" class="dash-download-btn" title="Generate & Download Legal License Agreement PDF">
+                                        <a href="/download/license/item/{{ lic.id }}" class="dash-download-btn" title="Download Official License Agreement PDF">
                                             <i class="fas fa-file-pdf"></i> Download PDF
                                         </a>
+                                        {% if lic.license_type != 'Exclusive' %}
+                                        <a href="/player?beat_id={{ lic.product_id }}&action=buy" class="dash-download-btn dash-lic-btn" style="border-color: rgba(201, 174, 116, 0.4); color: var(--accent-gold, #C9AE74);" title="Renew or upgrade your beat license">
+                                            <i class="fas fa-rotate"></i> {{ 'Renew License' if lic.is_expired else 'Renew / Upgrade' }}
+                                        </a>
+                                        {% endif %}
                                     </div>
                                 </div>
                                 {% endfor %}
