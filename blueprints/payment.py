@@ -572,6 +572,8 @@ def admin_bypass_checkout():
         lic_id = None
         if item.get('type') == 'beat':
             lic = License.query.filter_by(name=item.get('license', '').capitalize()).first()
+            if not lic:
+                lic = License.query.filter_by(name='Basic').first()
             if lic:
                 lic_id = lic.id
         add_order_item(order.id, product.id, 0, lic_id)

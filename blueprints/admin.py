@@ -1623,7 +1623,14 @@ def admin_licenses():
         OrderItem.query
         .join(Order, OrderItem.order_id == Order.id)
         .join(Product, OrderItem.product_id == Product.id)
-        .filter(Product.product_type == 'beat', (OrderItem.price_paid_cents or 0) > 0)
+        .filter(
+            Product.product_type == 'beat',
+            db.or_(
+                OrderItem.license_id.isnot(None),
+                Order.payment_method != 'free',
+                (OrderItem.price_paid_cents or 0) > 0
+            )
+        )
         .options(
             db.joinedload(OrderItem.order).joinedload(Order.user),
             db.joinedload(OrderItem.product).joinedload(Product.beat_detail),
@@ -1677,7 +1684,14 @@ def admin_licenses():
         OrderItem.query
         .join(Order, OrderItem.order_id == Order.id)
         .join(Product, OrderItem.product_id == Product.id)
-        .filter(Product.product_type == 'beat', (OrderItem.price_paid_cents or 0) > 0)
+        .filter(
+            Product.product_type == 'beat',
+            db.or_(
+                OrderItem.license_id.isnot(None),
+                Order.payment_method != 'free',
+                (OrderItem.price_paid_cents or 0) > 0
+            )
+        )
         .count()
     )
 
@@ -1685,7 +1699,15 @@ def admin_licenses():
         OrderItem.query
         .join(Order, OrderItem.order_id == Order.id)
         .join(Product, OrderItem.product_id == Product.id)
-        .filter(Product.product_type == 'beat', Order.payment_status == 'paid', (OrderItem.price_paid_cents or 0) > 0)
+        .filter(
+            Product.product_type == 'beat',
+            Order.payment_status == 'paid',
+            db.or_(
+                OrderItem.license_id.isnot(None),
+                Order.payment_method != 'free',
+                (OrderItem.price_paid_cents or 0) > 0
+            )
+        )
         .count()
     )
 

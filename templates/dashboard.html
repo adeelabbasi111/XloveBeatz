@@ -136,7 +136,14 @@ body.is-dashboard .looping-strip-wrapper {
                                         <div class="dash-product-meta">
                                             <span>{{ item.product.product_type|capitalize if item.product else '—' }}</span>
                                             &bull;
-                                            <span>{{ 'Free (Non-Commercial)' if ((item.price_paid_cents or 0) == 0 or (item.order and item.order.payment_method == 'free')) else (item.license.name if item.license else 'Standard') }}</span>
+                                            {% set is_free_item = (item.license is none and (not item.order or item.order.payment_method == 'free')) %}
+                                            {% if is_free_item %}
+                                                <span>Free (Non-Commercial)</span>
+                                            {% elif item.product and item.product.product_type == 'beat' %}
+                                                <span>{{ (item.license.name if item.license else 'Basic') }} License</span>
+                                            {% else %}
+                                                <span>{{ item.license.name if item.license else 'Standard' }}</span>
+                                            {% endif %}
                                             &bull;
                                             <span>{{ download_counts.get(item.product_id, 0) }} dls</span>
                                         </div>
@@ -147,13 +154,13 @@ body.is-dashboard .looping-strip-wrapper {
                                                 <i class="fas fa-download"></i> Download
                                             </a>
                                             {% if item.product and item.product.product_type == 'beat' %}
-                                                {% if (item.price_paid_cents or 0) == 0 or (item.order and item.order.payment_method == 'free') %}
+                                                {% if is_free_item %}
                                                     <a href="/player?beat_id={{ item.product_id }}&action=buy" class="dash-download-btn dash-lic-btn" style="border-color: rgba(201, 174, 116, 0.4); color: var(--accent-gold, #C9AE74);" title="Upgrade to Commercial License">
                                                         <i class="fas fa-bolt"></i> Upgrade License
                                                     </a>
                                                 {% else %}
                                                     <a href="/download/license/item/{{ item.id }}" class="dash-download-btn dash-lic-btn" title="Download Legal License Agreement PDF">
-                                                        <i class="fas fa-file-contract"></i> License
+                                                        <i class="fas fa-file-contract"></i> License PDF
                                                     </a>
                                                 {% endif %}
                                             {% endif %}

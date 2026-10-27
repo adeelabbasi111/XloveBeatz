@@ -56,32 +56,49 @@ def dashboard():
     licenses = []
     now = datetime.utcnow()
     for item in purchased_items:
-        if item.product and item.product.product_type == 'beat' and (item.price_paid_cents or 0) > 0 and (not item.order or item.order.payment_method != 'free'):
-            lic_name = item.license.name if item.license else 'Basic'
-            order_date = item.order.created_at if item.order else now
-            
-            term_years = 5 if lic_name.lower() == 'basic' else (7 if lic_name.lower() == 'premium' else None)
-            expiry_date = None
-            if term_years and order_date:
-                try:
-                    expiry_date = order_date.replace(year=order_date.year + term_years)
-                except ValueError:
-                    expiry_date = order_date.replace(year=order_date.year + term_years, day=28)
-            
-            is_expired = bool(expiry_date and expiry_date < now)
+        if not item.product or item.product.product_type != 'beat':
+            continue
 
-            licenses.append({
-                'id': item.id,
-                'order_item_id': item.id,
-                'beat_name': item.product.name,
-                'license_type': lic_name,
-                'generated_at': order_date,
-                'product_id': item.product_id,
-                'term': f'{term_years} Years' if term_years else 'Lifetime (Perpetual)',
-                'expiry_date': expiry_date,
-                'is_expired': is_expired,
-                'price_paid': (item.price_paid_cents or 0) / 100,
-            })
+        # Auto-heal: If it is a paid/non-free beat order missing license_id, assign Basic
+        if not item.license_id and item.order and item.order.payment_method != 'free':
+            basic_lic = License.query.filter_by(name='Basic').first()
+            if basic_lic:
+                item.license_id = basic_lic.id
+                try:
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+
+        # A beat is only free if it has no license AND order was claimed as free
+        is_free_beat = (item.license is None and (not item.order or item.order.payment_method == 'free'))
+        if is_free_beat:
+            continue
+
+        lic_name = item.license.name if item.license else 'Basic'
+        order_date = item.order.created_at if item.order else now
+        
+        term_years = 5 if lic_name.lower() == 'basic' else (7 if lic_name.lower() == 'premium' else None)
+        expiry_date = None
+        if term_years and order_date:
+            try:
+                expiry_date = order_date.replace(year=order_date.year + term_years)
+            except ValueError:
+                expiry_date = order_date.replace(year=order_date.year + term_years, day=28)
+        
+        is_expired = bool(expiry_date and expiry_date < now)
+
+        licenses.append({
+            'id': item.id,
+            'order_item_id': item.id,
+            'beat_name': item.product.name,
+            'license_type': lic_name,
+            'generated_at': order_date,
+            'product_id': item.product_id,
+            'term': f'{term_years} Years' if term_years else 'Lifetime (Perpetual)',
+            'expiry_date': expiry_date,
+            'is_expired': is_expired,
+            'price_paid': (item.price_paid_cents or 0) / 100,
+        })
 
     return render_template(
         'dashboard.html',
@@ -159,8 +176,11 @@ def api_user_licenses():
             Order.user_id == user_id,
             Order.payment_status == 'paid',
             Product.product_type == 'beat',
-            (OrderItem.price_paid_cents or 0) > 0,
-            (Order.payment_method != 'free')
+            db.or_(
+                OrderItem.license_id.isnot(None),
+                Order.payment_method != 'free',
+                (OrderItem.price_paid_cents or 0) > 0
+            )
         )
         .options(
             db.joinedload(OrderItem.order),
@@ -174,6 +194,9 @@ def api_user_licenses():
     result = []
     now = datetime.utcnow()
     for item in order_items:
+        is_free_beat = (item.license is None and (not item.order or item.order.payment_method == 'free'))
+        if is_free_beat:
+            continue
         lic_name = item.license.name if item.license else 'Basic'
         order_date = item.order.created_at if item.order else now
         term_years = 5 if lic_name.lower() == 'basic' else (7 if lic_name.lower() == 'premium' else None)
@@ -445,7 +468,7 @@ def download_license(license_id):
         flash('Order has not been paid', 'error')
         return redirect(url_for('dashboard.dashboard'))
 
-    if (order_item.price_paid_cents or 0) == 0 or order.payment_method == 'free':
+    if order_item.license is None and (order.payment_method == 'free' or (order_item.price_paid_cents or 0) == 0):
         flash('Free beats do not include a commercial license. Purchase a license to monetize and distribute.', 'info')
         return redirect(url_for('public.player_page'))
 
